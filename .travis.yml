@@ -6,3 +6,5 @@ go:
 
 install:
     - mkdir ./writer/testdata/
+    - go get github.com/issue9/conv
+    - go get github.com/issue9/assert

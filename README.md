@@ -1,6 +1,28 @@
 logs [![Build Status](https://travis-ci.org/issue9/logs.svg?branch=master)](https://travis-ci.org/issue9/logs)
 ======
 
+一个可配置的日志服务包。可以通过xml自定义日志输出：
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<logs>
+    <debug>
+        <buffer size="10">
+            <rotate dir="/var/log/" size="5M" />
+            <stmp username=".." password=".." />
+        </buffer>
+    </debug>
+    <info>
+        ....
+    </info>
+</logs>
+```
+
+
+```go
+// 用xml初始化logs
+logs.InitFromFile("./config.xml")
+```
+
 ### 安装
 
 ```shell

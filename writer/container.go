@@ -13,8 +13,7 @@ type Container struct {
 	ws []io.Writer
 }
 
-var _ WriteFlushAdder = &Container{}
-
+// 构造Container实例
 func NewContainer(writers ...io.Writer) *Container {
 	return &Container{ws: writers}
 }
@@ -30,11 +29,13 @@ func (c *Container) Write(bs []byte) (size int, err error) {
 	return
 }
 
+// 添加一个io.Writer实例
 func (c *Container) Add(w io.Writer) error {
 	c.ws = append(c.ws, w)
 	return nil
 }
 
+// 调用所有子项的Flush函数。
 func (c *Container) Flush() (size int, err error) {
 	for _, w := range c.ws {
 		if b, ok := w.(Flusher); ok {

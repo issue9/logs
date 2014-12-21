@@ -11,6 +11,8 @@ import (
 	"github.com/issue9/assert"
 )
 
+var _ WriteFlushAdder = &Container{}
+
 func TestContainer(t *testing.T) {
 	a := assert.New(t)
 

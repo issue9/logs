@@ -5,11 +5,14 @@
 package writer
 
 import (
+	"io"
 	"testing"
 	"time"
 
 	"github.com/issue9/assert"
 )
+
+var _ io.Writer = &Smtp{}
 
 func testSmtp(t *testing.T) {
 	smtp := NewSmtp("test@qq.com", "pwd", "test", "smtp.qq.com:25", []string{"test@gmail.com"})

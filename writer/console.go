@@ -17,8 +17,6 @@ type Console struct {
 	w     io.Writer
 }
 
-var _ io.Writer = &Console{}
-
 // 新建Console实例
 //
 // color ansi的颜色控制符，有关颜色定义字符串在term包中已经定义。

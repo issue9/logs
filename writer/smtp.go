@@ -6,7 +6,6 @@ package writer
 
 import (
 	"bytes"
-	"io"
 	"net/smtp"
 	"strings"
 )
@@ -31,8 +30,6 @@ type Smtp struct {
 	// 函数来提升性能。
 	auth smtp.Auth
 }
-
-var _ io.Writer = &Smtp{}
 
 // 新建Smtp对象。
 // username为smtp的账号；

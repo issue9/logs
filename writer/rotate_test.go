@@ -5,12 +5,15 @@
 package writer
 
 import (
+	"io"
 	"io/ioutil"
 	"testing"
 	"time"
 
 	"github.com/issue9/assert"
 )
+
+var _ io.WriteCloser = &Rotate{}
 
 func TestRotate(t *testing.T) {
 	a := assert.New(t)

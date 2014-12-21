@@ -36,8 +36,6 @@ type Rotate struct {
 	wSize int       // 当前正在写的文件大小
 }
 
-var _ io.WriteCloser = &Rotate{}
-
 // 新建Rotate。
 // dir为文件保存的目录，若不存在会尝试创建。
 // size为每个文件的最大尺寸，单位为byte。size应该足够大，如果size
@@ -107,7 +105,7 @@ func (r *Rotate) init() error {
 	return nil
 }
 
-// io.WriteCloser.Write
+// io.WriteCloser.Write()
 func (r *Rotate) Write(buf []byte) (int, error) {
 	if (r.wSize > r.size) || r.w == nil {
 		if err := r.init(); err != nil {
@@ -125,11 +123,15 @@ func (r *Rotate) Write(buf []byte) (int, error) {
 	return size, nil
 }
 
-// io.WriteCloser.Close
+// io.WriteCloser.Close()
 func (r *Rotate) Close() error {
 	if r.w == nil {
 		return nil
 	}
 
 	return r.w.(*os.File).Close()
+}
+
+func (r *Rotate) Flush() {
+	r.Close()
 }

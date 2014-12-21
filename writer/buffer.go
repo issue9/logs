@@ -17,8 +17,6 @@ type Buffer struct {
 	w      io.Writer // 输出的io.Writer
 }
 
-var _ WriteFlushAdder = &Buffer{}
-
 // 新建一个Buffer。
 // w最终输出的方向；当size<=1时，所有的内容都不会缓存，直接向w输出。
 func NewBuffer(w io.Writer, size int) *Buffer {

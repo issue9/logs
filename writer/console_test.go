@@ -5,11 +5,14 @@
 package writer
 
 import (
+	"io"
 	"os"
 	"testing"
 
 	"github.com/issue9/term"
 )
+
+var _ io.Writer = &Console{}
 
 func TestConsole(t *testing.T) {
 	c := NewConsole(os.Stderr, term.FCyan)

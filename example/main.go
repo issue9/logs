@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	err := logs.InitFromFile("./config.xml")
+	err := logs.InitFromXmlFile("./config.xml")
 	if err != nil {
 		//panic(err)
 		os.Stderr.WriteString(err.Error())
@@ -22,4 +22,5 @@ func main() {
 
 	logs.Info("INFO1")
 	logs.Debugf("DEBUG %v", 1)
+	logs.ERROR.Println("ERROR.Println")
 }

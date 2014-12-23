@@ -5,122 +5,156 @@
 package logs
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	"io"
 	"log"
+	"os"
+	"strings"
+
+	"github.com/issue9/logs/writer"
 )
 
-// 默认实现
-var std *LevelLogger
+var (
+	INFO     *log.Logger
+	WARN     *log.Logger
+	ERROR    *log.Logger
+	DEBUG    *log.Logger
+	TRACE    *log.Logger
+	CRITICAL *log.Logger
+)
 
-// 初始化一个默认的LevelLogger实例，之后可以
-// 直接调用logs.Info(...)等函数。
-func InitFromFile(file string) (err error) {
-	if std, err = NewFromFile(file); err != nil {
+// 用于保存INFO,WARN等日志实例的io.Writer接口实例，
+// 方便在关闭日志时，输出其中缓存的内容。
+var conts = writer.NewContainer()
+
+// 从一个xml文件中初始化日志系统。
+func InitFromXmlFile(path string) error {
+	f, err := os.Open(path)
+	if err != nil {
 		return err
+	}
+
+	defer f.Close()
+
+	return Init(f)
+}
+
+// 从一个xml字符串初始化日志系统。
+func InitFromXml(xml string) error {
+	return Init(bytes.NewBufferString(xml))
+}
+
+// 初始化日志系统。
+// r为一个有xml格式内容的io.Reader实例。
+func Init(r io.Reader) error {
+	cfg, err := loadFromXml(r)
+	if err != nil {
+		return err
+	}
+
+	if cfg.name != "logs" {
+		return fmt.Errorf("顶级元素必须为logs，当前值为[%v]", cfg.name)
+	}
+
+	if len(cfg.attrs) > 0 {
+		return fmt.Errorf("logs元素不存在任何属性")
+	}
+
+	for name, c := range cfg.items {
+		writer, err := c.toWriter()
+		if err != nil {
+			return err
+		}
+
+		w, ok := writer.(*logWriter)
+		if !ok {
+			return errors.New("二级元素必须为logWriter类型")
+		}
+		switch strings.ToLower(name) {
+		case "info":
+			INFO = w.toLogger()
+		case "warn":
+			WARN = w.toLogger()
+		case "debug":
+			DEBUG = w.toLogger()
+		case "error":
+			ERROR = w.toLogger()
+		case "trace":
+			TRACE = w.toLogger()
+		case "critical":
+			CRITICAL = w.toLogger()
+		default:
+			return fmt.Errorf("未知的二级元素:[%v]", name)
+		}
+		conts.Add(w.c)
 	}
 
 	return nil
 }
 
-// 从一个xml字符串的reader中初始化levellogger
-func InitFromXml(r io.Reader) (err error) {
-	if std, err = NewFromXml(r); err != nil {
-		return err
-	}
-
-	return nil
+// 输出所有的缓存内容。
+func Flush() {
+	conts.Flush()
 }
 
-func Flush() (int, error) {
-	return std.Flush()
-}
-
-// 将指定的level的日志转换成log.Logger实例
-// 需要先调用Init(...)函数进行初始化。
-func ToStdLogger(level int) (log *log.Logger, ok bool) {
-	return std.ToStdLogger(level)
-}
-
-// 向指定level的日志输出一行信息
-// 需要先调用Init(...)函数进行初始化。
-func Println(level int, v ...interface{}) {
-	std.Println(level, v...)
-}
-
-// 向指定level的日志输出一条信息
-// 需要先调用Init(...)函数进行初始化。
-func Printf(level int, format string, v ...interface{}) {
-	std.Printf(level, format, v...)
-}
-
-// Info相当于Println(v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Info相当于INFO.Println(v...)的简写方式
 func Info(v ...interface{}) {
-	std.Info(v...)
+	INFO.Println(v...)
 }
 
-// Infof根目录于Printf(format, v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Infof相当于INFO.Printf(format, v...)的简写方式
 func Infof(format string, v ...interface{}) {
-	std.Infof(format, v...)
+	INFO.Printf(format, v...)
 }
 
-// Debug相当于Println(v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Debug相当于DEBUG.Println(v...)的简写方式
 func Debug(v ...interface{}) {
-	std.Debug(v...)
+	DEBUG.Println(v...)
 }
 
-// Debugf根目录于Printf(format, v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Debugf相当于DEBUG.Printf(format, v...)的简写方式
 func Debugf(format string, v ...interface{}) {
-	std.Debugf(format, v...)
+	DEBUG.Printf(format, v...)
 }
 
-// Trace相当于Println(v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Trace相当于TRACE.Println(v...)的简写方式
 func Trace(v ...interface{}) {
-	std.Trace(v...)
+	TRACE.Println(v...)
 }
 
-// Tracef根目录于Printf(format, v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Tracef相当于TRACE.Printf(format, v...)的简写方式
 func Tracef(format string, v ...interface{}) {
-	std.Tracef(format, v...)
+	TRACE.Printf(format, v...)
 }
 
-// Warn相当于Println(v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Warn相当于WARN.Println(v...)的简写方式
 func Warn(v ...interface{}) {
-	std.Warn(v...)
+	WARN.Println(v...)
 }
 
-// Warnf根目录于Printf(format, v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Warnf相当于WARN.Printf(format, v...)的简写方式
 func Warnf(format string, v ...interface{}) {
-	std.Warnf(format, v...)
+	WARN.Printf(format, v...)
 }
 
-// Error相当于Println(v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Error相当于ERROR.Println(v...)的简写方式
 func Error(v ...interface{}) {
-	std.Error(v...)
+	WARN.Println(v...)
 }
 
-// Errorf根目录于Printf(format, v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Errorf相当于ERROR.Printf(format, v...)的简写方式
 func Errorf(format string, v ...interface{}) {
-	std.Errorf(format, v...)
+	WARN.Printf(format, v...)
 }
 
-// Critical相当于Println(v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Critical相当于CRITICAL.Println(v...)的简写方式
 func Critical(v ...interface{}) {
-	std.Critical(v...)
+	CRITICAL.Println(v...)
 }
 
-// Criticalf根目录于Printf(format, v...)的简写方式
-// 需要先调用Init(...)函数进行初始化。
+// Criticalf相当于CRITICAL.Printf(format, v...)的简写方式
 func Criticalf(format string, v ...interface{}) {
-	std.Criticalf(format, v...)
+	CRITICAL.Printf(format, v...)
 }

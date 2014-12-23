@@ -7,6 +7,7 @@ package logs
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -16,42 +17,7 @@ import (
 	"github.com/issue9/term"
 )
 
-// writer的初始化函数。
-// args参数为对应的xml节点的属性列表。
-type WriterInitializer func(args map[string]string) (io.Writer, error)
-
-// 注册的writer，所有注册的writer，都可以通过配置文件配置。
-var regInitializer = map[string]WriterInitializer{}
-var regNames []string
-
-// 清除已经注册的初始化函数。
-func clearInitializer() {
-	regInitializer = make(map[string]WriterInitializer)
-	regNames = regNames[:0]
-}
-
-// 注册一个initizlizer
-// 返回值反映是否注册成功。若已经存在相同名称的，则返回false
-func Register(name string, init WriterInitializer) bool {
-	if IsRegisted(name) {
-		return false
-	}
-
-	regInitializer[name] = init
-	regNames = append(regNames, name)
-	return true
-}
-
-// 查询指定名称的Writer是否已经被注册
-func IsRegisted(name string) bool {
-	_, found := regInitializer[name]
-	return found
-}
-
-// 返回所有已注册的writer名称
-func Registed() []string {
-	return regNames
-}
+// 本文件下声明一系列writer的注册函数。
 
 func argNotFoundErr(wname, argName string) error {
 	return fmt.Errorf("[%v]配置文件中未指定参数:[%v]", wname, argName)
@@ -154,6 +120,29 @@ func stmpInitializer(args map[string]string) (io.Writer, error) {
 	return writer.NewSmtp(username, password, subject, host, sendTo), nil
 }
 
+var flagMap = map[string]int{
+	"log.ldate":         log.Ldate,
+	"log.ltime":         log.Ltime,
+	"log.lmicroseconds": log.Lmicroseconds,
+	"log.llongfile":     log.Llongfile,
+	"log.lshortfile":    log.Lshortfile,
+	"log.lstdflags":     log.LstdFlags,
+}
+
+func logWriterInitializer(args map[string]string) (io.Writer, error) {
+	flagStr, found := args["flag"]
+	if !found || (flagStr == "") {
+		flagStr = "log.lstdflags"
+	}
+
+	flag, found := flagMap[strings.ToLower(flagStr)]
+	if !found {
+		return nil, fmt.Errorf("未知的Flag参数:[%v]", flagStr)
+	}
+
+	return newLogWriter(args["prefix"], flag), nil
+}
+
 func init() {
 	if !Register("stmp", stmpInitializer) {
 		panic("注册stmp时失败")
@@ -169,5 +158,31 @@ func init() {
 
 	if !Register("rotate", rotateInitializer) {
 		panic("注册rotate时失败")
+	}
+
+	// logWriter
+
+	if !Register("info", logWriterInitializer) {
+		panic("注册info时失败")
+	}
+
+	if !Register("debug", logWriterInitializer) {
+		panic("注册debug时失败")
+	}
+
+	if !Register("trace", logWriterInitializer) {
+		panic("注册trace时失败")
+	}
+
+	if !Register("warn", logWriterInitializer) {
+		panic("注册warn时失败")
+	}
+
+	if !Register("error", logWriterInitializer) {
+		panic("注册error时失败")
+	}
+
+	if !Register("critical", logWriterInitializer) {
+		panic("注册critical时失败")
 	}
 }

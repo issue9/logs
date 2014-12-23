@@ -11,7 +11,7 @@ import (
 	"github.com/issue9/term"
 )
 
-// 带色彩输出的控制台。
+// 带色彩输出的控制台。不支持windows系统。
 type Console struct {
 	color string
 	w     io.Writer

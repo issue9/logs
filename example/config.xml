@@ -26,7 +26,6 @@
 
     <error>
         <console output="os.stderr" color="\033[1m" />
-        <stmp username=".." password="pwd" host="stmp.example.com" subject="error" sendTo="abc@example.com;abc1@example.com" />
         <rotate dir="./testdata/error/" size="5M" />
     </error>
 

@@ -23,11 +23,6 @@ type Smtp struct {
 	// 邮件头部分的长度
 	headerLen int
 
-	// BUG(caixw): 缓存smtp.Auth，一般情况下是没有问题，若
-	// smtp.Auth的实现者在实例里保存状态值之类的东西，则不
-	// 能缓存只能在每次SendMail的时候实时申请，会造成大量的
-	// 内存碎片，可考虑sync.Pool或是直接重写smtp.SendMail()
-	// 函数来提升性能。
 	auth smtp.Auth
 }
 

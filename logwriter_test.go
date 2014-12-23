@@ -12,6 +12,8 @@ import (
 	"github.com/issue9/logs/writer"
 )
 
+var _ writer.WriteAdder = &logWriter{}
+
 // logWriterTestWriter1的输出内容保存在这里
 var logWriterTestWriter1Content []byte
 
@@ -37,12 +39,7 @@ func (w *logWriterTestWriter2) Write(bs []byte) (int, error) {
 func TestLogWriter(t *testing.T) {
 	a := assert.New(t)
 
-	lw := &logWriter{
-		level:  LevelInfo,
-		flag:   log.LstdFlags,
-		prefix: "",
-		c:      writer.NewContainer(),
-	}
+	lw := newLogWriter("", log.LstdFlags)
 	a.NotNil(lw)
 
 	err := lw.Add(&logWriterTestWriter1{})
@@ -50,28 +47,9 @@ func TestLogWriter(t *testing.T) {
 	err = lw.Add(&logWriterTestWriter2{})
 	a.NotError(err)
 
-	lw.initLogger()
-	a.NotNil(lw.log)
-	lw.log.Print("hello world")
+	l := lw.toLogger()
+	l.Println("abcd")
 
 	a.True(len(logWriterTestWriter1Content) > 0)
 	a.Equal(logWriterTestWriter1Content, logWriterTestWriter2Content)
-}
-
-func TestLogWriterInitializer(t *testing.T) {
-	a := assert.New(t)
-
-	args := map[string]string{
-		"prefix": "[INFO]",
-		"flag":   "log.lstdflags",
-		"misc":   "misc",
-	}
-	w, err := logWriterInitializer(LevelInfo, args)
-	a.NotError(err).NotNil(w)
-
-	lw, ok := w.(*logWriter)
-	a.True(ok).NotNil(lw)
-
-	a.Equal(lw.prefix, "[INFO]").
-		Equal(lw.flag, log.LstdFlags)
 }

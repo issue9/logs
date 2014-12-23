@@ -23,19 +23,18 @@ func NewBuffer(w io.Writer, size int) *Buffer {
 	return &Buffer{size: size, w: w, buffer: make([][]byte, 0, size)}
 }
 
-// WriterContainer.Add
+// Adder.Add()
 func (b *Buffer) Add(w io.Writer) error {
 	if b.w == nil {
 		b.w = w
 		return nil
 	}
 
-	if ws, ok := b.w.(WriteAdder); ok {
-		ws.Add(w)
-		return nil
+	if ws, ok := b.w.(WriteFlushAdder); ok {
+		return ws.Add(w)
 	}
 
-	if ws, ok := w.(WriteAdder); ok {
+	if ws, ok := w.(WriteFlushAdder); ok {
 		ws.Add(b.w)
 		b.w = ws
 		return nil
@@ -45,7 +44,7 @@ func (b *Buffer) Add(w io.Writer) error {
 	return nil
 }
 
-// io.Writer
+// io.Writer.Write()
 func (b *Buffer) Write(bs []byte) (int, error) {
 	if b.size <= 1 {
 		return b.w.Write(bs)
@@ -60,7 +59,7 @@ func (b *Buffer) Write(bs []byte) (int, error) {
 	return b.Flush()
 }
 
-// Flusher.Flush
+// Flusher.Flush()
 func (b *Buffer) Flush() (size int, err error) {
 	if b.w == nil {
 		return 0, errors.New("并未指定输出环境，b.w指向空值")

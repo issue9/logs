@@ -8,11 +8,12 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/issue9/logs/writer"
 )
 
-// 用于表示config.xml中的配置数据。
+// 用于表示xml配置文件中的数据。
 type config struct {
 	parent *config
 	name   string             // writer的名称，一般为节点名
@@ -20,9 +21,9 @@ type config struct {
 	items  map[string]*config // 若是容器，则还有子项
 }
 
-// 从一个xml reader初始化config
+// 从一个xml格式的reader初始化config
 func loadFromXml(r io.Reader) (*config, error) {
-	var cfg *config = nil //&config{parent: nil}
+	var cfg *config = nil
 	var t xml.Token
 	var err error
 
@@ -64,23 +65,23 @@ func loadFromXml(r io.Reader) (*config, error) {
 
 // 将当前的config转换成io.Writer
 func (c *config) toWriter() (io.Writer, error) {
-	initializer, found := regInitializer[c.name]
+	fun, found := inits.funs[c.name]
 	if !found {
 		return nil, fmt.Errorf("未注册的初始化函数:[%v]", c.name)
 	}
 
-	w, err := initializer(c.attrs)
+	w, err := fun(c.attrs)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(c.items) == 0 {
+	if len(c.items) == 0 { // 没有子项
 		return w, err
 	}
 
-	cont, ok := w.(writer.FlushAdder)
+	cont, ok := w.(writer.Adder)
 	if !ok {
-		return nil, fmt.Errorf("[%v]并未实现writer.FlushAdder接口", c.name)
+		return nil, fmt.Errorf("[%v]并未实现writer.Adder接口", c.name)
 	}
 
 	for _, cfg := range c.items {
@@ -92,4 +93,58 @@ func (c *config) toWriter() (io.Writer, error) {
 	}
 
 	return w, nil
+}
+
+// writer的初始化函数。
+// args参数为对应的xml节点的属性列表。
+type WriterInitializer func(args map[string]string) (io.Writer, error)
+
+type initMap struct {
+	sync.Mutex
+	funs  map[string]WriterInitializer
+	names []string
+}
+
+var inits = &initMap{
+	funs:  map[string]WriterInitializer{},
+	names: []string{},
+}
+
+// 清除已经注册的初始化函数。
+func clearInitializer() {
+	inits.Lock()
+	defer inits.Unlock()
+
+	inits.funs = make(map[string]WriterInitializer)
+	inits.names = inits.names[:0]
+}
+
+// 注册一个writer初始化函数。
+// writer初始化函数原型可参考:WriterInitializer。
+// 返回值反映是否注册成功。若已经存在相同名称的，则返回false
+func Register(name string, init WriterInitializer) bool {
+	inits.Lock()
+	defer inits.Unlock()
+
+	if _, found := inits.funs[name]; found {
+		return false
+	}
+
+	inits.funs[name] = init
+	inits.names = append(inits.names, name)
+	return true
+}
+
+// 查询指定名称的Writer是否已经被注册
+func IsRegisted(name string) bool {
+	inits.Lock()
+	defer inits.Unlock()
+
+	_, found := inits.funs[name]
+	return found
+}
+
+// 返回所有已注册的writer名称
+func Registed() []string {
+	return inits.names
 }

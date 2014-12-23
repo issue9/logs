@@ -132,6 +132,7 @@ func (r *Rotate) Close() error {
 	return r.w.(*os.File).Close()
 }
 
+// Flusher.Flush()
 func (r *Rotate) Flush() {
 	r.Close()
 }

@@ -114,3 +114,35 @@ func TestconfigToWriter(t *testing.T) {
 	c.Write([]byte(" world"))
 	a.Equal(configTestWriterContent, []byte("hello world"))
 }
+
+func init1(a1 map[string]string) (io.Writer, error) {
+	return nil, nil
+}
+
+func init2(a1 map[string]string) (io.Writer, error) {
+	return nil, nil
+}
+
+func TestInit(t *testing.T) {
+	a := assert.New(t)
+
+	// 清空，包的init函数有可能会初始化一些数据。
+	clearInitializer()
+
+	a.True(Register("init1", init1)).
+		True(IsRegisted("init1")).
+		Equal(Registed(), []string{"init1"})
+
+	a.True(Register("init2", init2)).
+		True(IsRegisted("init2")).
+		True(IsRegisted("init1")).
+		Equal(Registed(), []string{"init1", "init2"})
+
+	a.False(IsRegisted("init3"))
+
+	a.False(Register("init1", init2)) // 重复注册
+	a.True(IsRegisted("init1"))
+
+	clearInitializer()
+	a.Equal(0, len(inits.names)).Equal(0, len(inits.funs))
+}

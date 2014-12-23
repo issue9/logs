@@ -38,8 +38,13 @@ func (c *Container) Add(w io.Writer) error {
 // 调用所有子项的Flush函数。
 func (c *Container) Flush() (size int, err error) {
 	for _, w := range c.ws {
-		if b, ok := w.(Flusher); ok {
-			size, err = b.Flush()
+		b, ok := w.(Flusher)
+		if !ok {
+			continue
+		}
+
+		if size, err = b.Flush(); err != nil {
+			return size, err
 		}
 	}
 	return size, err

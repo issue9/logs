@@ -5,4 +5,4 @@
 // writer包提供了一组实现io.Writer接口的结构。
 package writer
 
-const Version = "0.1.1.141222"
+const Version = "0.1.1.141223"

@@ -8,13 +8,12 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 
 	"github.com/issue9/conv"
 	"github.com/issue9/logs/writer"
-	"github.com/issue9/term"
+	"github.com/issue9/term/colors"
 )
 
 // 本文件下声明一系列writer的注册函数。
@@ -58,17 +57,28 @@ func bufferInitializer(args map[string]string) (io.Writer, error) {
 	return writer.NewBuffer(nil, num), nil
 }
 
-var consoleOutputMap = map[string]io.Writer{
-	"os.stderr": os.Stderr,
-	"os.stdin":  os.Stdin,
-	"os.stdout": os.Stdout,
+var consoleOutputMap = map[string]int{
+	"stderr": colors.Stderr,
+	"stdout": colors.Stdout,
+}
+
+var consoleColorMap = map[string]colors.Color{
+	"default": colors.Default,
+	"black":   colors.Black,
+	"red":     colors.Red,
+	"green":   colors.Green,
+	"yellow":  colors.Yellow,
+	"blue":    colors.Blue,
+	"magenta": colors.Magenta,
+	"cyan":    colors.Cyan,
+	"white":   colors.White,
 }
 
 // writer.Console的初始化函数
 func consoleInitializer(args map[string]string) (io.Writer, error) {
 	outputIndex, found := args["output"]
 	if !found {
-		outputIndex = "os.stderr"
+		outputIndex = "stderr"
 	}
 
 	output, found := consoleOutputMap[outputIndex]
@@ -76,16 +86,27 @@ func consoleInitializer(args map[string]string) (io.Writer, error) {
 		return nil, fmt.Errorf("[%v]不是一个有效的控制台输出项", outputIndex)
 	}
 
-	color, found := args["color"]
+	fcIndex, found := args["foreground"]
+	if !found { // 默认用红包前景色
+		fcIndex = "red"
+	}
+
+	fc, found := consoleColorMap[fcIndex]
 	if !found {
-		color = term.FRed
+		return nil, fmt.Errorf("无效的前景色[%v]", fcIndex)
 	}
 
-	if color[0] != '\033' && color[len(color)-1] != 'm' {
-		return nil, fmt.Errorf("color的值[%v]必须为一个ansi color值", color)
+	bcIndex, found := args["background"]
+	if !found {
+		bcIndex = "default"
 	}
 
-	return writer.NewConsole(output, color), nil
+	bc, found := consoleColorMap[bcIndex]
+	if !found {
+		return nil, fmt.Errorf("无效的背景色[%v]", bcIndex)
+	}
+
+	return writer.NewConsole(output, fc, bc), nil
 }
 
 // writer.Stmp的初始化函数

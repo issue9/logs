@@ -5,43 +5,30 @@
 package writer
 
 import (
-	"fmt"
-	"io"
-
-	"github.com/issue9/term"
+	"github.com/issue9/term/colors"
 )
 
-// 带色彩输出的控制台。不支持windows系统。
+// 带色彩输出的控制台。
 type Console struct {
-	color string
-	w     io.Writer
+	c *colors.Colorize
 }
 
 // 新建Console实例
 //
-// color ansi的颜色控制符，有关颜色定义字符串在term包中已经定义。
-// w 控制台实例，只能是os.Stderr,osStdout，其它将不会显示颜色。
-func NewConsole(w io.Writer, color string) *Console {
+// out为输出方向，可以是colors.Stderr和colors.Stdout两个值。
+// foreground,background 为输出文字的前景色和背景色。
+func NewConsole(out int, foreground, background colors.Color) *Console {
 	return &Console{
-		color: color,
-		w:     w,
+		c: colors.New(out, foreground, background),
 	}
 }
 
 // 更改输出颜色
-func (c *Console) SetColor(color string) {
-	c.color = color
+func (c *Console) SetColor(foreground, background colors.Color) {
+	c.c.SetColor(foreground, background)
 }
 
 // io.Writer
 func (c *Console) Write(b []byte) (size int, err error) {
-	// 写入颜色
-	fmt.Fprintf(c.w, "%v", c.color)
-
-	size, err = c.w.Write(b)
-
-	// 恢复默认值
-	fmt.Fprintf(c.w, "%v", term.Reset)
-
-	return
+	return c.c.Print(string(b))
 }

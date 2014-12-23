@@ -63,11 +63,10 @@
 // 接收人地址，多个收件地址使用分号分隔。
 //
 // 4. console:
-// 向控制台输出内容。可定义的属性为：color和output，
-// 其中output只能为"os.Stderr","os.stdin", "os.stdout"三个值，
-// 表示输出的具体方向，默认值为"os.stderr"；而color表示输出时的颜色，
-// 为一个ansi颜色控制码(在windows将原样输出),不指定时，默认为红包，
-// term包中定义了部分颜色值，可以直接拿来用。
+// 向控制台输出内容。可定义的属性为：foreground，background和output，
+// 其中output只能为"stderr", "stdout"三个值，表示输出的具体方向，
+// 默认值为"stderr"；而foreground和background表示输出时的前景和背景色，
+// 其值在github.com/issue9/term/colors中定义。
 //
 // 自定义
 //
@@ -81,4 +80,4 @@
 // 具体可参考WriterInitializer。
 package logs
 
-const Version = "0.1.2.141222"
+const Version = "0.1.3.141223"

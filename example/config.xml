@@ -25,12 +25,12 @@
     </warn>
 
     <error>
-        <console output="os.stderr" color="\033[1m" />
+        <console output="stderr" foreground="red" background="blue" />
         <rotate dir="./testdata/error/" size="5M" />
     </error>
 
     <critical>
-        <console output="os.stderr" color="\033[1m" />
+        <console output="stderr" foreground="red" />
         <stmp username=".." password="pwd" host="stmp.example.com" subject="error" sendTo="abc@example.com;abc1@example.com" />
         <rotate dir="./testdata/critical/" size="5M" />
     </critical>

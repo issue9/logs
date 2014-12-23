@@ -9,16 +9,16 @@ import (
 	"os"
 	"testing"
 
-	"github.com/issue9/term"
+	"github.com/issue9/term/colors"
 )
 
 var _ io.Writer = &Console{}
 
 func TestConsole(t *testing.T) {
-	c := NewConsole(os.Stderr, term.FCyan)
+	c := NewConsole(colors.Stderr, colors.Cyan, colors.Default)
 	c.Write([]byte("is cyan\n"))
 
-	c.SetColor(term.FBlue)
+	c.SetColor(colors.Blue, colors.Default)
 	c.Write([]byte("is blue\n"))
 
 	os.Stderr.WriteString("Reset\n")

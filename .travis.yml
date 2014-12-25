@@ -8,4 +8,4 @@ install:
     - mkdir ./writer/testdata/
     - go get github.com/issue9/conv
     - go get github.com/issue9/assert
-    - go get github.com/issue9/term
+    - go get github.com/issue9/term/colors

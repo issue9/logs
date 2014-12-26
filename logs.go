@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/issue9/logs/writer"
 )
 
+// 预定义的6个log.Logger实例。
 var (
 	INFO     *log.Logger
 	WARN     *log.Logger
@@ -25,7 +27,7 @@ var (
 	CRITICAL *log.Logger
 )
 
-// 用于保存INFO,WARN等日志实例的io.Writer接口实例，
+// 保存INFO,WARN等6个预定义log.Logger实例的io.Writer接口实例，
 // 方便在关闭日志时，输出其中缓存的内容。
 var conts = writer.NewContainer()
 
@@ -46,7 +48,18 @@ func InitFromXml(xml string) error {
 	return Init(bytes.NewBufferString(xml))
 }
 
-// 初始化日志系统。
+func init() {
+	// 默认初始化为所有的日志实例。
+	discardLog := log.New(ioutil.Discard, "", log.LstdFlags)
+	INFO = discardLog
+	WARN = discardLog
+	DEBUG = discardLog
+	ERROR = discardLog
+	TRACE = discardLog
+	CRITICAL = discardLog
+}
+
+// 从一个io.Reader初始化日志系统。
 // r为一个有xml格式内容的io.Reader实例。
 func Init(r io.Reader) error {
 	cfg, err := loadFromXml(r)
@@ -55,7 +68,7 @@ func Init(r io.Reader) error {
 	}
 
 	if cfg.name != "logs" {
-		return fmt.Errorf("顶级元素必须为logs，当前值为[%v]", cfg.name)
+		return fmt.Errorf("顶级元素必须为logs，当前名称为[%v]", cfg.name)
 	}
 
 	if len(cfg.attrs) > 0 {
@@ -157,4 +170,24 @@ func Critical(v ...interface{}) {
 // Criticalf相当于CRITICAL.Printf(format, v...)的简写方式
 func Criticalf(format string, v ...interface{}) {
 	CRITICAL.Printf(format, v...)
+}
+
+// 向所有的日志输出内容。
+func All(v ...interface{}) {
+	Info(v...)
+	Debug(v...)
+	Trace(v...)
+	Warn(v...)
+	Error(v...)
+	Critical(v...)
+}
+
+// 向所有的日志输出内容。
+func Allf(format string, v ...interface{}) {
+	Infof(format, v...)
+	Debugf(format, v...)
+	Tracef(format, v...)
+	Warnf(format, v...)
+	Errorf(format, v...)
+	Criticalf(format, v...)
 }

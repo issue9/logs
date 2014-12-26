@@ -13,7 +13,7 @@ import (
 	"github.com/issue9/logs/writer"
 )
 
-func TestLoadFromXml(t *testing.T) {
+func TestConfig_LoadFromXml(t *testing.T) {
 	var xmlCfg = `
 <?xml version="1.0" encoding="utf-8" ?>
 <logs>
@@ -32,9 +32,7 @@ func TestLoadFromXml(t *testing.T) {
     </debug>
 </logs>
 `
-
 	a := assert.New(t)
-
 	r := bytes.NewReader([]byte(xmlCfg))
 	a.NotNil(r)
 
@@ -49,6 +47,20 @@ func TestLoadFromXml(t *testing.T) {
 	buf, found := info.items["buffer"]
 	a.True(found).NotNil(buf)
 	a.Equal(buf.attrs["size"], "5")
+
+	// 测试错误的xml配置文件
+	xmlCfg = `
+<?xml version="1.0" encoding="utf-8" ?>
+<logs>
+    <info></info>
+    <info></info>
+</logs>
+`
+	r = bytes.NewReader([]byte(xmlCfg))
+	a.NotNil(r)
+
+	cfg, err = loadFromXml(r)
+	a.Error(err).Nil(cfg)
 }
 
 // test config.toWriter
@@ -78,7 +90,7 @@ var xmlCfg = `
 </logs>
 `
 
-func TestconfigToWriter(t *testing.T) {
+func TestConfig_ToWriter(t *testing.T) {
 	a := assert.New(t)
 	clearInitializer()
 

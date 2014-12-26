@@ -2,11 +2,14 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// logs 是对标准库的log的一个简单扩展，定义了6个级别的日志，
-// 用户可以根据自己的需求，通过xml文件定义每个级别的日志行为，
-// 而不需要更改源代码。
+// logs 是对标准库的log的一个简单扩展，定义了6个级别的日志：
+// ERROR,INFO,TRACE,DEBUG,CRITICAL,WARN，用户可以根据自己的需求，
+// 向指定级别的日志输出特定内容，也可以通过xml文件定义每个级别的日志行为。
 //
-// 以下是一个简短的xml配置文件范本，具体的可参考config.xml文件。
+// 默认情况下，所有日志都输出到ioutil.Discard。
+// 用户仅需要显示地调用相应的初始化函数对日志进行初始化。
+//
+// 以下是一个简短的xml配置文件范本，具体的可参考目录下的config.xml。
 //  xml:
 //  <?xml version="1.0" encoding="utf-8" ?>
 //  <logs>
@@ -17,8 +20,9 @@
 //          </buffer>
 //      </debug>
 //      <info>
-//          ....
+//          <console output="stderr" color="yellow" />
 //      </info>
+//      <!-- 除了debug和info，其它4个依然输出到ioutil.Discard -->
 //  </logs>
 //
 //  go:
@@ -26,10 +30,17 @@
 //  logs.Debugf("format", v...)
 //  logs.DEBUG.Println(...)
 //
+//  // error并未在配置文件中出现，所有内容将输出到ioutil.Discard
+//  logs.ERROR.Print(...)
+//
+//  // 向所有级别的日志输出内容。
+//  logs.All(...)
+//
 // 上面的配置文件表示DEBUG级别的内容输出前都进被buffer实例进行缓存，
 // 当量达到10条时，一次性向rotate和stmp输出。
-// 其中buffer、rotate、stmp甚至是debug和logs都是一个个实现io.Writer
-// 接口的结构。通过Register()向logs注册成功之后，即可以使用。
+// 其中buffer、rotate、stmp甚至是debug和info都是一个个实现io.Writer
+// 接口的结构。通过Register()注册成功之后，即可以使用。
+//
 //
 // 配置文件：
 //
@@ -80,4 +91,4 @@
 // 具体可参考WriterInitializer。
 package logs
 
-const Version = "0.1.3.141223"
+const Version = "0.1.4.141226"

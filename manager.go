@@ -44,6 +44,11 @@ func loadFromXml(r io.Reader) (*config, error) {
 				if cfg.items == nil {
 					cfg.items = make(map[string]*config)
 				}
+
+				if _, found := cfg.items[token.Name.Local]; found {
+					return nil, fmt.Errorf("重复的元素名[%v]", token.Name.Local)
+				}
+
 				cfg.items[token.Name.Local] = c
 			}
 			cfg = c

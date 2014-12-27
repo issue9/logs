@@ -5,7 +5,6 @@
 package logs
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -17,19 +16,22 @@ import (
 	"github.com/issue9/logs/writer"
 )
 
-// 预定义的6个log.Logger实例。
-var (
-	INFO     *log.Logger
-	WARN     *log.Logger
-	ERROR    *log.Logger
-	DEBUG    *log.Logger
-	TRACE    *log.Logger
-	CRITICAL *log.Logger
-)
+// 默认所有日志的写入文件。
+var discardLog = log.New(ioutil.Discard, "", log.LstdFlags)
 
-// 保存INFO,WARN等6个预定义log.Logger实例的io.Writer接口实例，
+// 保存INFO,WARN等6个预定义log.Logger的io.Writer接口实例，
 // 方便在关闭日志时，输出其中缓存的内容。
 var conts = writer.NewContainer()
+
+// 预定义的6个log.Logger实例。
+var (
+	INFO     = discardLog
+	WARN     = discardLog
+	ERROR    = discardLog
+	DEBUG    = discardLog
+	TRACE    = discardLog
+	CRITICAL = discardLog
+)
 
 // 从一个xml文件中初始化日志系统。
 func InitFromXmlFile(path string) error {
@@ -45,18 +47,7 @@ func InitFromXmlFile(path string) error {
 
 // 从一个xml字符串初始化日志系统。
 func InitFromXml(xml string) error {
-	return Init(bytes.NewBufferString(xml))
-}
-
-func init() {
-	// 默认初始化为所有的日志实例。
-	discardLog := log.New(ioutil.Discard, "", log.LstdFlags)
-	INFO = discardLog
-	WARN = discardLog
-	DEBUG = discardLog
-	ERROR = discardLog
-	TRACE = discardLog
-	CRITICAL = discardLog
+	return Init(strings.NewReader(xml))
 }
 
 // 从一个io.Reader初始化日志系统。
@@ -75,7 +66,15 @@ func Init(r io.Reader) error {
 		return fmt.Errorf("logs元素不存在任何属性")
 	}
 
+	if len(cfg.items) == 0 {
+		return errors.New("空的logs元素")
+	}
+
 	for name, c := range cfg.items {
+		if len(c.items) == 0 {
+			return fmt.Errorf("[%v]并未指定writer", name)
+		}
+
 		writer, err := c.toWriter()
 		if err != nil {
 			return err

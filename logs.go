@@ -84,7 +84,7 @@ func Init(r io.Reader) error {
 		if !ok {
 			return errors.New("二级元素必须为logWriter类型")
 		}
-		switch strings.ToLower(name) {
+		switch name {
 		case "info":
 			INFO = w.toLogger()
 		case "warn":

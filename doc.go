@@ -7,7 +7,7 @@
 // 向指定级别的日志输出特定内容，也可以通过xml文件定义每个级别的日志行为。
 //
 // 默认情况下，所有日志都输出到ioutil.Discard。
-// 用户仅需要显示地调用相应的初始化函数对日志进行初始化。
+// 用户需要显示地调用相应的初始化函数对日志进行初始化。
 //
 // 以下是一个简短的xml配置文件范本，具体的可参考目录下的config.xml。
 //  xml:
@@ -75,7 +75,7 @@
 //
 // 4. console:
 // 向控制台输出内容。可定义的属性为：foreground，background和output，
-// 其中output只能为"stderr", "stdout"三个值，表示输出的具体方向，
+// 其中output只能为"stderr", "stdout"两个值，表示输出的具体方向，
 // 默认值为"stderr"；而foreground和background表示输出时的前景和背景色，
 // 其值在github.com/issue9/term/colors中定义。
 //
@@ -91,4 +91,4 @@
 // 具体可参考WriterInitializer。
 package logs
 
-const Version = "0.1.5.141227"
+const Version = "0.1.5.141228"

@@ -13,11 +13,8 @@ import (
 
 // 这是对log.New()参数的一个包装。
 //
-// log.Logger并未提供更换output的功能，
-// 为了达到writer.FlushAdder.Add()函数的功能，
-// 只能将所有的log.New()函数参数缓存起来，
-// 直到调用toLogger()时才正直初始化成log.Logger()实例。
-// 但是之后就不能再调用Add()方法添加新的io.Writer实例了。
+// 封装log.New()的参数，使其在转换成log.Logger实例之前，
+// 类似于writer.Container，这样方便通过Register()注册。
 type logWriter struct {
 	prefix string
 	flag   int
@@ -32,13 +29,11 @@ func newLogWriter(prefix string, flag int) *logWriter {
 	}
 }
 
-// io.Writer.Write()
 func (l *logWriter) Write(bs []byte) (int, error) {
 	panic("该函数并未真正实现，仅为支持接口而设")
 	return 0, nil
 }
 
-// writer.FlushAdder.Add()
 func (l *logWriter) Add(w io.Writer) error {
 	return l.c.Add(w)
 }

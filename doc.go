@@ -54,8 +54,8 @@
 // 分别对应INFO,DEBUG,TRACE,WARN,ERROR,CRITICAL等日志实例。
 // 可以带上prefix和flag属性，分别对应log.New()中的相应参数。
 //
-// - 三级元素可以自己根据需求组合，logs自带以下writer，用户
-// 也可以自己向logs注册自己的实现。
+// - 三级元素可以自己根据需求组合，logs自带以下writer，
+// 用户也可以自己向logs注册自己的实现。
 //
 // 1. buffer:
 // 缓存工具，比如上面的示例中，所有向debug输出的内容，都会被buffer缓存，
@@ -91,4 +91,4 @@
 // 具体可参考WriterInitializer。
 package logs
 
-const Version = "0.1.5.141228"
+const Version = "0.1.5.141230"

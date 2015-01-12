@@ -12,6 +12,22 @@ import (
 	"github.com/issue9/logs/writer"
 )
 
+func TestToByte(t *testing.T) {
+	a := assert.New(t)
+
+	eq := func(str string, val int64) {
+		size, err := toByte(str)
+		a.NotError(err).Equal(size, val)
+	}
+
+	eq("", 0)
+	eq("M", 0)
+	eq("1M", 1024*1024)
+	eq("100G", 100*1024*1024*1024)
+	eq("10.2K", 10*1024)
+	eq("10.9K", 10*1024)
+}
+
 func TestRotateInitializer(t *testing.T) {
 	a := assert.New(t)
 	args := map[string]string{}

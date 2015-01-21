@@ -5,63 +5,13 @@
 package logs
 
 import (
-	"bytes"
 	"io"
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writer"
 )
-
-func TestConfig_LoadFromXml(t *testing.T) {
-	var xmlCfg = `
-<?xml version="1.0" encoding="utf-8" ?>
-<logs>
-    <!-- comment -->
-    <info>
-        <buffer size="5">
-            <file dir="/var/logs/info" />
-        </buffer>
-        <console color="\033[12m" />
-    </info>
-
-    <!-- 中文注释 -->
-    <debug>
-        <file dir="/var/logs/debug" />
-        <console color="\033[12" />
-    </debug>
-</logs>
-`
-	a := assert.New(t)
-	r := bytes.NewReader([]byte(xmlCfg))
-	a.NotNil(r)
-
-	cfg, err := loadFromXml(r)
-	a.NotError(err).NotNil(cfg)
-	a.Equal(2, len(cfg.items)) // info debug
-
-	info, found := cfg.items["info"]
-	a.True(found).NotNil(info).Equal(info.name, "info")
-	a.Equal(2, len(info.items)) // buffer,console
-
-	buf, found := info.items["buffer"]
-	a.True(found).NotNil(buf)
-	a.Equal(buf.attrs["size"], "5")
-
-	// 测试错误的xml配置文件
-	xmlCfg = `
-<?xml version="1.0" encoding="utf-8" ?>
-<logs>
-    <info></info>
-    <info></info>
-</logs>
-`
-	r = bytes.NewReader([]byte(xmlCfg))
-	a.NotNil(r)
-
-	cfg, err = loadFromXml(r)
-	a.Error(err).Nil(cfg)
-}
 
 // test config.toWriter
 
@@ -90,7 +40,7 @@ var xmlCfg = `
 </logs>
 `
 
-func TestConfig_ToWriter(t *testing.T) {
+func TestToWriter(t *testing.T) {
 	a := assert.New(t)
 	clearInitializer()
 
@@ -104,15 +54,11 @@ func TestConfig_ToWriter(t *testing.T) {
 	}
 	a.True(Register("debug", debug))
 
-	// 加载xml
-	r := bytes.NewReader([]byte(xmlCfg))
-	a.NotNil(r)
-
-	cfg, err := loadFromXml(r)
+	cfg, err := config.ParseXMLString(xmlCfg)
 	a.NotError(err).NotNil(cfg)
 
 	// 转换成writer
-	w, err := cfg.toWriter()
+	w, err := toWriter(cfg)
 	a.NotError(err).NotNil(w)
 
 	// 转换成writer.Container

@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	err := logs.InitFromXmlFile("./config.xml")
+	err := logs.InitFromXMLFile("./config.xml")
 	if err != nil {
 		//panic(err)
 		os.Stderr.WriteString(err.Error())

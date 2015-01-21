@@ -7,12 +7,10 @@ package logs
 import (
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
-	"os"
-	"strings"
 
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writer"
 )
 
@@ -34,55 +32,54 @@ var (
 )
 
 // 从一个xml文件中初始化日志系统。
-func InitFromXmlFile(path string) error {
-	f, err := os.Open(path)
+func InitFromXMLFile(path string) error {
+	cfg, err := config.ParseXMLFile(path)
 	if err != nil {
 		return err
 	}
-
-	defer f.Close()
-
-	return Init(f)
+	return initFromConfig(cfg)
 }
 
 // 从一个xml字符串初始化日志系统。
-func InitFromXml(xml string) error {
-	return Init(strings.NewReader(xml))
-}
-
-// 从一个io.Reader初始化日志系统。
-// r为一个有xml格式内容的io.Reader实例。
-func Init(r io.Reader) error {
-	cfg, err := loadFromXml(r)
+func InitFromXMLString(xml string) error {
+	cfg, err := config.ParseXMLString(xml)
 	if err != nil {
 		return err
 	}
+	return initFromConfig(cfg)
+}
 
-	if cfg.name != "logs" {
-		return fmt.Errorf("顶级元素必须为logs，当前名称为[%v]", cfg.name)
+// 从config.Config中初始化整个log系统
+func initFromConfig(cfg *config.Config) error {
+	if cfg.Name != "logs" {
+		return fmt.Errorf("initFromConfig:顶级元素必须为logs，当前名称为[%v]", cfg.Name)
 	}
 
-	if len(cfg.attrs) > 0 {
-		return fmt.Errorf("logs元素不存在任何属性")
+	if len(cfg.Attrs) > 0 {
+		return fmt.Errorf("initFromConfig:logs元素不存在任何属性")
 	}
 
-	if len(cfg.items) == 0 {
-		return errors.New("空的logs元素")
+	if len(cfg.Items) == 0 {
+		return errors.New("initFromConfig:空的logs元素")
 	}
 
-	for name, c := range cfg.items {
-		if len(c.items) == 0 {
-			return fmt.Errorf("[%v]并未指定writer", name)
+	if len(cfg.Items) > 6 {
+		return errors.New("initFromConfig:logs最多只有6个子元素")
+	}
+
+	for name, c := range cfg.Items {
+		if len(c.Items) == 0 {
+			return fmt.Errorf("initFromConfig:[%v]并未指定writer", name)
 		}
 
-		writer, err := c.toWriter()
+		writer, err := toWriter(c)
 		if err != nil {
 			return err
 		}
 
 		w, ok := writer.(*logWriter)
 		if !ok {
-			return errors.New("二级元素必须为logWriter类型")
+			return errors.New("initFromConfig:二级元素必须为logWriter类型")
 		}
 		switch name {
 		case "info":
@@ -98,7 +95,7 @@ func Init(r io.Reader) error {
 		case "critical":
 			CRITICAL = w.toLogger()
 		default:
-			return fmt.Errorf("未知的二级元素:[%v]", name)
+			return fmt.Errorf("initFromConfig:未知的二级元素:[%v]", name)
 		}
 		conts.Add(w.c)
 	}

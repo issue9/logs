@@ -10,14 +10,7 @@ import (
 	"github.com/issue9/assert"
 )
 
-func TestInitFromXmlFile(t *testing.T) {
-	a := assert.New(t)
-
-	a.Error(InitFromXmlFile("./config1.db"))
-	a.NotError(InitFromXmlFile("./config.xml"))
-}
-
-func TestInitFromXml(t *testing.T) {
+func TestInitFromConfig(t *testing.T) {
 	a := assert.New(t)
 
 	// 错误的xml内容
@@ -26,7 +19,7 @@ func TestInitFromXml(t *testing.T) {
 <logs>
 </logs>
 `
-	a.Error(InitFromXml(xml))
+	a.Error(InitFromXMLString(xml))
 
 	// 错误的xml内容,顶级只能为logs
 	xml = `
@@ -35,7 +28,7 @@ func TestInitFromXml(t *testing.T) {
 	<debug></debug>
 </log>
 `
-	a.Error(InitFromXml(xml))
+	a.Error(InitFromXMLString(xml))
 
 	// 错误的xml内容,未知的debug1元素
 	xml = `
@@ -44,7 +37,7 @@ func TestInitFromXml(t *testing.T) {
 	<debug1></debug1>
 </logs>
 `
-	a.Error(InitFromXml(xml))
+	a.Error(InitFromXMLString(xml))
 
 	// 错误的xml内容,debug必须要有子元素。
 	xml = `
@@ -54,7 +47,7 @@ func TestInitFromXml(t *testing.T) {
     </debug>
 </logs>
 `
-	a.Error(InitFromXml(xml))
+	a.Error(InitFromXMLString(xml))
 
 	// 正确内容
 	xml = `
@@ -65,5 +58,5 @@ func TestInitFromXml(t *testing.T) {
     </debug>
 </logs>
 `
-	a.NotError(InitFromXml(xml))
+	a.NotError(InitFromXMLString(xml))
 }

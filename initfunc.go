@@ -5,6 +5,7 @@
 package logs
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -34,7 +35,7 @@ const (
 // 后缀单位只支持k,g,m，不区分大小写。
 func toByte(str string) (int64, error) {
 	if len(str) == 0 {
-		return 0, nil
+		return -1, errors.New("不能传递空值")
 	}
 
 	str = strings.ToLower(str)
@@ -61,12 +62,16 @@ func toByte(str string) (int64, error) {
 	}
 
 	if len(str) == 0 {
-		return 0, nil
+		return -1, errors.New("传递了一个空值")
 	}
 
 	size, err := strconv.ParseFloat(str, 32)
 	if err != nil {
 		return -1, err
+	}
+
+	if size <= 0 {
+		return -1, fmt.Errorf("大小不能小于0，当前值为:[%v]", size)
 	}
 
 	return int64(size) * scale, nil

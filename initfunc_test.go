@@ -20,12 +20,22 @@ func TestToByte(t *testing.T) {
 		a.NotError(err).Equal(size, val)
 	}
 
-	eq("", 0)
-	eq("M", 0)
-	eq("1M", 1024*1024)
+	e := func(str string) {
+		size, err := toByte(str)
+		a.Error(err).Equal(size, -1)
+	}
+
+	eq("1m", 1024*1024)
 	eq("100G", 100*1024*1024*1024)
-	eq("10.2K", 10*1024)
+	eq("10.2k", 10*1024)
 	eq("10.9K", 10*1024)
+
+	e("")
+	e("M")
+	e("-1M")
+	e("-1.0G")
+	e("1P")
+	e("10MB")
 }
 
 func TestRotateInitializer(t *testing.T) {
@@ -35,8 +45,18 @@ func TestRotateInitializer(t *testing.T) {
 	w, err := rotateInitializer(args)
 	a.Error(err).Nil(w)
 
-	args["size"] = "12"
+	// 缺少size
 	args["dir"] = "c:/"
+	w, err = rotateInitializer(args)
+	a.Error(err).Nil(w)
+
+	// 错误的size参数
+	args["size"] = "12P"
+	w, err = rotateInitializer(args)
+	a.Error(err).Nil(w)
+
+	// 正常
+	args["size"] = "12"
 	w, err = rotateInitializer(args)
 	a.NotError(err).NotNil(w)
 
@@ -71,7 +91,18 @@ func TestConsoleInitializer(t *testing.T) {
 	w, err := consoleInitializer(args)
 	a.NotError(err).NotNil(w)
 
+	// 无效的output
 	args["output"] = "stdin"
+	w, err = consoleInitializer(args)
+	a.Error(err).Nil(w)
+
+	// 无效的foreground
+	args["foreground"] = "red1"
+	w, err = consoleInitializer(args)
+	a.Error(err).Nil(w)
+
+	// 无效的background
+	args["foreground"] = "red1"
 	w, err = consoleInitializer(args)
 	a.Error(err).Nil(w)
 

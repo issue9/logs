@@ -83,6 +83,11 @@ func argNotFoundErr(wname, argName string) error {
 
 // writer.Rotate的初始化函数。
 func rotateInitializer(args map[string]string) (io.Writer, error) {
+	prefix, found := args["prefix"]
+	if !found {
+		prefix = ""
+	}
+
 	dir, found := args["dir"]
 	if !found {
 		return nil, argNotFoundErr("rotate", "dir")
@@ -98,7 +103,7 @@ func rotateInitializer(args map[string]string) (io.Writer, error) {
 		return nil, err
 	}
 
-	return writer.NewRotate(dir, int(size))
+	return writer.NewRotate(prefix, dir, int(size))
 }
 
 // writer.Buffer的初始化函数

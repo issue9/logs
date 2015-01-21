@@ -3,7 +3,7 @@
     <!-- info内容，先缓存到一定10条，再一次性输出 -->
     <info prefix="INFO" flag="">
         <buffer size="100">
-            <rotate dir="./testdata/info/" size="5M" />
+            <rotate prefix="info-" dir="./testdata/" size="5M" />
         </buffer>
     </info>
 

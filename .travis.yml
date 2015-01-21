@@ -6,5 +6,6 @@ go:
 
 install:
     - mkdir ./writer/testdata/
+    - mkdir ./testdata/
     - go get github.com/issue9/assert
     - go get github.com/issue9/term/colors

@@ -90,4 +90,4 @@
 // 具体可参考WriterInitializer。
 package logs
 
-const Version = "0.1.6.140112"
+const Version = "0.2.7.150121"

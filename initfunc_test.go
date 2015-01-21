@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/logs/writer"
+	"github.com/issue9/logs/writers"
 )
 
 func TestToByte(t *testing.T) {
@@ -60,7 +60,7 @@ func TestRotateInitializer(t *testing.T) {
 	w, err = rotateInitializer(args)
 	a.NotError(err).NotNil(w)
 
-	_, ok := w.(*writer.Rotate)
+	_, ok := w.(*writers.Rotate)
 	a.True(ok)
 }
 
@@ -74,7 +74,7 @@ func TestBufferInitializer(t *testing.T) {
 	args["size"] = "5"
 	w, err = bufferInitializer(args)
 	a.NotError(err).NotNil(w)
-	_, ok := w.(*writer.Buffer)
+	_, ok := w.(*writers.Buffer)
 	a.True(ok)
 
 	// 无法解析的size参数
@@ -112,7 +112,7 @@ func TestConsoleInitializer(t *testing.T) {
 	w, err = consoleInitializer(args)
 	a.NotError(err).NotNil(w)
 
-	_, ok := w.(*writer.Console)
+	_, ok := w.(*writers.Console)
 	a.True(ok)
 }
 
@@ -130,7 +130,7 @@ func TestStmpInitializer(t *testing.T) {
 	w, err = stmpInitializer(args)
 	a.NotError(err).NotNil(w)
 
-	_, ok := w.(*writer.Smtp)
+	_, ok := w.(*writers.Smtp)
 	a.True(ok)
 }
 

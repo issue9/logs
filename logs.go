@@ -10,7 +10,7 @@ import (
 	"log"
 
 	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/writer"
+	"github.com/issue9/logs/writers"
 )
 
 // 默认所有日志的写入文件。
@@ -18,7 +18,7 @@ var discardLog = log.New(ioutil.Discard, "", log.LstdFlags)
 
 // 保存INFO,WARN等6个预定义log.Logger的io.Writer接口实例，
 // 方便在关闭日志时，输出其中缓存的内容。
-var conts = writer.NewContainer()
+var conts = writers.NewContainer()
 
 // 预定义的6个log.Logger实例。
 var (

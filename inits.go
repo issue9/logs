@@ -10,7 +10,7 @@ import (
 	"sync"
 
 	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/writer"
+	"github.com/issue9/logs/writers"
 )
 
 // 将当前的config.Config转换成io.Writer
@@ -29,9 +29,9 @@ func toWriter(c *config.Config) (io.Writer, error) {
 		return w, err
 	}
 
-	cont, ok := w.(writer.Adder)
+	cont, ok := w.(writers.Adder)
 	if !ok {
-		return nil, fmt.Errorf("toWriter:[%v]并未实现writer.Adder接口", c.Name)
+		return nil, fmt.Errorf("toWriter:[%v]并未实现writers.Adder接口", c.Name)
 	}
 
 	for _, cfg := range c.Items {

@@ -9,10 +9,10 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/logs/writer"
+	"github.com/issue9/logs/writers"
 )
 
-var _ writer.WriteAdder = &logWriter{}
+var _ writers.WriteAdder = &logWriter{}
 
 // logWriterTestWriter1的输出内容保存在这里
 var logWriterTestWriter1Content []byte
@@ -41,6 +41,7 @@ func TestLogWriter(t *testing.T) {
 
 	lw := newLogWriter("", log.LstdFlags)
 	a.NotNil(lw)
+	a.Panic(func() { lw.Write([]byte{'1'}) })
 
 	err := lw.Add(&logWriterTestWriter1{})
 	a.NotError(err)

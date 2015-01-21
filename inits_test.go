@@ -10,7 +10,7 @@ import (
 
 	"github.com/issue9/assert"
 	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/writer"
+	"github.com/issue9/logs/writers"
 )
 
 // test config.toWriter
@@ -29,7 +29,7 @@ func (t *configTestWriter) Write(bs []byte) (int, error) {
 
 // 容器类初始化函数
 func logsInit(args map[string]string) (io.Writer, error) {
-	return writer.NewContainer(), nil
+	return writers.NewContainer(), nil
 }
 
 func debugInit(args map[string]string) (io.Writer, error) {
@@ -61,8 +61,8 @@ func TestToWriter(t *testing.T) {
 	w, err := toWriter(cfg)
 	a.NotError(err).NotNil(w)
 
-	// 转换成writer.Container
-	c, ok := w.(*writer.Container)
+	// 转换成writers.Container
+	c, ok := w.(*writers.Container)
 	a.True(ok).NotNil(c)
 
 	// 写入c，应该有内容输出到configTestWriterContent
@@ -71,6 +71,11 @@ func TestToWriter(t *testing.T) {
 
 	c.Write([]byte(" world"))
 	a.Equal(configTestWriterContent, []byte("hello world"))
+
+	// 未注册的初始化函数
+	cfg.Name = "unregister"
+	w, err = toWriter(cfg)
+	a.Error(err).Nil(w)
 }
 
 func TestInits(t *testing.T) {

@@ -8,24 +8,24 @@ import (
 	"io"
 	"log"
 
-	"github.com/issue9/logs/writer"
+	"github.com/issue9/logs/writers"
 )
 
 // 这是对log.New()参数的一个包装。
 //
 // 封装log.New()的参数，使其在转换成log.Logger实例之前，
-// 类似于writer.Container，这样方便通过Register()注册。
+// 类似于writers.Container，这样方便通过Register()注册。
 type logWriter struct {
 	prefix string
 	flag   int
-	c      *writer.Container
+	c      *writers.Container
 }
 
 func newLogWriter(prefix string, flag int) *logWriter {
 	return &logWriter{
 		prefix: prefix,
 		flag:   flag,
-		c:      writer.NewContainer(),
+		c:      writers.NewContainer(),
 	}
 }
 

@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/issue9/logs/writer"
+	"github.com/issue9/logs/writers"
 	"github.com/issue9/term/colors"
 )
 
@@ -81,7 +81,7 @@ func argNotFoundErr(wname, argName string) error {
 	return fmt.Errorf("[%v]配置文件中未指定参数:[%v]", wname, argName)
 }
 
-// writer.Rotate的初始化函数。
+// writers.Rotate的初始化函数。
 func rotateInitializer(args map[string]string) (io.Writer, error) {
 	prefix, found := args["prefix"]
 	if !found {
@@ -103,10 +103,10 @@ func rotateInitializer(args map[string]string) (io.Writer, error) {
 		return nil, err
 	}
 
-	return writer.NewRotate(prefix, dir, int(size))
+	return writers.NewRotate(prefix, dir, int(size))
 }
 
-// writer.Buffer的初始化函数
+// writers.Buffer的初始化函数
 func bufferInitializer(args map[string]string) (io.Writer, error) {
 	size, found := args["size"]
 	if !found {
@@ -118,7 +118,7 @@ func bufferInitializer(args map[string]string) (io.Writer, error) {
 		return nil, err
 	}
 
-	return writer.NewBuffer(nil, num), nil
+	return writers.NewBuffer(nil, num), nil
 }
 
 var consoleOutputMap = map[string]int{
@@ -138,7 +138,7 @@ var consoleColorMap = map[string]colors.Color{
 	"white":   colors.White,
 }
 
-// writer.Console的初始化函数
+// writers.Console的初始化函数
 func consoleInitializer(args map[string]string) (io.Writer, error) {
 	outputIndex, found := args["output"]
 	if !found {
@@ -170,10 +170,10 @@ func consoleInitializer(args map[string]string) (io.Writer, error) {
 		return nil, fmt.Errorf("无效的背景色[%v]", bcIndex)
 	}
 
-	return writer.NewConsole(output, fc, bc), nil
+	return writers.NewConsole(output, fc, bc), nil
 }
 
-// writer.Stmp的初始化函数
+// writers.Stmp的初始化函数
 func stmpInitializer(args map[string]string) (io.Writer, error) {
 	username, found := args["username"]
 	if !found {
@@ -202,7 +202,7 @@ func stmpInitializer(args map[string]string) (io.Writer, error) {
 
 	sendTo := strings.Split(sendToStr, ";")
 
-	return writer.NewSmtp(username, password, subject, host, sendTo), nil
+	return writers.NewSmtp(username, password, subject, host, sendTo), nil
 }
 
 var flagMap = map[string]int{

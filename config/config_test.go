@@ -1,8 +1,8 @@
-// Copyright 2014 by caixw, All rights reserved.
+// Copyright 2015 by caixw, All rights reserved.
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package logs
+package config
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ import (
 	"github.com/issue9/assert"
 )
 
-func TestInitFromConfig(t *testing.T) {
+func TestCheck(t *testing.T) {
 	a := assert.New(t)
 
 	// 错误的xml内容
@@ -19,7 +19,8 @@ func TestInitFromConfig(t *testing.T) {
 <logs>
 </logs>
 `
-	a.Error(InitFromXMLString(xml))
+	cfg, err := ParseXMLString(xml)
+	a.Error(err).Nil(cfg)
 
 	// 错误的xml内容,顶级只能为logs
 	xml = `
@@ -28,7 +29,8 @@ func TestInitFromConfig(t *testing.T) {
 	<debug></debug>
 </log>
 `
-	a.Error(InitFromXMLString(xml))
+	cfg, err = ParseXMLString(xml)
+	a.Error(err).Nil(cfg)
 
 	// 错误的xml内容,未知的debug1元素
 	xml = `
@@ -37,7 +39,8 @@ func TestInitFromConfig(t *testing.T) {
 	<debug1></debug1>
 </logs>
 `
-	a.Error(InitFromXMLString(xml))
+	cfg, err = ParseXMLString(xml)
+	a.Error(err).Nil(cfg)
 
 	// 错误的xml内容,debug必须要有子元素。
 	xml = `
@@ -47,7 +50,8 @@ func TestInitFromConfig(t *testing.T) {
     </debug>
 </logs>
 `
-	a.Error(InitFromXMLString(xml))
+	cfg, err = ParseXMLString(xml)
+	a.Error(err).Nil(cfg)
 
 	// 正确内容
 	xml = `
@@ -58,5 +62,6 @@ func TestInitFromConfig(t *testing.T) {
     </debug>
 </logs>
 `
-	a.NotError(InitFromXMLString(xml))
+	cfg, err = ParseXMLString(xml)
+	a.NotError(err).NotNil(cfg)
 }

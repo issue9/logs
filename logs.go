@@ -6,7 +6,6 @@ package logs
 
 import (
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
 
@@ -51,27 +50,7 @@ func InitFromXMLString(xml string) error {
 
 // 从config.Config中初始化整个log系统
 func initFromConfig(cfg *config.Config) error {
-	if cfg.Name != "logs" {
-		return fmt.Errorf("initFromConfig:顶级元素必须为logs，当前名称为[%v]", cfg.Name)
-	}
-
-	if len(cfg.Attrs) > 0 {
-		return fmt.Errorf("initFromConfig:logs元素不存在任何属性")
-	}
-
-	if len(cfg.Items) == 0 {
-		return errors.New("initFromConfig:空的logs元素")
-	}
-
-	if len(cfg.Items) > 6 {
-		return errors.New("initFromConfig:logs最多只有6个子元素")
-	}
-
 	for name, c := range cfg.Items {
-		if len(c.Items) == 0 {
-			return fmt.Errorf("initFromConfig:[%v]并未指定writer", name)
-		}
-
 		writer, err := toWriter(c)
 		if err != nil {
 			return err
@@ -94,8 +73,6 @@ func initFromConfig(cfg *config.Config) error {
 			TRACE = w.toLogger()
 		case "critical":
 			CRITICAL = w.toLogger()
-		default:
-			return fmt.Errorf("initFromConfig:未知的二级元素:[%v]", name)
 		}
 		conts.Add(w.c)
 	}

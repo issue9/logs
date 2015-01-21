@@ -22,7 +22,9 @@ func TestParseXMLString(t *testing.T) {
 	xmlCfg := `
 <?xml version="1.0" encoding="utf-8" ?>
 <logs>
-    <info></info>
+    <info>
+		<console foreground="red" />
+	</info>
 </logs>
 `
 	cfg, err := ParseXMLString(xmlCfg)
@@ -38,13 +40,13 @@ func TestParseXML(t *testing.T) {
         <buffer size="5">
             <file dir="/var/logs/info" />
         </buffer>
-        <console color="\033[12m" />
+        <console foreground="red" />
     </info>
 
     <!-- 中文注释 -->
     <debug>
         <file dir="/var/logs/debug" />
-        <console color="\033[12" />
+        <console foreground="red" />
     </debug>
 </logs>
 `

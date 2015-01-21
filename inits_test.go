@@ -27,35 +27,35 @@ func (t *configTestWriter) Write(bs []byte) (int, error) {
 	return len(bs), nil
 }
 
-func (t *configTestWriter) AddWriter(w io.Writer) error {
-	t.ws = append(t.ws, w)
-	return nil
+// 容器类初始化函数
+func logsInit(args map[string]string) (io.Writer, error) {
+	return writer.NewContainer(), nil
 }
 
-var xmlCfg = `
-<?xml version="1.0" encoding="utf-8" ?>
-<logs>
-    <debug>
-    </debug>
-</logs>
-`
+func debugInit(args map[string]string) (io.Writer, error) {
+	return &configTestWriter{}, nil
+}
 
 func TestToWriter(t *testing.T) {
 	a := assert.New(t)
 	clearInitializer()
 
-	logs := func(args map[string]string) (io.Writer, error) {
-		return writer.NewContainer(), nil
-	}
-	a.True(Register("logs", logs))
+	a.True(Register("logs", logsInit))
+	a.True(Register("debug", debugInit))
 
-	debug := func(args map[string]string) (io.Writer, error) {
-		return &configTestWriter{}, nil
+	// 构造一个类似于以下结构的config.Config
+	// 不使用config.ParseXML，可以躲避错误检测
+	// <logs>
+	//     <debug></debug>
+	// </logs>
+	cfg := &config.Config{
+		Name: "logs",
+		Items: map[string]*config.Config{
+			"debug": &config.Config{
+				Name: "debug",
+			},
+		},
 	}
-	a.True(Register("debug", debug))
-
-	cfg, err := config.ParseXMLString(xmlCfg)
-	a.NotError(err).NotNil(cfg)
 
 	// 转换成writer
 	w, err := toWriter(cfg)
@@ -73,32 +73,25 @@ func TestToWriter(t *testing.T) {
 	a.Equal(configTestWriterContent, []byte("hello world"))
 }
 
-func init1(a1 map[string]string) (io.Writer, error) {
-	return nil, nil
-}
-
-func init2(a1 map[string]string) (io.Writer, error) {
-	return nil, nil
-}
-
-func TestInit(t *testing.T) {
+func TestInits(t *testing.T) {
 	a := assert.New(t)
 
 	// 清空，包的init函数有可能会初始化一些数据。
 	clearInitializer()
 
-	a.True(Register("init1", init1)).
+	a.True(Register("init1", logsInit)).
 		True(IsRegisted("init1")).
 		Equal(Registed(), []string{"init1"})
 
-	a.True(Register("init2", init2)).
+	a.True(Register("init2", debugInit)).
 		True(IsRegisted("init2")).
 		True(IsRegisted("init1")).
 		Equal(Registed(), []string{"init1", "init2"})
 
 	a.False(IsRegisted("init3"))
 
-	a.False(Register("init1", init2)) // 重复注册
+	// 重复注册
+	a.False(Register("init1", debugInit))
 	a.True(IsRegisted("init1"))
 
 	clearInitializer()

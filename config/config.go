@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 // logs包的配置文件处理。
-// 只对语法错误负责，不负责配置内容的对错。
 package config
 
 import (
@@ -19,6 +18,7 @@ type Config struct {
 	Items  map[string]*Config // 若是容器，则还有子项
 }
 
+// 检测语法错误及基本的内容错误。
 func check(cfg *Config) error {
 	if cfg.Name != "logs" {
 		return fmt.Errorf("check:顶级元素必须为logs，当前名称为[%v]", cfg.Name)
@@ -34,6 +34,23 @@ func check(cfg *Config) error {
 
 	if len(cfg.Items) > 6 {
 		return errors.New("check:logs最多只有6个子元素")
+	}
+
+	for name, item := range cfg.Items {
+		if len(item.Items) == 0 {
+			return fmt.Errorf("check:[%v]并未指定子元素", name)
+		}
+
+		switch name {
+		case "info":
+		case "warn":
+		case "debug":
+		case "error":
+		case "trace":
+		case "critical":
+		default:
+			return fmt.Errorf("check:未知道的二级元素名称:[%v]", name)
+		}
 	}
 
 	return nil

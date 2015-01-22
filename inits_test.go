@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/logs/config"
+	"github.com/issue9/logs/internal/config"
 	"github.com/issue9/logs/writers"
 )
 

@@ -9,7 +9,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/issue9/logs/config"
+	"github.com/issue9/logs/internal/config"
 	"github.com/issue9/logs/writers"
 )
 

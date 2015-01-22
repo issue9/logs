@@ -59,40 +59,43 @@
 // 1. buffer:
 //
 // 缓存工具，比如上面的示例中，所有向debug输出的内容，都会被buffer缓存，
-// 直到数量达到10条，buffer才会一起向rotate和stmp输出内容。
-// 只有一个size属性，用于指定缓存的数量。
+// 直到数量达到10条，才会一起向rotate和stmp输出内容。参数：
+//  size: 用于指定缓存的数量，必填参数。
 //
 // 2. rotate:
 //
 // 这是一个按文件大写自动分割日志的实例，以第一条记录的产生时间作为文件名，
-// 允许prefix，dir和size三个属性。其中prefix表示日志文件的前缀，留空表示没有前缀；
-// dir表示的是日志存放的目录；size表示的是每个日志的大概大小，
-// 可以是数值(单位为Byte)或是5M,5G等这类字符串(支持k,m,g三个后缀，不区分大小写)。
+// 允许prefix，dir和size三个属性。
+//  prefix：表示日志文件的前缀，留空表示没有前缀；
+//  dir：	表示的是日志存放的目录；
+//  size：	表示的是每个日志的大概大小，默认单位为byte，可以带字符单位，如5M,10G等(支持k,m,g三个后缀，不区分大小写)。
 //
 // 3. stmp:
 //
-// 发送邮件的实例，可定义的属性为：username 发送邮件的账号；
-// password账号对应的密码；host stmp的主机；subject 邮件的主题；sendTo，
-// 接收人地址，多个收件地址使用分号分隔。
+// 发送邮件，可定义的属性为：
+//  username: 发送邮件的账号；
+//  password: 账号对应的密码；
+//  host:	  stmp的主机；
+//  subject:  邮件的主题；
+//  sendTo:   接收人地址，多个收件地址使用分号分隔。
 //
 // 4. console:
 //
-// 向控制台输出内容。可定义的属性为：foreground，background和output，
-// 其中output只能为"stderr", "stdout"两个值，表示输出的具体方向，
-// 默认值为"stderr"；而foreground和background表示输出时的前景和背景色，
-// 其值在github.com/issue9/term/colors中定义。
+// 向控制台输出内容。可定义的属性为：
+//  output：    只能为"stderr", "stdout"两个值，表示输出的具体方向，默认值为"stderr"；
+//  foreground: 表示输出时的前景色，其值在github.com/issue9/term/colors中定义。
+//  background: 表示输出时的背景色，其值在github.com/issue9/term/colors中定义。
 //
 //
 // 自定义
 //
-// 除了以上定义的元素，用户也可以自定义一些新io.Writer以实现自定义的输出功能。
+// 除了以上定义的元素，用户也可以自定义一些io.Writer接口，以实现自定义的输出方向。
 // 要添加新的元素，只需要向Register()函数注册一个元素的初始化函数即可，
 // 其中注册的名称将作为配置节点的元素名称，需要唯一，不能与现有的名称相同；
 // 函数则作为节点转换成实例时的转换功能，需要负责解析节点传递过来的属性列表(args参数)，
 // 若是一个容器节点（如buffer，可以包含子节点）则返回的实例必须要实现WriteFlushAdder接口，
 // 该函数的原型为：
-//  func(args map[string]string) (io.Writer, error)
-// 具体可参考WriterInitializer。
+//  WriterInitializer
 package logs
 
 const Version = "0.3.8.150121"

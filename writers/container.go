@@ -49,3 +49,13 @@ func (c *Container) Flush() (size int, err error) {
 	}
 	return size, err
 }
+
+// 包含的元素
+func (c *Container) Len() int {
+	return len(c.ws)
+}
+
+// 清除所有的writer
+func (c *Container) Clear() {
+	c.ws = c.ws[:0]
+}

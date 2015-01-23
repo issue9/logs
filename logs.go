@@ -21,6 +21,7 @@ var discardLog = log.New(ioutil.Discard, "", log.LstdFlags)
 var conts = writers.NewContainer()
 
 // 预定义的6个log.Logger实例。
+// 不要给这些变量赋值新的值，也不要将这些值赋值给其它变量。
 var (
 	INFO     = discardLog
 	WARN     = discardLog
@@ -31,6 +32,7 @@ var (
 )
 
 // 从一个xml文件中初始化日志系统。
+// 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
 func InitFromXMLFile(path string) error {
 	cfg, err := config.ParseXMLFile(path)
 	if err != nil {
@@ -40,6 +42,7 @@ func InitFromXMLFile(path string) error {
 }
 
 // 从一个xml字符串初始化日志系统。
+// 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
 func InitFromXMLString(xml string) error {
 	cfg, err := config.ParseXMLString(xml)
 	if err != nil {
@@ -50,6 +53,18 @@ func InitFromXMLString(xml string) error {
 
 // 从config.Config中初始化整个log系统
 func initFromConfig(cfg *config.Config) error {
+	if conts.Len() > 0 { // 加载新配置文件。先输出旧的内容。
+		Flush()
+		conts.Clear()
+		// 重置为空值
+		INFO = discardLog
+		CRITICAL = discardLog
+		DEBUG = discardLog
+		TRACE = discardLog
+		WARN = discardLog
+		ERROR = discardLog
+	}
+
 	for name, c := range cfg.Items {
 		writer, err := toWriter(c)
 		if err != nil {

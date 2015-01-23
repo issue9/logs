@@ -22,7 +22,9 @@ func TestContainer(t *testing.T) {
 
 	c := NewContainer(b1)
 	size, err := c.Write([]byte("hello"))
-	a.NotError(err).True(size > 0)
+	a.NotError(err).
+		True(size > 0).
+		Equal(1, c.Len())
 
 	// 只向c添加了b1，此时b1有内容，b2没内容
 	a.Equal("hello", b1.String())
@@ -30,10 +32,25 @@ func TestContainer(t *testing.T) {
 
 	c.Add(b2)
 	size, err = c.Write([]byte(" world"))
-	a.NotError(err).True(size > 0)
+	a.NotError(err).
+		True(size > 0).
+		Equal(2, c.Len())
 
 	// b2后添加，此时b1有全部的内容，而b2只有后半部分。
 	a.Equal("hello world", b1.String())
 	a.Equal(" world", b2.String())
 
+	// 清除
+	c.Clear()
+	c.Write([]byte("hello world"))
+	a.Equal("hello world", b1.String())
+	a.Equal(" world", b2.String())
+	a.Equal(0, c.Len())
+
+	// 只添加b2，b1应该保持不变
+	c.Add(b2)
+	c.Write([]byte("hello"))
+	a.Equal("hello world", b1.String())
+	a.Equal(" worldhello", b2.String())
+	a.Equal(1, c.Len())
 }

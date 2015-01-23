@@ -46,7 +46,7 @@ func TestRotateInitializer(t *testing.T) {
 	a.Error(err).Nil(w)
 
 	// 缺少size
-	args["dir"] = "c:/"
+	args["dir"] = "./testdata"
 	w, err = rotateInitializer(args)
 	a.Error(err).Nil(w)
 
@@ -95,19 +95,19 @@ func TestConsoleInitializer(t *testing.T) {
 	args["output"] = "stdin"
 	w, err = consoleInitializer(args)
 	a.Error(err).Nil(w)
+	args["output"] = "stderr"
 
 	// 无效的foreground
 	args["foreground"] = "red1"
 	w, err = consoleInitializer(args)
 	a.Error(err).Nil(w)
+	args["foreground"] = "red"
 
 	// 无效的background
-	args["foreground"] = "red1"
+	args["background"] = "red1"
 	w, err = consoleInitializer(args)
 	a.Error(err).Nil(w)
 
-	args["output"] = "stderr"
-	args["foreground"] = "red"
 	args["background"] = "blue"
 	w, err = consoleInitializer(args)
 	a.NotError(err).NotNil(w)
@@ -139,10 +139,16 @@ func TestLogWriterInitializer(t *testing.T) {
 
 	args := map[string]string{
 		"prefix": "[INFO]",
-		"flag":   "log.lstdflags",
 		"misc":   "misc",
 	}
+	// 无效的flag参数
+	args["flag"] = "abc"
 	w, err := logWriterInitializer(args)
+	a.Error(err).Nil(w)
+	args["flag"] = ""
+
+	// 正确的
+	w, err = logWriterInitializer(args)
 	a.NotError(err).NotNil(w)
 
 	lw, ok := w.(*logWriter)

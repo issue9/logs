@@ -26,10 +26,10 @@
 // 然后就可以调用go代码输出日志内容:
 //  logs.Debug(...)
 //  logs.Debugf("format", v...)
-//  logs.DEBUG.Println(...)
+//  logs.DEBUG().Println(...)
 //
 //  // error并未在配置文件中出现，所有内容将输出到ioutil.Discard
-//  logs.ERROR.Print(...)
+//  logs.ERROR().Print(...)
 //
 //  // 向所有级别的日志输出内容。
 //  logs.All(...)
@@ -98,4 +98,4 @@
 //  WriterInitializer
 package logs
 
-const Version = "0.4.10.150123"
+const Version = "0.5.11.150123"

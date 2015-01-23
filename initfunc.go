@@ -118,7 +118,7 @@ func bufferInitializer(args map[string]string) (io.Writer, error) {
 		return nil, err
 	}
 
-	return writers.NewBuffer(nil, num), nil
+	return writers.NewBuffer(num), nil
 }
 
 var consoleOutputMap = map[string]int{

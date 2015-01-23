@@ -22,5 +22,5 @@ func main() {
 
 	logs.Info("INFO1")
 	logs.Debugf("DEBUG %v", 1)
-	logs.ERROR.Println("ERROR.Println")
+	logs.ERROR().Println("ERROR().Println")
 }

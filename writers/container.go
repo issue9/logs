@@ -19,6 +19,7 @@ func NewContainer(writers ...io.Writer) *Container {
 }
 
 // 当某一项出错时，将直接返回其信息，后续的都将中断。
+// 若容器为空时，则相当于不作任何动作。
 func (c *Container) Write(bs []byte) (size int, err error) {
 	for _, w := range c.ws {
 		if size, err = w.Write(bs); err != nil {

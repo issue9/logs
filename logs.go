@@ -22,12 +22,12 @@ var conts = writers.NewContainer()
 
 // 预定义的6个log.Logger实例。
 var (
-	info     = discardLog
-	warn     = discardLog
-	_error   = discardLog
-	debug    = discardLog
-	trace    = discardLog
-	critical = discardLog
+	INFO     = discardLog
+	WARN     = discardLog
+	ERROR    = discardLog
+	DEBUG    = discardLog
+	TRACE    = discardLog
+	CRITICAL = discardLog
 )
 
 // 从一个xml文件中初始化日志系统。
@@ -55,13 +55,14 @@ func initFromConfig(cfg *config.Config) error {
 	if conts.Len() > 0 { // 加载新配置文件。先输出旧的内容。
 		Flush()
 		conts.Clear()
+
 		// 重置为空值
-		info = discardLog
-		critical = discardLog
-		debug = discardLog
-		trace = discardLog
-		warn = discardLog
-		_error = discardLog
+		INFO = discardLog
+		CRITICAL = discardLog
+		DEBUG = discardLog
+		TRACE = discardLog
+		WARN = discardLog
+		ERROR = discardLog
 	}
 
 	for name, c := range cfg.Items {
@@ -76,17 +77,17 @@ func initFromConfig(cfg *config.Config) error {
 		}
 		switch name {
 		case "info":
-			info = w.toLogger()
+			INFO = w.toLogger()
 		case "warn":
-			warn = w.toLogger()
+			WARN = w.toLogger()
 		case "debug":
-			debug = w.toLogger()
+			DEBUG = w.toLogger()
 		case "error":
-			_error = w.toLogger()
+			ERROR = w.toLogger()
 		case "trace":
-			trace = w.toLogger()
+			TRACE = w.toLogger()
 		case "critical":
-			critical = w.toLogger()
+			CRITICAL = w.toLogger()
 		}
 		conts.Add(w.c)
 	}
@@ -99,94 +100,64 @@ func Flush() {
 	conts.Flush()
 }
 
-// 返回info日志实例。
-func INFO() *log.Logger {
-	return info
-}
-
-// Info相当于info.Println(v...)的简写方式
+// Info相当于INFO.Println(v...)的简写方式
 func Info(v ...interface{}) {
-	info.Println(v...)
+	INFO.Println(v...)
 }
 
-// Infof相当于info.Printf(format, v...)的简写方式
+// Infof相当于INFO.Printf(format, v...)的简写方式
 func Infof(format string, v ...interface{}) {
-	info.Printf(format, v...)
+	INFO.Printf(format, v...)
 }
 
-// 返回debug级别的日志。
-func DEBUG() *log.Logger {
-	return debug
-}
-
-// Debug相当于debug.Println(v...)的简写方式
+// Debug相当于DEBUG.Println(v...)的简写方式
 func Debug(v ...interface{}) {
-	debug.Println(v...)
+	DEBUG.Println(v...)
 }
 
-// Debugf相当于debug.Printf(format, v...)的简写方式
+// Debugf相当于DEBUG.Printf(format, v...)的简写方式
 func Debugf(format string, v ...interface{}) {
-	debug.Printf(format, v...)
+	DEBUG.Printf(format, v...)
 }
 
-// 返回trace级别的日志。
-func TRACE() *log.Logger {
-	return trace
-}
-
-// Trace相当于trace.Println(v...)的简写方式
+// Trace相当于TRACE.Println(v...)的简写方式
 func Trace(v ...interface{}) {
-	trace.Println(v...)
+	TRACE.Println(v...)
 }
 
-// Tracef相当于trace.Printf(format, v...)的简写方式
+// Tracef相当于TRACE.Printf(format, v...)的简写方式
 func Tracef(format string, v ...interface{}) {
-	trace.Printf(format, v...)
+	TRACE.Printf(format, v...)
 }
 
-// 返回warn级别的日志。
-func WARN() *log.Logger {
-	return warn
-}
-
-// Warn相当于warn.Println(v...)的简写方式
+// Warn相当于WARN.Println(v...)的简写方式
 func Warn(v ...interface{}) {
-	warn.Println(v...)
+	WARN.Println(v...)
 }
 
-// Warnf相当于warn.Printf(format, v...)的简写方式
+// Warnf相当于WARN.Printf(format, v...)的简写方式
 func Warnf(format string, v ...interface{}) {
-	warn.Printf(format, v...)
+	WARN.Printf(format, v...)
 }
 
-// 返回error级别的日志。
-func ERROR() *log.Logger {
-	return _error
-}
-
-// Error相当于_error.Println(v...)的简写方式
+// Error相当于ERROR.Println(v...)的简写方式
 func Error(v ...interface{}) {
-	_error.Println(v...)
+	ERROR.Println(v...)
 }
 
-// Errorf相当于_error.Printf(format, v...)的简写方式
+// Errorf相当于ERROR.Printf(format, v...)的简写方式
 func Errorf(format string, v ...interface{}) {
-	_error.Printf(format, v...)
+	ERROR.Printf(format, v...)
 }
 
-// 返回critical级别的日志。
-func CRITICAL() *log.Logger {
-	return critical
-}
-
-// Critical相当于critical.Println(v...)的简写方式
+// Critical相当于CRITICAL.Println(v...)的简写方式
 func Critical(v ...interface{}) {
-	critical.Println(v...)
+	CRITICAL.Println(v...)
 }
 
-// Criticalf相当于critical.Printf(format, v...)的简写方式
+// Criticalf相当于CRITICAL.Printf(format, v...)的简写方式
 func Criticalf(format string, v ...interface{}) {
-	critical.Printf(format, v...)
+	CRITICAL.Printf(format, v...)
 }
 
 // 向所有的日志输出内容。

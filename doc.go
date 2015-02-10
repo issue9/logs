@@ -5,10 +5,17 @@
 // 基于xml配置的日志系统。
 //
 // logs 定义了6个级别的日志：ERROR,INFO,TRACE,DEBUG,CRITICAL,WARN。
-// 用户可以根据自己的需求，通过xml配置文件自定义每个日志输出行为，
-// 默认情况下，所有日志都输出到ioutil.Discard，即不展现任何内容。
+// 用户可以根据自己的需求，自定义每个日志输出行为，默认情况下，
+// 所有日志都输出到ioutil.Discard，即不展现任何内容。
 //
-// 以下是一个简短的xml配置文件范本，具体的可参考目录下的config.xml。
+//  logs.DEBUG = log.New(writers.NewRotate(), "[DEBUG]", log.LstdFlags)
+//  logs.INFO  = log.New(writers.NewConsole(), "[INFO]", log.LstdFlags)
+//  logs.Debug("start debug") // 向debug输出内容
+//  logs.Info("start server") // 向info输出内容
+//  logs.Error("...")		  // 未指定ERROR，默认指向ioutil.Discard
+//
+// 或是通过一个xml配置文件指定输出，以下为一个简短的xml配置示例，
+// 具体的可参考目录下的config.xml。
 //  <?xml version="1.0" encoding="utf-8" ?>
 //  <logs>
 //      <debug>
@@ -26,10 +33,10 @@
 // 然后就可以调用go代码输出日志内容:
 //  logs.Debug(...)
 //  logs.Debugf("format", v...)
-//  logs.DEBUG().Println(...)
+//  logs.DEBUG.Println(...)
 //
 //  // error并未在配置文件中出现，所有内容将输出到ioutil.Discard
-//  logs.ERROR().Print(...)
+//  logs.ERROR.Print(...)
 //
 //  // 向所有级别的日志输出内容。
 //  logs.All(...)
@@ -68,7 +75,8 @@
 // 允许prefix，dir和size三个属性。
 //  prefix：表示日志文件的前缀，留空表示没有前缀；
 //  dir：	表示的是日志存放的目录；
-//  size：	表示的是每个日志的大概大小，默认单位为byte，可以带字符单位，如5M,10G等(支持k,m,g三个后缀，不区分大小写)。
+//  size：	表示的是每个日志的大概大小，默认单位为byte，可以带字符单位，
+//          如5M,10G等(支持k,m,g三个后缀，不区分大小写)。
 //
 // 3. stmp:
 //
@@ -98,4 +106,4 @@
 //  WriterInitializer
 package logs
 
-const Version = "0.5.11.150123"
+const Version = "0.6.12.150210"

@@ -16,7 +16,13 @@ var _ WriteFlushAdder = &Buffer{}
 
 func TestBuffer(t *testing.T) {
 	a := assert.New(t)
+
+	// 正确的NewBuffer()
 	buf := NewBuffer(0)
+	a.NotNil(buf)
+
+	// 不能添加空值
+	a.Error(buf.Add(nil))
 
 	// 不缓存，直接输出，但又没指定输出方向，相当于直接扔掉！
 	size, err := buf.Write([]byte("abc"))

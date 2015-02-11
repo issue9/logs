@@ -15,16 +15,19 @@ var _ WriteFlushAdder = &Container{}
 
 func TestContainer(t *testing.T) {
 	a := assert.New(t)
-
 	b1 := bytes.NewBufferString("")
 	b2 := bytes.NewBufferString("")
 	a.NotNil(b2).NotNil(b1)
 
-	c := NewContainer(b1)
+	c := NewContainer()
+	a.NotError(c.Add(b1))
 	size, err := c.Write([]byte("hello"))
 	a.NotError(err).
 		True(size > 0).
 		Equal(1, c.Len())
+
+	// 传递错误的nil值。
+	a.Error(c.Add(nil))
 
 	// 只向c添加了b1，此时b1有内容，b2没内容
 	a.Equal("hello", b1.String())

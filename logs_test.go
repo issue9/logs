@@ -94,7 +94,7 @@ func TestInitFormXMLString(t *testing.T) {
 </logs>
 `
 	debugW.Reset()
-	conts.Add(nil) // 触发initFromXmlString中的重置功能
+	conts.Add(infoW) // 触发initFromXmlString中的重置功能
 	a.True(conts.Len() == 1)
 	a.NotError(InitFromXMLString(xml))
 	a.True(CRITICAL == discardLog) // InitFromXMLString会重置所有的日志指向

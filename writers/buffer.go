@@ -5,6 +5,7 @@
 package writers
 
 import (
+	"errors"
 	"io"
 )
 
@@ -18,12 +19,19 @@ type Buffer struct {
 
 // 新建一个Buffer。
 // w最终输出的方向；当size<=1时，所有的内容都不会缓存，直接向w输出。
-func NewBuffer(size int, ws ...io.Writer) *Buffer {
-	return &Buffer{size: size, ws: ws, buffer: make([][]byte, 0, size)}
+func NewBuffer(size int) *Buffer {
+	return &Buffer{size: size,
+		ws:     make([]io.Writer, 0, 1),
+		buffer: make([][]byte, 0, size),
+	}
 }
 
 // Adder.Add()
 func (b *Buffer) Add(w io.Writer) error {
+	if w == nil {
+		return errors.New("参数w不能为一个空值")
+	}
+
 	b.ws = append(b.ws, w)
 	return nil
 }

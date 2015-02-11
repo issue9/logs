@@ -5,17 +5,18 @@
 package writers
 
 import (
+	"errors"
 	"io"
 )
 
-// 对WriterContainer的默认实现。
+// io.Writer的容器。
 type Container struct {
 	ws []io.Writer
 }
 
 // 构造Container实例
-func NewContainer(writers ...io.Writer) *Container {
-	return &Container{ws: writers}
+func NewContainer() *Container {
+	return &Container{ws: make([]io.Writer, 0, 1)}
 }
 
 // 当某一项出错时，将直接返回其信息，后续的都将中断。
@@ -32,6 +33,10 @@ func (c *Container) Write(bs []byte) (size int, err error) {
 
 // 添加一个io.Writer实例
 func (c *Container) Add(w io.Writer) error {
+	if w == nil {
+		return errors.New("参数w不能为一个空值")
+	}
+
 	c.ws = append(c.ws, w)
 	return nil
 }

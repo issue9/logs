@@ -5,11 +5,12 @@
 // 基于xml配置的日志系统。
 //
 // logs 定义了6个级别的日志：ERROR,INFO,TRACE,DEBUG,CRITICAL,WARN。
-// 用户可以根据自己的需求，自定义每个日志输出行为，默认情况下，
+// 用户可以根据自己的需求，自定义每个日志输出行为。默认情况下，
 // 所有日志都输出到ioutil.Discard，即不展现任何内容。
 //
 //  logs.DEBUG = log.New(writers.NewRotate(), "[DEBUG]", log.LstdFlags)
 //  logs.INFO  = log.New(writers.NewConsole(), "[INFO]", log.LstdFlags)
+//
 //  logs.Debug("start debug") // 向debug输出内容
 //  logs.Info("start server") // 向info输出内容
 //  logs.Error("...")		  // 未指定ERROR，默认指向ioutil.Discard
@@ -60,19 +61,21 @@
 // 分别对应INFO,DEBUG,TRACE,WARN,ERROR,CRITICAL等日志实例。
 // 可以带上prefix和flag属性，分别对应log.New()中的相应参数。
 //
-// - 三级元素可以自己根据需求组合，logs自带以下writer，
+// - 三级及以下元素可以自己根据需求组合，logs自带以下writer，
 // 用户也可以自己向logs注册自己的实现。
 //
 // 1. buffer:
 //
-// 缓存工具，比如上面的示例中，所有向debug输出的内容，都会被buffer缓存，
-// 直到数量达到10条，才会一起向rotate和stmp输出内容。参数：
+// 缓存工具，当数量达到指定值时，一起向所有的子元素输出。
+// 比如上面的示例中，所有向debug输出的内容，都会被buffer缓存，
+// 直到数量达到10条，才会一起向rotate和stmp输出内容。
+// 仅有size一个参数：
 //  size: 用于指定缓存的数量，必填参数。
 //
 // 2. rotate:
 //
-// 这是一个按文件大写自动分割日志的实例，以第一条记录的产生时间作为文件名，
-// 允许prefix，dir和size三个属性。
+// 这是一个按文件大写自动分割日志的实例，以第一条记录的产生时间作为文件名。
+// 拥有以下三个参数：
 //  prefix：表示日志文件的前缀，留空表示没有前缀；
 //  dir：	表示的是日志存放的目录；
 //  size：	表示的是每个日志的大概大小，默认单位为byte，可以带字符单位，
@@ -80,7 +83,7 @@
 //
 // 3. stmp:
 //
-// 发送邮件，可定义的属性为：
+// 将日志内容发送给指定邮件，可定义的属性为：
 //  username: 发送邮件的账号；
 //  password: 账号对应的密码；
 //  host:	  stmp的主机；
@@ -97,7 +100,7 @@
 //
 // 自定义
 //
-// 除了以上定义的元素，用户也可以自定义一些io.Writer接口，以实现自定义的输出方向。
+// 除了以上定义的元素，用户也可以自行实现io.Writer接口，以实现自定义的输出方向。
 // 要添加新的元素，只需要向Register()函数注册一个元素的初始化函数即可，
 // 其中注册的名称将作为配置节点的元素名称，需要唯一，不能与现有的名称相同；
 // 函数则作为节点转换成实例时的转换功能，需要负责解析节点传递过来的属性列表(args参数)，
@@ -106,4 +109,4 @@
 //  WriterInitializer
 package logs
 
-const Version = "0.6.12.150210"
+const Version = "0.6.12.150211"

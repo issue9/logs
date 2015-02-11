@@ -13,8 +13,6 @@ import (
 	"github.com/issue9/logs/writers"
 )
 
-// test config.toWriter
-
 // configTestWriter.Write的输入内容，写到此变量中
 var configTestWriterContent []byte
 

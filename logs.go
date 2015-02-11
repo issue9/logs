@@ -96,6 +96,7 @@ func initFromConfig(cfg *config.Config) error {
 }
 
 // 输出所有的缓存内容。
+// NOTE:若DEBUG等变量是通过直接赋值取得的，则Flush()函数不启作用。
 func Flush() {
 	conts.Flush()
 }

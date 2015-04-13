@@ -109,4 +109,4 @@
 //  WriterInitializer
 package logs
 
-const Version = "0.6.12.150211"
+const Version = "0.6.13.150413"

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"log"
-	"os"
 
 	"github.com/issue9/logs/internal/config"
 	"github.com/issue9/logs/writers"
@@ -182,22 +181,4 @@ func Allf(format string, v ...interface{}) {
 	Warnf(format, v...)
 	Errorf(format, v...)
 	Criticalf(format, v...)
-}
-
-// 输出所有的日志内容，然后退出程序。
-func Exit(code int) {
-	Flush()
-	os.Exit(code)
-}
-
-// 向ERROR输出日志，并退出。
-func Fatal(v ...interface{}) {
-	Error(v...)
-	Exit(2)
-}
-
-// 向ERROR输出日志，并退出。
-func Fatalf(format string, v ...interface{}) {
-	Errorf(format, v...)
-	Exit(2)
 }

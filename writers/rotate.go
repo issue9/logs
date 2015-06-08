@@ -59,7 +59,7 @@ func NewRotate(prefix, dir string, size int) (*Rotate, error) {
 		}
 	}
 
-	if !info.Mode().IsDir() {
+	if !info.IsDir() {
 		return nil, fmt.Errorf("[%v]不是一个目录", dir)
 	}
 

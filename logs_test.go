@@ -39,12 +39,12 @@ func resetLog(t *testing.T) {
 	a.True(warnW.Len() == 0)
 	a.True(criticalW.Len() == 0)
 
-	INFO = log.New(infoW, "[INFO]", log.LstdFlags)
-	DEBUG = log.New(debugW, "[DEBUG]", log.LstdFlags)
-	ERROR = log.New(errorW, "[ERROR]", log.LstdFlags)
-	TRACE = log.New(traceW, "[TRACE]", log.LstdFlags)
-	WARN = log.New(warnW, "[WARN]", log.LstdFlags)
-	CRITICAL = log.New(criticalW, "[CRITICAL]", log.LstdFlags)
+	info = log.New(infoW, "[INFO]", log.LstdFlags)
+	debug = log.New(debugW, "[DEBUG]", log.LstdFlags)
+	_error = log.New(errorW, "[ERROR]", log.LstdFlags)
+	trace = log.New(traceW, "[TRACE]", log.LstdFlags)
+	warn = log.New(warnW, "[WARN]", log.LstdFlags)
+	critical = log.New(criticalW, "[CRITICAL]", log.LstdFlags)
 }
 
 func checkLog(t *testing.T) {
@@ -97,7 +97,8 @@ func TestInitFormXMLString(t *testing.T) {
 	conts.Add(infoW) // 触发initFromXmlString中的重置功能
 	a.True(conts.Len() == 1)
 	a.NotError(InitFromXMLString(xml))
-	a.True(CRITICAL == discardLog) // InitFromXMLString会重置所有的日志指向
+	a.True(critical == nil)   // InitFromXMLString会重置所有的日志指向
+	a.True(CRITICAL() == nil) // InitFromXMLString会重置所有的日志指向
 
 	Debug("abc")
 	a.True(debugW.Len() == 0) // 缓存未达10，依然为空

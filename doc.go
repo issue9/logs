@@ -5,18 +5,8 @@
 // 基于xml配置的日志系统。
 //
 // logs 定义了6个级别的日志：ERROR,INFO,TRACE,DEBUG,CRITICAL,WARN。
-// 用户可以根据自己的需求，自定义每个日志输出行为。默认情况下，
-// 所有日志都输出到ioutil.Discard，即不展现任何内容。
-//
-//  logs.DEBUG = log.New(writers.NewRotate(), "[DEBUG]", log.LstdFlags)
-//  logs.INFO  = log.New(writers.NewConsole(), "[INFO]", log.LstdFlags)
-//
-//  logs.Debug("start debug") // 向debug输出内容
-//  logs.Info("start server") // 向info输出内容
-//  logs.Error("...")		  // 未指定ERROR，默认指向ioutil.Discard
-//
-// 或是通过一个xml配置文件指定输出，以下为一个简短的xml配置示例，
-// 具体的可参考目录下的config.xml。
+// 用户可以根据自己的需求，通过xml配置文件自定义每个日志输出行为。
+// 以下为一个简短的xml配置示例，具体的可参考目录下的config.xml。
 //  <?xml version="1.0" encoding="utf-8" ?>
 //  <logs>
 //      <debug>
@@ -36,8 +26,8 @@
 //  logs.Debugf("format", v...)
 //  logs.DEBUG.Println(...)
 //
-//  // error并未在配置文件中出现，所有内容将输出到ioutil.Discard
-//  logs.ERROR.Print(...)
+//  // error并未在配置文件中出现，所有内容将不作实际输出()
+//  logs.ERROR().Print(...)
 //
 //  // 向所有级别的日志输出内容。
 //  logs.All(...)
@@ -109,4 +99,4 @@
 //  WriterInitializer
 package logs
 
-const Version = "0.7.14.150422"
+const Version = "0.8.15.150609"

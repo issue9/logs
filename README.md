@@ -22,13 +22,7 @@ logs [![Build Status](https://travis-ci.org/issue9/logs.svg?branch=master)](http
 logs.InitFromXMLFile("./config.xml")// 用xml初始化logs
 logs.Debug("debug start...")
 logs.Debugf("%v start...", "debug")
-logs.DEBUG.Println("debug start...")
-```
-
-当然也可以不使用xml，直接给变量赋值：
-```go
-logs.DEBUG = log.New(writers.NewRotate(), "[DEBUG]", log.LstdFlag)
-logs.Debug("...") // 向DEBUG输出内容。
+logs.DEBUG().Println("debug start...")
 ```
 
 ### 安装

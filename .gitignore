@@ -27,4 +27,7 @@ _testmain.go
 *.swp
 
 # 测试内容
-**/testdata/*
+testdata
+
+# osx
+.DS_Store

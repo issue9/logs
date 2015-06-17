@@ -6,7 +6,9 @@ package logs
 
 import (
 	"errors"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/issue9/logs/internal/config"
 	"github.com/issue9/logs/writers"
@@ -254,4 +256,33 @@ func Allf(format string, v ...interface{}) {
 	Warnf(format, v...)
 	Errorf(format, v...)
 	Criticalf(format, v...)
+}
+
+// 输出错误信息，然后退出程序。
+func Fatal(v ...interface{}) {
+	All(v...)
+	Flush()
+	os.Exit(2)
+}
+
+// 输出错误信息，然后退出程序。
+func Fatalf(format string, v ...interface{}) {
+	Allf(format, v...)
+	Flush()
+	os.Exit(2)
+}
+
+// 输出错误信息，然后触发panic。
+func Panic(v ...interface{}) {
+	s := fmt.Sprint(v...)
+	All(s)
+	Flush()
+	panic(s)
+}
+
+// 输出错误信息，然后触发panic。
+func Panicf(format string, v ...interface{}) {
+	Allf(format, v...)
+	Flush()
+	panic(fmt.Sprintf(format, v...))
 }

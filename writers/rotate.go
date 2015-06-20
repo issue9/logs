@@ -5,7 +5,7 @@
 package writers
 
 import (
-	"fmt"
+	//"fmt"
 	"io"
 	"os"
 	"time"
@@ -42,8 +42,9 @@ type Rotate struct {
 // size为每个文件的最大尺寸，单位为byte。size应该足够大，如果size
 // 的大小不足够支撑一秒钟产生的量，则会继续在原有文件之后追加内容。
 func NewRotate(prefix, dir string, size int) (*Rotate, error) {
-	info, err := os.Stat(dir)
-	if err != nil {
+	// 确保结目录分隔符结尾，如果是文件的话，加上目录分隔符，在os.Stat时会返回error。
+	dir = dir + string(os.PathSeparator)
+	if _, err := os.Stat(dir); err != nil && !os.IsExist(err) {
 		if !os.IsNotExist(err) {
 			return nil, err
 		}
@@ -54,16 +55,11 @@ func NewRotate(prefix, dir string, size int) (*Rotate, error) {
 		}
 
 		// 创建目录成功，重新获取状态
-		if info, err = os.Stat(dir); err != nil {
+		if _, err = os.Stat(dir); err != nil {
 			return nil, err
 		}
 	}
 
-	if !info.IsDir() {
-		return nil, fmt.Errorf("[%v]不是一个目录", dir)
-	}
-
-	dir = dir + string(os.PathSeparator)
 	return &Rotate{
 		dir:      dir,
 		basePath: dir + prefix,

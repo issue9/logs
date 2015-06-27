@@ -106,6 +106,8 @@ func INFO() *log.Logger {
 }
 
 // Info相当于INFO().Println(v...)的简写方式
+// Info函数默认是带换行符的，若需要不带换行符的，请使用DEBUG().Print()函数代替。
+// 其它相似函数也有类型功能。
 func Info(v ...interface{}) {
 	if info == nil {
 		return

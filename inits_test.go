@@ -20,6 +20,15 @@ type configTestWriter struct {
 	ws []io.Writer
 }
 
+// 清除已经注册的初始化函数。
+func clearInitializer() {
+	inits.Lock()
+	defer inits.Unlock()
+
+	inits.funs = make(map[string]WriterInitializer)
+	inits.names = inits.names[:0]
+}
+
 func (t *configTestWriter) Write(bs []byte) (int, error) {
 	configTestWriterContent = append(configTestWriterContent, bs...)
 	return len(bs), nil

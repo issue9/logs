@@ -60,15 +60,6 @@ var inits = &initMap{
 	names: []string{},
 }
 
-// 清除已经注册的初始化函数。
-func clearInitializer() {
-	inits.Lock()
-	defer inits.Unlock()
-
-	inits.funs = make(map[string]WriterInitializer)
-	inits.names = inits.names[:0]
-}
-
 // 注册一个writer初始化函数。
 // writer初始化函数原型可参考:WriterInitializer。
 // 返回值反映是否注册成功。若已经存在相同名称的，则返回false

@@ -98,5 +98,3 @@
 // 该函数的原型为：
 //  WriterInitializer
 package logs
-
-const Version = "0.8.17.150628"

@@ -5,10 +5,10 @@
 package logs
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/issue9/logs/internal/config"
 	"github.com/issue9/logs/writers"
@@ -20,12 +20,7 @@ var conts = writers.NewContainer()
 
 // 预定义的6个log.Logger实例。
 var (
-	info     *log.Logger = nil
-	warn     *log.Logger = nil
-	_error   *log.Logger = nil
-	debug    *log.Logger = nil
-	trace    *log.Logger = nil
-	critical *log.Logger = nil
+	info, warn, _error, debug, trace, critical *log.Logger
 )
 
 // 从一个xml文件中初始化日志系统。
@@ -64,30 +59,37 @@ func initFromConfig(cfg *config.Config) error {
 	}
 
 	for name, c := range cfg.Items {
-		writer, err := toWriter(c)
+		flagStr, found := c.Attrs["flag"]
+		if !found || (flagStr == "") {
+			flagStr = "log.lstdflags"
+		}
+
+		flag, found := flagMap[strings.ToLower(flagStr)]
+		if !found {
+			return fmt.Errorf("未知的Flag参数:[%v]", flagStr)
+		}
+
+		cont, err := toWriter(c)
 		if err != nil {
 			return err
 		}
+		l := log.New(cont, c.Attrs["prefix"], flag)
 
-		w, ok := writer.(*logWriter)
-		if !ok {
-			return errors.New("initFromConfig:二级元素必须为logWriter类型")
-		}
 		switch name {
 		case "info":
-			info = w.toLogger()
+			info = l
 		case "warn":
-			warn = w.toLogger()
+			warn = l
 		case "debug":
-			debug = w.toLogger()
+			debug = l
 		case "error":
-			_error = w.toLogger()
+			_error = l
 		case "trace":
-			trace = w.toLogger()
+			trace = l
 		case "critical":
-			critical = w.toLogger()
+			critical = l
 		}
-		conts.Add(w.c)
+		conts.Add(cont)
 	}
 
 	return nil

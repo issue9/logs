@@ -214,18 +214,8 @@ var flagMap = map[string]int{
 	"log.lstdflags":     log.LstdFlags,
 }
 
-func logWriterInitializer(args map[string]string) (io.Writer, error) {
-	flagStr, found := args["flag"]
-	if !found || (flagStr == "") {
-		flagStr = "log.lstdflags"
-	}
-
-	flag, found := flagMap[strings.ToLower(flagStr)]
-	if !found {
-		return nil, fmt.Errorf("未知的Flag参数:[%v]", flagStr)
-	}
-
-	return newLogWriter(args["prefix"], flag), nil
+func logContInitializer(args map[string]string) (io.Writer, error) {
+	return writers.NewContainer(), nil
 }
 
 func init() {
@@ -247,27 +237,27 @@ func init() {
 
 	// logWriter
 
-	if !Register("info", logWriterInitializer) {
+	if !Register("info", logContInitializer) {
 		panic("注册info时失败")
 	}
 
-	if !Register("debug", logWriterInitializer) {
+	if !Register("debug", logContInitializer) {
 		panic("注册debug时失败")
 	}
 
-	if !Register("trace", logWriterInitializer) {
+	if !Register("trace", logContInitializer) {
 		panic("注册trace时失败")
 	}
 
-	if !Register("warn", logWriterInitializer) {
+	if !Register("warn", logContInitializer) {
 		panic("注册warn时失败")
 	}
 
-	if !Register("error", logWriterInitializer) {
+	if !Register("error", logContInitializer) {
 		panic("注册error时失败")
 	}
 
-	if !Register("critical", logWriterInitializer) {
+	if !Register("critical", logContInitializer) {
 		panic("注册critical时失败")
 	}
 }

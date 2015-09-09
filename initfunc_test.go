@@ -5,7 +5,6 @@
 package logs
 
 import (
-	"log"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -132,28 +131,4 @@ func TestStmpInitializer(t *testing.T) {
 
 	_, ok := w.(*writers.Smtp)
 	a.True(ok)
-}
-
-func TestLogWriterInitializer(t *testing.T) {
-	a := assert.New(t)
-
-	args := map[string]string{
-		"prefix": "[INFO]",
-		"misc":   "misc",
-	}
-	// 无效的flag参数
-	args["flag"] = "abc"
-	w, err := logWriterInitializer(args)
-	a.Error(err).Nil(w)
-	args["flag"] = ""
-
-	// 正确的
-	w, err = logWriterInitializer(args)
-	a.NotError(err).NotNil(w)
-
-	lw, ok := w.(*logWriter)
-	a.True(ok).NotNil(lw)
-
-	a.Equal(lw.prefix, "[INFO]").
-		Equal(lw.flag, log.LstdFlags)
 }

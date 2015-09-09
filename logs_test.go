@@ -79,7 +79,7 @@ func TestInitFormXMLString(t *testing.T) {
 
 	// 重新注册以下用到的writer
 	clearInitializer()
-	a.True(Register("debug", logWriterInitializer), "注册debug时失败")
+	a.True(Register("debug", logContInitializer), "注册debug时失败")
 	a.True(Register("buffer", bufferInitializer), "注册buffer时失败")
 	a.True(Register("debugW", debugWInit), "注册debugW时失败")
 

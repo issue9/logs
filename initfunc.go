@@ -151,7 +151,7 @@ func consoleInitializer(args map[string]string) (io.Writer, error) {
 	}
 
 	fcIndex, found := args["foreground"]
-	if !found { // 默认用红包前景色
+	if !found { // 默认用红色前景色
 		fcIndex = "red"
 	}
 

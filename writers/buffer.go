@@ -43,7 +43,10 @@ func (b *Buffer) Write(bs []byte) (int, error) {
 		return b.write(bs)
 	}
 
-	b.buffer = append(b.buffer, bs)
+	// 参数bs来源于log.Logger.buf，该变量会被log.Logger不断
+	// 重复使用，所以此处应该复制一份bs的内容再保存。
+	cp := make([]byte, 0, len(bs))
+	b.buffer = append(b.buffer, append(cp, bs...))
 
 	if len(b.buffer) < b.size {
 		return len(bs), nil

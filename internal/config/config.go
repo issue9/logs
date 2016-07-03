@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// logs包的配置文件处理。
+// logs 包的配置文件处理。
 package config
 
 import (
@@ -10,10 +10,10 @@ import (
 	"fmt"
 )
 
-// 用于表示xml配置文件中的数据。
+// 用于表示 XML 配置文件中的数据。
 type Config struct {
 	Parent *Config
-	Name   string             // writer的名称，一般为节点名
+	Name   string             // writer 的名称，一般为节点名
 	Attrs  map[string]string  // 参数列表
 	Items  map[string]*Config // 若是容器，则还有子项
 }

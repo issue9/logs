@@ -81,7 +81,7 @@ func argNotFoundErr(wname, argName string) error {
 	return fmt.Errorf("[%v]配置文件中未指定参数:[%v]", wname, argName)
 }
 
-// writers.Rotate的初始化函数。
+// writers.Rotate 的初始化函数。
 func rotateInitializer(args map[string]string) (io.Writer, error) {
 	prefix, found := args["prefix"]
 	if !found {
@@ -106,7 +106,7 @@ func rotateInitializer(args map[string]string) (io.Writer, error) {
 	return writers.NewRotate(prefix, dir, int(size))
 }
 
-// writers.Buffer的初始化函数
+// writers.Buffer 的初始化函数
 func bufferInitializer(args map[string]string) (io.Writer, error) {
 	size, found := args["size"]
 	if !found {
@@ -138,7 +138,7 @@ var consoleColorMap = map[string]colors.Color{
 	"white":   colors.White,
 }
 
-// writers.Console的初始化函数
+// writers.Console 的初始化函数
 func consoleInitializer(args map[string]string) (io.Writer, error) {
 	outputIndex, found := args["output"]
 	if !found {
@@ -173,7 +173,7 @@ func consoleInitializer(args map[string]string) (io.Writer, error) {
 	return writers.NewConsole(output, fc, bc), nil
 }
 
-// writers.Stmp的初始化函数
+// writers.Stmp 的初始化函数
 func stmpInitializer(args map[string]string) (io.Writer, error) {
 	username, found := args["username"]
 	if !found {
@@ -206,6 +206,7 @@ func stmpInitializer(args map[string]string) (io.Writer, error) {
 }
 
 var flagMap = map[string]int{
+	"none":              0,
 	"log.ldate":         log.Ldate,
 	"log.ltime":         log.Ltime,
 	"log.lmicroseconds": log.Lmicroseconds,

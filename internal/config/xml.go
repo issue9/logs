@@ -23,12 +23,12 @@ func ParseXMLFile(path string) (*Config, error) {
 	return parseXML(f)
 }
 
-// 从一个xml字符串初始化日志系统。
+// 从一个 XML 字符串初始化日志系统。
 func ParseXMLString(xml string) (*Config, error) {
 	return parseXML(strings.NewReader(xml))
 }
 
-// 从一个xml格式的reader初始化Config
+// 从一个 XML 格式的 reader 初始化 Config
 func parseXML(r io.Reader) (*Config, error) {
 	var cfg *Config = nil
 	var t xml.Token
@@ -63,7 +63,7 @@ func parseXML(r io.Reader) (*Config, error) {
 			if cfg.Parent != nil {
 				cfg = cfg.Parent
 			}
-		default: // 可能还有ProcInst,CharData,Comment等用不到的标签
+		default: // 可能还有 ProcInst,CharData,Comment 等用不到的标签
 			continue
 		}
 	} // end for

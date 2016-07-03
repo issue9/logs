@@ -13,7 +13,7 @@ import (
 	"github.com/issue9/logs/writers"
 )
 
-// 将当前的config.Config转换成io.Writer
+// 将当前的 config.Config 转换成 io.Writer
 func toWriter(c *config.Config) (io.Writer, error) {
 	fun, found := inits.funs[c.Name]
 	if !found {
@@ -45,8 +45,8 @@ func toWriter(c *config.Config) (io.Writer, error) {
 	return w, nil
 }
 
-// writer的初始化函数。
-// args参数为对应的xml节点的属性列表。
+// writer 的初始化函数。
+// args 参数为对应的 XML 节点的属性列表。
 type WriterInitializer func(args map[string]string) (io.Writer, error)
 
 type initMap struct {
@@ -60,8 +60,8 @@ var inits = &initMap{
 	names: []string{},
 }
 
-// 注册一个writer初始化函数。
-// writer初始化函数原型可参考:WriterInitializer。
+// 注册一个 writer 初始化函数。
+// writer 初始化函数原型可参考: WriterInitializer。
 // 返回值反映是否注册成功。若已经存在相同名称的，则返回false
 func Register(name string, init WriterInitializer) bool {
 	inits.Lock()
@@ -76,7 +76,7 @@ func Register(name string, init WriterInitializer) bool {
 	return true
 }
 
-// 查询指定名称的Writer是否已经被注册
+// 查询指定名称的 Writer 是否已经被注册
 func IsRegisted(name string) bool {
 	inits.Lock()
 	defer inits.Unlock()
@@ -85,7 +85,7 @@ func IsRegisted(name string) bool {
 	return found
 }
 
-// 返回所有已注册的writer名称
+// 返回所有已注册的 writer 名称
 func Registed() []string {
 	return inits.names
 }

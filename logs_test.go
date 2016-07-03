@@ -14,12 +14,12 @@ import (
 )
 
 var (
-	debugW    = bytes.NewBufferString("")
-	infoW     = bytes.NewBufferString("")
-	errorW    = bytes.NewBufferString("")
-	traceW    = bytes.NewBufferString("")
-	warnW     = bytes.NewBufferString("")
-	criticalW = bytes.NewBufferString("")
+	debugW    = new(bytes.Buffer)
+	infoW     = new(bytes.Buffer)
+	errorW    = new(bytes.Buffer)
+	traceW    = new(bytes.Buffer)
+	warnW     = new(bytes.Buffer)
+	criticalW = new(bytes.Buffer)
 )
 
 func resetLog(t *testing.T) {
@@ -41,7 +41,7 @@ func resetLog(t *testing.T) {
 
 	info = log.New(infoW, "[INFO]", log.LstdFlags)
 	debug = log.New(debugW, "[DEBUG]", log.LstdFlags)
-	_error = log.New(errorW, "[ERROR]", log.LstdFlags)
+	erro = log.New(errorW, "[ERROR]", log.LstdFlags)
 	trace = log.New(traceW, "[TRACE]", log.LstdFlags)
 	warn = log.New(warnW, "[WARN]", log.LstdFlags)
 	critical = log.New(criticalW, "[CRITICAL]", log.LstdFlags)

@@ -20,7 +20,7 @@ var conts = writers.NewContainer()
 
 // 预定义的6个 log.Logger 实例。
 var (
-	info, warn, _error, debug, trace, critical *log.Logger
+	info, warn, erro, debug, trace, critical *log.Logger
 )
 
 // 从一个 XML 文件中初始化日志系统。
@@ -55,18 +55,17 @@ func initFromConfig(cfg *config.Config) error {
 		debug = nil
 		trace = nil
 		warn = nil
-		_error = nil
+		erro = nil
 	}
 
 	for name, c := range cfg.Items {
+		flag := 0
 		flagStr, found := c.Attrs["flag"]
-		if !found || (flagStr == "") {
-			flagStr = "log.lstdflags"
-		}
-
-		flag, found := flagMap[strings.ToLower(flagStr)]
-		if !found {
-			return fmt.Errorf("未知的Flag参数:[%v]", flagStr)
+		if found && (flagStr != "") {
+			flag, found = flagMap[strings.ToLower(flagStr)]
+			if !found {
+				return fmt.Errorf("未知的Flag参数:[%v]", flagStr)
+			}
 		}
 
 		cont, err := toWriter(c)
@@ -83,7 +82,7 @@ func initFromConfig(cfg *config.Config) error {
 		case "debug":
 			debug = l
 		case "error":
-			_error = l
+			erro = l
 		case "trace":
 			trace = l
 		case "critical":
@@ -198,25 +197,25 @@ func Warnf(format string, v ...interface{}) {
 
 // 获取 ERROR 级别的 log.Logger 实例，在未指定 error 级别的日志时，该实例返回一个 nil。
 func ERROR() *log.Logger {
-	return _error
+	return erro
 }
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
 func Error(v ...interface{}) {
-	if _error == nil {
+	if erro == nil {
 		return
 	}
 
-	_error.Println(v...)
+	erro.Println(v...)
 }
 
 // Errorf 相当于 ERROR().Printf(format, v...) 的简写方式
 func Errorf(format string, v ...interface{}) {
-	if _error == nil {
+	if erro == nil {
 		return
 	}
 
-	_error.Printf(format, v...)
+	erro.Printf(format, v...)
 }
 
 // 获取 CRITICAL 级别的 log.Logger 实例，在未指定 critical 级别的日志时，该实例返回一个 nil。

@@ -13,9 +13,14 @@ import (
 	"github.com/issue9/logs/writers"
 )
 
+var (
+	funs   = map[string]WriterInitializer{}
+	funsMu = &sync.Mutex{}
+)
+
 // 将当前的 config.Config 转换成 io.Writer
 func toWriter(c *config.Config) (io.Writer, error) {
-	fun, found := inits.funs[c.Name]
+	fun, found := funs[c.Name]
 	if !found {
 		return nil, fmt.Errorf("toWriter:未注册的初始化函数:[%v]", c.Name)
 	}
@@ -49,46 +54,37 @@ func toWriter(c *config.Config) (io.Writer, error) {
 // args 参数为对应的 XML 节点的属性列表。
 type WriterInitializer func(args map[string]string) (io.Writer, error)
 
-type initMap struct {
-	sync.Mutex
-	funs map[string]WriterInitializer
-}
-
-var inits = &initMap{
-	funs: map[string]WriterInitializer{},
-}
-
 // 注册一个 writer 初始化函数。
 // writer 初始化函数原型可参考: WriterInitializer。
-// 返回值反映是否注册成功。若已经存在相同名称的，则返回false
+// 返回值反映是否注册成功。若已经存在相同名称的，则返回 false
 func Register(name string, init WriterInitializer) bool {
-	inits.Lock()
-	defer inits.Unlock()
+	funsMu.Lock()
+	defer funsMu.Unlock()
 
-	if _, found := inits.funs[name]; found {
+	if _, found := funs[name]; found {
 		return false
 	}
 
-	inits.funs[name] = init
+	funs[name] = init
 	return true
 }
 
 // 查询指定名称的 Writer 是否已经被注册
 func IsRegisted(name string) bool {
-	inits.Lock()
-	defer inits.Unlock()
+	funsMu.Lock()
+	defer funsMu.Unlock()
 
-	_, found := inits.funs[name]
+	_, found := funs[name]
 	return found
 }
 
 // 返回所有已注册的 writer 名称
 func Registed() []string {
-	inits.Lock()
-	defer inits.Unlock()
+	funsMu.Lock()
+	defer funsMu.Unlock()
 
-	names := make([]string, 0, len(inits.funs))
-	for name := range inits.funs {
+	names := make([]string, 0, len(funs))
+	for name := range funs {
 		names = append(names, name)
 	}
 

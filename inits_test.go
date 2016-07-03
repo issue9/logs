@@ -22,10 +22,10 @@ type configTestWriter struct {
 
 // 清除已经注册的初始化函数。
 func clearInitializer() {
-	inits.Lock()
-	defer inits.Unlock()
+	funsMu.Lock()
+	defer funsMu.Unlock()
 
-	inits.funs = make(map[string]WriterInitializer)
+	funs = make(map[string]WriterInitializer)
 }
 
 func (t *configTestWriter) Write(bs []byte) (int, error) {
@@ -97,7 +97,7 @@ func TestInits(t *testing.T) {
 	a.True(Register("init2", debugInit)).
 		True(IsRegisted("init2")).
 		True(IsRegisted("init1")).
-		Contains(Registed(), []string{"init1", "init2"})
+		Contains([]string{"init1", "init2"}, Registed())
 
 	a.False(IsRegisted("init3"))
 
@@ -106,5 +106,5 @@ func TestInits(t *testing.T) {
 	a.True(IsRegisted("init1"))
 
 	clearInitializer()
-	a.Equal(0, len(inits.funs))
+	a.Equal(0, len(funs))
 }

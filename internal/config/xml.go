@@ -12,12 +12,12 @@ import (
 	"strings"
 )
 
+// 从一个 XML 文件初始化日志系统。
 func ParseXMLFile(path string) (*Config, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-
 	defer f.Close()
 
 	return parseXML(f)

@@ -26,7 +26,6 @@ func clearInitializer() {
 	defer inits.Unlock()
 
 	inits.funs = make(map[string]WriterInitializer)
-	inits.names = inits.names[:0]
 }
 
 func (t *configTestWriter) Write(bs []byte) (int, error) {
@@ -98,7 +97,7 @@ func TestInits(t *testing.T) {
 	a.True(Register("init2", debugInit)).
 		True(IsRegisted("init2")).
 		True(IsRegisted("init1")).
-		Equal(Registed(), []string{"init1", "init2"})
+		Contains(Registed(), []string{"init1", "init2"})
 
 	a.False(IsRegisted("init3"))
 
@@ -107,5 +106,5 @@ func TestInits(t *testing.T) {
 	a.True(IsRegisted("init1"))
 
 	clearInitializer()
-	a.Equal(0, len(inits.names)).Equal(0, len(inits.funs))
+	a.Equal(0, len(inits.funs))
 }

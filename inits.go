@@ -51,13 +51,11 @@ type WriterInitializer func(args map[string]string) (io.Writer, error)
 
 type initMap struct {
 	sync.Mutex
-	funs  map[string]WriterInitializer
-	names []string
+	funs map[string]WriterInitializer
 }
 
 var inits = &initMap{
-	funs:  map[string]WriterInitializer{},
-	names: []string{},
+	funs: map[string]WriterInitializer{},
 }
 
 // 注册一个 writer 初始化函数。
@@ -72,7 +70,6 @@ func Register(name string, init WriterInitializer) bool {
 	}
 
 	inits.funs[name] = init
-	inits.names = append(inits.names, name)
 	return true
 }
 
@@ -87,5 +84,13 @@ func IsRegisted(name string) bool {
 
 // 返回所有已注册的 writer 名称
 func Registed() []string {
-	return inits.names
+	inits.Lock()
+	defer inits.Unlock()
+
+	names := make([]string, 0, len(inits.funs))
+	for name := range inits.funs {
+		names = append(names, name)
+	}
+
+	return names
 }

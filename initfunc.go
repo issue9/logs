@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -121,9 +122,10 @@ func bufferInitializer(args map[string]string) (io.Writer, error) {
 	return writers.NewBuffer(num), nil
 }
 
-var consoleOutputMap = map[string]int{
-	"stderr": colors.Stderr,
-	"stdout": colors.Stdout,
+var consoleOutputMap = map[string]*os.File{
+	"stderr": os.Stderr,
+	"stdout": os.Stdout,
+	"stdin":  os.Stdin,
 }
 
 var consoleColorMap = map[string]colors.Color{

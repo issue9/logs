@@ -91,7 +91,7 @@ func TestConsoleInitializer(t *testing.T) {
 	a.NotError(err).NotNil(w)
 
 	// 无效的output
-	args["output"] = "stdin"
+	args["output"] = "file"
 	w, err = consoleInitializer(args)
 	a.Error(err).Nil(w)
 	args["output"] = "stderr"

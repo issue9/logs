@@ -15,7 +15,7 @@ import (
 var _ io.Writer = &Console{}
 
 func TestConsole(t *testing.T) {
-	c := NewConsole(colors.Stderr, colors.Cyan, colors.Default)
+	c := NewConsole(os.Stderr, colors.Cyan, colors.Default)
 	c.Write([]byte("is cyan\n"))
 
 	c.SetColor(colors.Blue, colors.Default)

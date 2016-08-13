@@ -114,7 +114,7 @@ func Info(v ...interface{}) {
 		return
 	}
 
-	info.Println(v...)
+	info.Output(2, fmt.Sprintln(v...))
 }
 
 // Infof 相当于 INFO().Printf(format, v...) 的简写方式
@@ -123,7 +123,7 @@ func Infof(format string, v ...interface{}) {
 		return
 	}
 
-	info.Printf(format, v...)
+	info.Output(2, fmt.Sprintf(format, v...))
 }
 
 // 获取 DEBUG 级别的 log.Logger 实例，在未指定 debug 级别的日志时，该实例返回一个 nil。
@@ -137,7 +137,7 @@ func Debug(v ...interface{}) {
 		return
 	}
 
-	debug.Println(v...)
+	debug.Output(2, fmt.Sprintln(v...))
 }
 
 // Debugf 相当于 DEBUG().Printf(format, v...) 的简写方式
@@ -146,7 +146,7 @@ func Debugf(format string, v ...interface{}) {
 		return
 	}
 
-	debug.Printf(format, v...)
+	debug.Output(2, fmt.Sprintf(format, v...))
 }
 
 // 获取 TRACE 级别的 log.Logger 实例，在未指定 trace 级别的日志时，该实例返回一个 nil。
@@ -160,7 +160,7 @@ func Trace(v ...interface{}) {
 		return
 	}
 
-	trace.Println(v...)
+	trace.Output(2, fmt.Sprintln(v...))
 }
 
 // Tracef 相当于 TRACE().Printf(format, v...) 的简写方式
@@ -169,7 +169,7 @@ func Tracef(format string, v ...interface{}) {
 		return
 	}
 
-	trace.Printf(format, v...)
+	trace.Output(2, fmt.Sprintf(format, v...))
 }
 
 // 获取 WARN 级别的 log.Logger 实例，在未指定 warn 级别的日志时，该实例返回一个 nil。
@@ -183,7 +183,7 @@ func Warn(v ...interface{}) {
 		return
 	}
 
-	warn.Println(v...)
+	warn.Output(2, fmt.Sprintln(v...))
 }
 
 // Warnf 相当于 WARN().Printf(format, v...) 的简写方式
@@ -192,7 +192,7 @@ func Warnf(format string, v ...interface{}) {
 		return
 	}
 
-	warn.Printf(format, v...)
+	warn.Output(2, fmt.Sprintf(format, v...))
 }
 
 // 获取 ERROR 级别的 log.Logger 实例，在未指定 error 级别的日志时，该实例返回一个 nil。
@@ -206,7 +206,7 @@ func Error(v ...interface{}) {
 		return
 	}
 
-	erro.Println(v...)
+	erro.Output(2, fmt.Sprintln(v...))
 }
 
 // Errorf 相当于 ERROR().Printf(format, v...) 的简写方式
@@ -215,7 +215,7 @@ func Errorf(format string, v ...interface{}) {
 		return
 	}
 
-	erro.Printf(format, v...)
+	erro.Output(2, fmt.Sprintf(format, v...))
 }
 
 // 获取 CRITICAL 级别的 log.Logger 实例，在未指定 critical 级别的日志时，该实例返回一个 nil。
@@ -229,7 +229,7 @@ func Critical(v ...interface{}) {
 		return
 	}
 
-	critical.Println(v...)
+	critical.Output(2, fmt.Sprintln(v...))
 }
 
 // Criticalf 相当于 CRITICAL().Printf(format, v...) 的简写方式
@@ -238,7 +238,7 @@ func Criticalf(format string, v ...interface{}) {
 		return
 	}
 
-	critical.Printf(format, v...)
+	critical.Output(2, fmt.Sprintf(format, v...))
 }
 
 // 向所有的日志输出内容。

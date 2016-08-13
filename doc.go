@@ -97,4 +97,11 @@
 // 若是一个容器节点（如 buffer，可以包含子节点）则返回的实例必须要实现 WriteFlushAdder 接口，
 // 该函数的原型为：
 //  WriterInitializer
+//
+//
+//
+// NOTE:
+//
+// logs.Error() 等函数不应该嵌套其它函数中，这样会造成错误信息定位不准确，若有必要，应该
+// 直接使用 logs.ERROR().Output() 函数代替。
 package logs

@@ -5,6 +5,7 @@
 package logs
 
 import (
+	"log"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -35,6 +36,18 @@ func TestToByte(t *testing.T) {
 	e("-1.0G")
 	e("1P")
 	e("10MB")
+}
+
+func TestParseFlag(t *testing.T) {
+	a := assert.New(t)
+
+	eq := func(str string, v int) {
+		ret, err := parseFlag(str)
+		a.NotError(err).Equal(ret, v)
+	}
+
+	eq("log.Ldate|log.ltime", log.Ldate|log.Ltime)
+	eq("log.Ldate| log.Ltime", log.Ldate|log.Ltime)
 }
 
 func TestRotateInitializer(t *testing.T) {

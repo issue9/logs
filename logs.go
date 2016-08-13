@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/issue9/logs/internal/config"
 	"github.com/issue9/logs/writers"
@@ -61,10 +60,11 @@ func initFromConfig(cfg *config.Config) error {
 	for name, c := range cfg.Items {
 		flag := 0
 		flagStr, found := c.Attrs["flag"]
-		if found && (flagStr != "") {
-			flag, found = flagMap[strings.ToLower(flagStr)]
-			if !found {
-				return fmt.Errorf("未知的Flag参数:[%v]", flagStr)
+		if found && (len(flagStr) > 0) {
+			var err error
+			flag, err = parseFlag(flagStr)
+			if err != nil {
+				return err
 			}
 		}
 

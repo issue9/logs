@@ -217,6 +217,24 @@ var flagMap = map[string]int{
 	"log.lstdflags":     log.LstdFlags,
 }
 
+// 将 log.Ldate|log.Ltime 的字符串转换成正确的值
+func parseFlag(flagStr string) (int, error) {
+	strs := strings.Split(flagStr, "|")
+	ret := 0
+
+	for _, str := range strs {
+		str = strings.ToLower(strings.TrimSpace(str))
+		flag, found := flagMap[str]
+		if !found {
+			return 0, errors.New("无效的 flag:" + str)
+		}
+		ret |= flag
+	}
+
+	return ret, nil
+}
+
+// error, warn, info 等顶级项，会被当作一个容器放入到 log.Logger 中
 func logContInitializer(args map[string]string) (io.Writer, error) {
 	return writers.NewContainer(), nil
 }
@@ -238,7 +256,7 @@ func init() {
 		panic("注册rotate时失败")
 	}
 
-	// logWriter
+	// logContInitializer
 
 	if !Register("info", logContInitializer) {
 		panic("注册info时失败")

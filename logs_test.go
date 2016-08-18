@@ -97,8 +97,8 @@ func TestInitFormXMLString(t *testing.T) {
 	conts.Add(infoW) // 触发initFromXmlString中的重置功能
 	a.True(conts.Len() == 1)
 	a.NotError(InitFromXMLString(xml))
-	a.True(critical == nil)   // InitFromXMLString会重置所有的日志指向
-	a.True(CRITICAL() == nil) // InitFromXMLString会重置所有的日志指向
+	a.True(critical == discard)   // InitFromXMLString会重置所有的日志指向
+	a.True(CRITICAL() == discard) // InitFromXMLString会重置所有的日志指向
 
 	Debug("abc")
 	a.True(debugW.Len() == 0) // 缓存未达10，依然为空

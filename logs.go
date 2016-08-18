@@ -6,6 +6,7 @@ package logs
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -19,7 +20,13 @@ var conts = writers.NewContainer()
 
 // 预定义的6个 log.Logger 实例。
 var (
-	info, warn, erro, debug, trace, critical *log.Logger
+	discard  = log.New(ioutil.Discard, "", 0)
+	info     = discard
+	warn     = discard
+	erro     = discard
+	debug    = discard
+	trace    = discard
+	critical = discard
 )
 
 // 从一个 XML 文件中初始化日志系统。
@@ -49,12 +56,12 @@ func initFromConfig(cfg *config.Config) error {
 		conts.Clear()
 
 		// 重置为空值
-		info = nil
-		critical = nil
-		debug = nil
-		trace = nil
-		warn = nil
-		erro = nil
+		info = discard
+		critical = discard
+		debug = discard
+		trace = discard
+		warn = discard
+		erro = discard
 	}
 
 	for name, c := range cfg.Items {

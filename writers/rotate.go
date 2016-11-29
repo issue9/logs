@@ -15,14 +15,14 @@ var (
 	// 默认的文件权限
 	defaultMode os.FileMode = os.ModePerm
 
-	// linux下需加上O_WRONLY或是O_RDWR
+	// linux下需加上 O_WRONLY 或是 O_RDWR
 	defaultFlag = os.O_APPEND | os.O_CREATE | os.O_WRONLY
 
 	// 默认的日志后缀名
 	defaultExt = ".log"
 )
 
-// 可按大小进行分割的文件
+// Rotate 可按大小进行分割的文件
 //  import "log"
 //  // 每个文件以100M大小进行分割，以日期名作为文件名保存在/var/log下。
 //  f,_ := NewRotate("/var/log", 100*1024*1024)
@@ -36,7 +36,7 @@ type Rotate struct {
 	wSize int       // 当前正在写的文件大小
 }
 
-// 新建Rotate。
+// NewRotate 新建Rotate。
 // prefix 文件名前缀。
 // dir为文件保存的目录，若不存在会尝试创建。
 // size为每个文件的最大尺寸，单位为byte。size应该足够大，如果size

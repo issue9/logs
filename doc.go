@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// logs 是基于 XML 配置的日志系统。
+// Package logs 是基于 XML 配置的日志系统。
 //
 // logs 定义了6个级别的日志：ERROR,INFO,TRACE,DEBUG,CRITICAL,WARN。
 // 用户可以根据自己的需求，通过xml配置文件自定义每个日志输出行为。
@@ -100,8 +100,5 @@
 //
 //
 //
-// NOTE:
-//
-// logs.Error() 等函数不应该嵌套其它函数中，这样会造成错误信息定位不准确，若有必要，应该
-// 直接使用 logs.ERROR().Output() 函数代替。
+// NOTE: 不能对 logs.Error() 等函数进行再次封闭，若非要这样做的话，建议使用 logs.ERROR().Output()，否则会造成输出的错误信息定位不准确的问题。
 package logs

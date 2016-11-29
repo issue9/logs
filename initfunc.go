@@ -204,7 +204,7 @@ func stmpInitializer(args map[string]string) (io.Writer, error) {
 
 	sendTo := strings.Split(sendToStr, ";")
 
-	return writers.NewSmtp(username, password, subject, host, sendTo), nil
+	return writers.NewSMTP(username, password, subject, host, sendTo), nil
 }
 
 var flagMap = map[string]int{

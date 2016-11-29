@@ -2,7 +2,5 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-// writer包提供了一组实现io.Writer接口的结构。
+// Package writers 提供了一组实现 io.Writer 接口的结构。
 package writers
-
-const Version = "0.3.4.150620"

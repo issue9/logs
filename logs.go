@@ -14,11 +14,11 @@ import (
 	"github.com/issue9/logs/writers"
 )
 
-// 保存 info、warn 等6个预定义 log.Logger 的 io.Writer 接口实例，
+// 保存 info、warn 等 6 个预定义 log.Logger 的 io.Writer 接口实例，
 // 方便在关闭日志时，输出其中缓存的内容。
 var conts = writers.NewContainer()
 
-// 预定义的6个 log.Logger 实例。
+// 预定义的 6 个 log.Logger 实例。
 var (
 	discard  = log.New(ioutil.Discard, "", 0)
 	info     = discard
@@ -29,7 +29,7 @@ var (
 	critical = discard
 )
 
-// 从一个 XML 文件中初始化日志系统。
+// InitFromXMLFile 从一个 XML 文件中初始化日志系统。
 // 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
 func InitFromXMLFile(path string) error {
 	cfg, err := config.ParseXMLFile(path)
@@ -39,7 +39,7 @@ func InitFromXMLFile(path string) error {
 	return initFromConfig(cfg)
 }
 
-// 从一个 XML 字符串初始化日志系统。
+// InitFromXMLString 从一个 XML 字符串初始化日志系统。
 // 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
 func InitFromXMLString(xml string) error {
 	cfg, err := config.ParseXMLString(xml)
@@ -101,14 +101,14 @@ func initFromConfig(cfg *config.Config) error {
 	return nil
 }
 
-// 输出所有的缓存内容。
+// Flush 输出所有的缓存内容。
 // 若是通过 os.Exit() 退出程序的，在执行之前，
 // 一定记得调用 Flush() 输出可能缓存的日志内容。
 func Flush() {
 	conts.Flush()
 }
 
-// 获取 INFO 级别的 log.Logger 实例，在未指定 info 级别的日志时，该实例返回一个 nil。
+// INFO 获取 INFO 级别的 log.Logger 实例，在未指定 info 级别的日志时，该实例返回一个 nil。
 func INFO() *log.Logger {
 	return info
 }
@@ -133,7 +133,7 @@ func Infof(format string, v ...interface{}) {
 	info.Output(2, fmt.Sprintf(format, v...))
 }
 
-// 获取 DEBUG 级别的 log.Logger 实例，在未指定 debug 级别的日志时，该实例返回一个 nil。
+// DEBUG 获取 DEBUG 级别的 log.Logger 实例，在未指定 debug 级别的日志时，该实例返回一个 nil。
 func DEBUG() *log.Logger {
 	return debug
 }
@@ -156,7 +156,7 @@ func Debugf(format string, v ...interface{}) {
 	debug.Output(2, fmt.Sprintf(format, v...))
 }
 
-// 获取 TRACE 级别的 log.Logger 实例，在未指定 trace 级别的日志时，该实例返回一个 nil。
+// TRACE 获取 TRACE 级别的 log.Logger 实例，在未指定 trace 级别的日志时，该实例返回一个 nil。
 func TRACE() *log.Logger {
 	return trace
 }
@@ -179,7 +179,7 @@ func Tracef(format string, v ...interface{}) {
 	trace.Output(2, fmt.Sprintf(format, v...))
 }
 
-// 获取 WARN 级别的 log.Logger 实例，在未指定 warn 级别的日志时，该实例返回一个 nil。
+// WARN 获取 WARN 级别的 log.Logger 实例，在未指定 warn 级别的日志时，该实例返回一个 nil。
 func WARN() *log.Logger {
 	return warn
 }
@@ -225,7 +225,7 @@ func Errorf(format string, v ...interface{}) {
 	erro.Output(2, fmt.Sprintf(format, v...))
 }
 
-// 获取 CRITICAL 级别的 log.Logger 实例，在未指定 critical 级别的日志时，该实例返回一个 nil。
+// CRITICAL 获取 CRITICAL 级别的 log.Logger 实例，在未指定 critical 级别的日志时，该实例返回一个 nil。
 func CRITICAL() *log.Logger {
 	return critical
 }
@@ -248,7 +248,7 @@ func Criticalf(format string, v ...interface{}) {
 	critical.Output(2, fmt.Sprintf(format, v...))
 }
 
-// 向所有的日志输出内容。
+// All 向所有的日志输出内容。
 func All(v ...interface{}) {
 	Info(v...)
 	Debug(v...)
@@ -258,7 +258,7 @@ func All(v ...interface{}) {
 	Critical(v...)
 }
 
-// 向所有的日志输出内容。
+// Allf 向所有的日志输出内容。
 func Allf(format string, v ...interface{}) {
 	Infof(format, v...)
 	Debugf(format, v...)
@@ -268,21 +268,21 @@ func Allf(format string, v ...interface{}) {
 	Criticalf(format, v...)
 }
 
-// 输出错误信息，然后退出程序。
+// Fatal 输出错误信息，然后退出程序。
 func Fatal(v ...interface{}) {
 	All(v...)
 	Flush()
 	os.Exit(2)
 }
 
-// 输出错误信息，然后退出程序。
+// Fatalf 输出错误信息，然后退出程序。
 func Fatalf(format string, v ...interface{}) {
 	Allf(format, v...)
 	Flush()
 	os.Exit(2)
 }
 
-// 输出错误信息，然后触发 panic。
+// Panic 输出错误信息，然后触发 panic。
 func Panic(v ...interface{}) {
 	s := fmt.Sprint(v...)
 	All(s)
@@ -290,7 +290,7 @@ func Panic(v ...interface{}) {
 	panic(s)
 }
 
-// 输出错误信息，然后触发 panic。
+// Panicf 输出错误信息，然后触发 panic。
 func Panicf(format string, v ...interface{}) {
 	Allf(format, v...)
 	Flush()

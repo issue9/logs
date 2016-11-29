@@ -10,15 +10,15 @@ import (
 )
 
 // Buffer 实现对输出内容的缓存，只有输出数量达到指定的值
-// 才会真正地向指定的io.Writer输出。
+// 才会真正地向指定的 io.Writer 输出。
 type Buffer struct {
 	size   int         // 最大的缓存数量
 	buffer [][]byte    // 缓存的内容
-	ws     []io.Writer // 输出的io.Writer
+	ws     []io.Writer // 输出的 io.Writer
 }
 
-// 新建一个Buffer。
-// w最终输出的方向；当size<=1时，所有的内容都不会缓存，直接向w输出。
+// NewBuffer 新建一个 Buffer。
+// w 最终输出的方向；当 size<=1 时，所有的内容都不会缓存，直接向 w 输出。
 func NewBuffer(size int) *Buffer {
 	return &Buffer{size: size,
 		ws:     make([]io.Writer, 0, 1),

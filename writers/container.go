@@ -9,12 +9,12 @@ import (
 	"io"
 )
 
-// io.Writer的容器。
+// Container 为 io.Writer 的容器。
 type Container struct {
 	ws []io.Writer
 }
 
-// 构造Container实例
+// NewContainer 构造 Container 实例
 func NewContainer() *Container {
 	return &Container{ws: make([]io.Writer, 0, 1)}
 }

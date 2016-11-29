@@ -8,15 +8,15 @@ import (
 	"io"
 )
 
-// io.Writer的容器。
+// Adder 为 io.Writer 的容器。
 type Adder interface {
-	// 向容器添加一个io.Writer实例
+	// 向容器添加一个 io.Writer 实例
 	Add(io.Writer) error
 }
 
-// 缓存接口
+// Flusher 缓存接口
 //
-// go中并没有提供析构函数的机制，所以想要在对象销毁时自动输出缓存中的内容，
+// go 中并没有提供析构函数的机制，所以想要在对象销毁时自动输出缓存中的内容，
 // 只能定义一个接口。
 type Flusher interface {
 	// 将缓存的内容输出

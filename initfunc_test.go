@@ -142,6 +142,6 @@ func TestStmpInitializer(t *testing.T) {
 	w, err = stmpInitializer(args)
 	a.NotError(err).NotNil(w)
 
-	_, ok := w.(*writers.Smtp)
+	_, ok := w.(*writers.SMTP)
 	a.True(ok)
 }

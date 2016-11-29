@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-// 实现io.Writer接口的邮件发送。
-type Smtp struct {
+// SMTP 实现 io.Writer 接口的邮件发送。
+type SMTP struct {
 	username string   // smtp账号
 	password string   // smtp密码
 	host     string   // smtp主机，需要带上端口
@@ -26,14 +26,14 @@ type Smtp struct {
 	auth smtp.Auth
 }
 
-// 新建Smtp对象。
-// username为smtp的账号；
-// password为smtp对应的密码；
-// subject为发送邮件的主题；
-// host为smtp的主机地址，需要带上端口号；
-// sendTo为接收者的地址。
-func NewSmtp(username, password, subject, host string, sendTo []string) *Smtp {
-	ret := &Smtp{
+// NewSMTP 新建 SMTP 对象。
+// username 为smtp 的账号；
+// password 为 smtp 对应的密码；
+// subject 为发送邮件的主题；
+// host 为 smtp 的主机地址，需要带上端口号；
+// sendTo 为接收者的地址。
+func NewSMTP(username, password, subject, host string, sendTo []string) *SMTP {
+	ret := &SMTP{
 		username: username,
 		password: password,
 		subject:  subject,
@@ -49,7 +49,7 @@ func NewSmtp(username, password, subject, host string, sendTo []string) *Smtp {
 //
 // 像To,From这些内容都是固定的，可以先写入到缓存中，这样
 // 这后就不需要再次构造这些内容。
-func (s *Smtp) init() {
+func (s *SMTP) init() {
 	s.cache = bytes.NewBufferString("")
 	s.cache.Grow(1024)
 
@@ -84,7 +84,7 @@ func (s *Smtp) init() {
 }
 
 // io.Writer
-func (s *Smtp) Write(msg []byte) (int, error) {
+func (s *SMTP) Write(msg []byte) (int, error) {
 	s.cache.Write(msg)
 
 	err := smtp.SendMail(

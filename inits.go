@@ -26,7 +26,7 @@ var (
 func toWriter(c *config.Config) (io.Writer, error) {
 	fun, found := funs[c.Name]
 	if !found {
-		return nil, fmt.Errorf("toWriter:未注册的初始化函数:[%v]", c.Name)
+		return nil, fmt.Errorf("未注册的初始化函数:[%v]", c.Name)
 	}
 
 	w, err := fun(c.Attrs)
@@ -40,7 +40,7 @@ func toWriter(c *config.Config) (io.Writer, error) {
 
 	cont, ok := w.(writers.Adder)
 	if !ok {
-		return nil, fmt.Errorf("toWriter:[%v]并未实现writers.Adder接口", c.Name)
+		return nil, fmt.Errorf("[%v]并未实现writers.Adder接口", c.Name)
 	}
 
 	for _, cfg := range c.Items {

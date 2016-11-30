@@ -19,7 +19,7 @@ logs [![Build Status](https://travis-ci.org/issue9/logs.svg?branch=master)](http
 
 
 ```go
-logs.InitFromXMLFile("./config.xml")// 用 XML 初始化 logs
+logs.InitFromXMLFile("./config.xml") // 用 XML 初始化 logs
 logs.Debug("debug start...")
 logs.Debugf("%v start...", "debug")
 logs.DEBUG().Println("debug start...")

@@ -156,7 +156,6 @@ func consoleInitializer(args map[string]string) (io.Writer, error) {
 	if !found { // 默认用红色前景色
 		fcIndex = "red"
 	}
-
 	fc, found := consoleColorMap[fcIndex]
 	if !found {
 		return nil, fmt.Errorf("无效的前景色[%v]", fcIndex)
@@ -166,7 +165,6 @@ func consoleInitializer(args map[string]string) (io.Writer, error) {
 	if !found {
 		bcIndex = "default"
 	}
-
 	bc, found := consoleColorMap[bcIndex]
 	if !found {
 		return nil, fmt.Errorf("无效的背景色[%v]", bcIndex)

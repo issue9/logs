@@ -4,9 +4,9 @@
 
 // Package logs 是基于 XML 配置的日志系统。
 //
-// logs 定义了6个级别的日志：ERROR,INFO,TRACE,DEBUG,CRITICAL,WARN。
-// 用户可以根据自己的需求，通过xml配置文件自定义每个日志输出行为。
-// 以下为一个简短的xml配置示例，具体的可参考目录下的config.xml。
+// logs 定义了6个级别的日志：ERROR、INFO、TRACE、DEBUG、CRITICAL 和 WARN。
+// 用户可以根据自己的需求，通过 XML 配置文件自定义每个日志输出行为。
+// 以下为一个简短的 XML 配置示例，具体的可参考目录下的 config.xml。
 //  <?xml version="1.0" encoding="utf-8" ?>
 //  <logs>
 //      <debug>
@@ -18,7 +18,7 @@
 //      <info>
 //          <console output="stderr" color="yellow" />
 //      </info>
-//      <!-- 除了debug和info，其它4个依然输出到ioutil.Discard -->
+//      <!-- 除了 debug 和 info，其它 4 个依然输出到 ioutil.Discard -->
 //  </logs>
 //
 // 然后就可以调用 Go 代码输出日志内容:
@@ -34,7 +34,7 @@
 //
 // 上面的配置文件表示 DEBUG 级别的内容输出前都进被缓存，当量达到 10 条时，
 // 一次性向 rotate 和 stmp 输出。
-// 其中 buffer、rotate、stmp、debug 和 info 都是实现了 io.Writer接口的结
+// 其中 buffer、rotate、stmp、debug 和 info 都是实现了 io.Writer 接口的结
 // 构。通过 Register() 注册成功之后，即可以使用。
 //
 //
@@ -98,7 +98,6 @@
 // 该函数的原型为：
 //  WriterInitializer
 //
-//
-//
-// NOTE: 不能对 logs.Error() 等函数进行再次封闭，若非要这样做的话，建议使用 logs.ERROR().Output()，否则会造成输出的错误信息定位不准确的问题。
+// NOTE: 不能对 logs.Error() 等函数进行再次封闭，若非要这样做的话，
+// 建议使用 logs.ERROR().Output()，否则会造成输出的错误信息定位不准确的问题。
 package logs

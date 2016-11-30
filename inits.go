@@ -13,6 +13,10 @@ import (
 	"github.com/issue9/logs/writers"
 )
 
+// WriterInitializer io.Writer 实例的初始化函数。
+// args 参数为对应的 XML 节点的属性列表。
+type WriterInitializer func(args map[string]string) (io.Writer, error)
+
 var (
 	funs   = map[string]WriterInitializer{}
 	funsMu = &sync.Mutex{}
@@ -50,11 +54,7 @@ func toWriter(c *config.Config) (io.Writer, error) {
 	return w, nil
 }
 
-// writer 的初始化函数。
-// args 参数为对应的 XML 节点的属性列表。
-type WriterInitializer func(args map[string]string) (io.Writer, error)
-
-// 注册一个 writer 初始化函数。
+// Register 注册一个 WriterInitializer。
 // writer 初始化函数原型可参考: WriterInitializer。
 // 返回值反映是否注册成功。若已经存在相同名称的，则返回 false
 func Register(name string, init WriterInitializer) bool {
@@ -69,7 +69,7 @@ func Register(name string, init WriterInitializer) bool {
 	return true
 }
 
-// 查询指定名称的 Writer 是否已经被注册
+// IsRegisted 查询指定名称的 Writer 是否已经被注册
 func IsRegisted(name string) bool {
 	funsMu.Lock()
 	defer funsMu.Unlock()
@@ -78,7 +78,7 @@ func IsRegisted(name string) bool {
 	return found
 }
 
-// 返回所有已注册的 writer 名称
+// Registed 返回所有已注册的 writer 名称
 func Registed() []string {
 	funsMu.Lock()
 	defer funsMu.Unlock()

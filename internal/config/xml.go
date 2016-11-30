@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// 从一个 XML 文件初始化日志系统。
+// ParseXMLFile 从一个 XML 文件初始化 Config 实例。
 func ParseXMLFile(path string) (*Config, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -23,14 +23,14 @@ func ParseXMLFile(path string) (*Config, error) {
 	return parseXML(f)
 }
 
-// 从一个 XML 字符串初始化日志系统。
+// ParseXMLString 从一个 XML 字符串初始化 Config 实例。
 func ParseXMLString(xml string) (*Config, error) {
 	return parseXML(strings.NewReader(xml))
 }
 
 // 从一个 XML 格式的 reader 初始化 Config
 func parseXML(r io.Reader) (*Config, error) {
-	var cfg *Config = nil
+	var cfg *Config
 	var t xml.Token
 	var err error
 
@@ -53,7 +53,7 @@ func parseXML(r io.Reader) (*Config, error) {
 				}
 
 				if _, found := cfg.Items[token.Name.Local]; found {
-					return nil, fmt.Errorf("parseXML:重复的元素名[%v]", token.Name.Local)
+					return nil, fmt.Errorf("重复的元素名[%v]", token.Name.Local)
 				}
 
 				cfg.Items[token.Name.Local] = c

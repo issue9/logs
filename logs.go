@@ -18,7 +18,7 @@ import (
 // 方便在关闭日志时，输出其中缓存的内容。
 var conts = writers.NewContainer()
 
-// 预定义的 6 个 log.Logger 实例。
+// 预定义的 6 个 log.Logger 实例。默认不向任何位置输出内容。
 var (
 	discard  = log.New(ioutil.Discard, "", 0)
 	info     = discard
@@ -94,6 +94,8 @@ func initFromConfig(cfg *config.Config) error {
 			trace = l
 		case "critical":
 			critical = l
+		default:
+			return fmt.Errorf("未知道的二级元素名称:[%v]", name)
 		}
 		conts.Add(cont)
 	}

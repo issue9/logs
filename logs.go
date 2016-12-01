@@ -5,6 +5,7 @@
 package logs
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -35,7 +36,12 @@ var levels = map[string]int{
 	"critical": LevelCritical,
 }
 
-var loggers [levelSize]*logger
+var (
+	loggers [levelSize]*logger
+
+	discard = log.New(ioutil.Discard, "", 0)
+	ininted bool
+)
 
 type logger struct {
 	flush writers.Flusher
@@ -51,15 +57,9 @@ func (l *logger) set(w io.Writer, prefix string, flag int) {
 
 func init() {
 	for index := range loggers {
-		loggers[index] = &logger{}
-	}
-
-	setDefaultLog()
-}
-
-func setDefaultLog() {
-	for _, l := range loggers {
-		l.set(ioutil.Discard, "", log.LstdFlags)
+		loggers[index] = &logger{
+			log: discard,
+		}
 	}
 }
 
@@ -83,13 +83,26 @@ func InitFromXMLString(xml string) error {
 	return initFromConfig(cfg)
 }
 
-// 从 config.Config 中初始化整个 logs 系统
-func initFromConfig(cfg *config.Config) error {
-	if loggers[0].log != nil { // 加载新配置文件。先输出旧的内容。
-		Flush()
-		setDefaultLog()
+// SetWriter 设置某一个类型的输出通道
+//
+// 若将 w 设置为 nil 等同于 iotuil.Discard，即关闭此类型的输出。
+func SetWriter(level int, w io.Writer, prefix string, flag int) error {
+	if level < 0 || level > levelSize {
+		return errors.New("无效的 level 值")
 	}
 
+	if w == nil {
+		loggers[level].flush = nil
+		loggers[level].log = discard
+		return nil
+	}
+
+	loggers[level].set(w, prefix, flag)
+	return nil
+}
+
+// 从 config.Config 中初始化整个 logs 系统
+func initFromConfig(cfg *config.Config) error {
 	for name, c := range cfg.Items {
 		flag := 0
 		flagStr, found := c.Attrs["flag"]

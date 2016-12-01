@@ -40,7 +40,6 @@ var (
 	loggers [levelSize]*logger
 
 	discard = log.New(ioutil.Discard, "", 0)
-	ininted bool
 )
 
 type logger struct {

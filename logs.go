@@ -119,19 +119,11 @@ func INFO() *log.Logger {
 // Info 函数默认是带换行符的，若需要不带换行符的，请使用 DEBUG().Print() 函数代替。
 // 其它相似函数也有类型功能。
 func Info(v ...interface{}) {
-	if info == nil {
-		return
-	}
-
 	info.Output(2, fmt.Sprintln(v...))
 }
 
 // Infof 相当于 INFO().Printf(format, v...) 的简写方式
 func Infof(format string, v ...interface{}) {
-	if info == nil {
-		return
-	}
-
 	info.Output(2, fmt.Sprintf(format, v...))
 }
 
@@ -142,19 +134,11 @@ func DEBUG() *log.Logger {
 
 // Debug 相当于 DEBUG().Println(v...) 的简写方式
 func Debug(v ...interface{}) {
-	if debug == nil {
-		return
-	}
-
 	debug.Output(2, fmt.Sprintln(v...))
 }
 
 // Debugf 相当于 DEBUG().Printf(format, v...) 的简写方式
 func Debugf(format string, v ...interface{}) {
-	if debug == nil {
-		return
-	}
-
 	debug.Output(2, fmt.Sprintf(format, v...))
 }
 
@@ -165,19 +149,11 @@ func TRACE() *log.Logger {
 
 // Trace 相当于 TRACE().Println(v...) 的简写方式
 func Trace(v ...interface{}) {
-	if trace == nil {
-		return
-	}
-
 	trace.Output(2, fmt.Sprintln(v...))
 }
 
 // Tracef 相当于 TRACE().Printf(format, v...) 的简写方式
 func Tracef(format string, v ...interface{}) {
-	if trace == nil {
-		return
-	}
-
 	trace.Output(2, fmt.Sprintf(format, v...))
 }
 
@@ -188,42 +164,26 @@ func WARN() *log.Logger {
 
 // Warn 相当于 WARN().Println(v...) 的简写方式
 func Warn(v ...interface{}) {
-	if warn == nil {
-		return
-	}
-
 	warn.Output(2, fmt.Sprintln(v...))
 }
 
 // Warnf 相当于 WARN().Printf(format, v...) 的简写方式
 func Warnf(format string, v ...interface{}) {
-	if warn == nil {
-		return
-	}
-
 	warn.Output(2, fmt.Sprintf(format, v...))
 }
 
-// 获取 ERROR 级别的 log.Logger 实例，在未指定 error 级别的日志时，该实例返回一个 nil。
+// ERROR 获取 ERROR 级别的 log.Logger 实例，在未指定 error 级别的日志时，该实例返回一个 nil。
 func ERROR() *log.Logger {
 	return erro
 }
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
 func Error(v ...interface{}) {
-	if erro == nil {
-		return
-	}
-
 	erro.Output(2, fmt.Sprintln(v...))
 }
 
 // Errorf 相当于 ERROR().Printf(format, v...) 的简写方式
 func Errorf(format string, v ...interface{}) {
-	if erro == nil {
-		return
-	}
-
 	erro.Output(2, fmt.Sprintf(format, v...))
 }
 
@@ -234,19 +194,11 @@ func CRITICAL() *log.Logger {
 
 // Critical 相当于 CRITICAL().Println(v...)的简写方式
 func Critical(v ...interface{}) {
-	if critical == nil {
-		return
-	}
-
 	critical.Output(2, fmt.Sprintln(v...))
 }
 
 // Criticalf 相当于 CRITICAL().Printf(format, v...) 的简写方式
 func Criticalf(format string, v ...interface{}) {
-	if critical == nil {
-		return
-	}
-
 	critical.Output(2, fmt.Sprintf(format, v...))
 }
 

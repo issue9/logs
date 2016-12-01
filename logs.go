@@ -6,6 +6,7 @@ package logs
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,20 +15,53 @@ import (
 	"github.com/issue9/logs/writers"
 )
 
-// 保存 info、warn 等 6 个预定义 log.Logger 的 io.Writer 接口实例，
-// 方便在关闭日志时，输出其中缓存的内容。
-var conts = writers.NewContainer()
-
-// 预定义的 6 个 log.Logger 实例。默认不向任何位置输出内容。
-var (
-	discard  = log.New(ioutil.Discard, "", 0)
-	info     = discard
-	warn     = discard
-	erro     = discard
-	debug    = discard
-	trace    = discard
-	critical = discard
+// 定义了一些日志的类型
+const (
+	LevelInfo = iota
+	LevelTrace
+	LevelDebug
+	LevelWarn
+	LevelError
+	LevelCritical
+	levelSize
 )
+
+var levels = map[string]int{
+	"info":     LevelInfo,
+	"trace":    LevelTrace,
+	"debug":    LevelDebug,
+	"warn":     LevelWarn,
+	"error":    LevelError,
+	"critical": LevelCritical,
+}
+
+var loggers [levelSize]*logger
+
+type logger struct {
+	flush writers.Flusher
+	log   *log.Logger // 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
+}
+
+func (l *logger) set(w io.Writer, prefix string, flag int) {
+	if f, ok := w.(writers.Flusher); ok {
+		l.flush = f
+	}
+	l.log = log.New(w, prefix, flag)
+}
+
+func init() {
+	for index := range loggers {
+		loggers[index] = &logger{}
+	}
+
+	setDefaultLog()
+}
+
+func setDefaultLog() {
+	for _, l := range loggers {
+		l.set(ioutil.Discard, "", log.LstdFlags)
+	}
+}
 
 // InitFromXMLFile 从一个 XML 文件中初始化日志系统。
 // 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
@@ -51,17 +85,9 @@ func InitFromXMLString(xml string) error {
 
 // 从 config.Config 中初始化整个 logs 系统
 func initFromConfig(cfg *config.Config) error {
-	if conts.Len() > 0 { // 加载新配置文件。先输出旧的内容。
+	if loggers[0].log != nil { // 加载新配置文件。先输出旧的内容。
 		Flush()
-		conts.Clear()
-
-		// 重置为空值
-		info = discard
-		critical = discard
-		debug = discard
-		trace = discard
-		warn = discard
-		erro = discard
+		setDefaultLog()
 	}
 
 	for name, c := range cfg.Items {
@@ -75,29 +101,16 @@ func initFromConfig(cfg *config.Config) error {
 			}
 		}
 
-		cont, err := toWriter(c)
+		w, err := toWriter(c)
 		if err != nil {
 			return err
 		}
-		l := log.New(cont, c.Attrs["prefix"], flag)
-
-		switch name {
-		case "info":
-			info = l
-		case "warn":
-			warn = l
-		case "debug":
-			debug = l
-		case "error":
-			erro = l
-		case "trace":
-			trace = l
-		case "critical":
-			critical = l
-		default:
+		index, found := levels[name]
+		if !found {
 			return fmt.Errorf("未知道的二级元素名称:[%v]", name)
 		}
-		conts.Add(cont)
+
+		loggers[index].set(w, c.Attrs["prefix"], flag)
 	}
 
 	return nil
@@ -107,131 +120,125 @@ func initFromConfig(cfg *config.Config) error {
 // 若是通过 os.Exit() 退出程序的，在执行之前，
 // 一定记得调用 Flush() 输出可能缓存的日志内容。
 func Flush() {
-	conts.Flush()
+	for _, l := range loggers {
+		if l.flush != nil {
+			l.flush.Flush()
+		}
+	}
 }
 
 // INFO 获取 INFO 级别的 log.Logger 实例，在未指定 info 级别的日志时，该实例返回一个 nil。
 func INFO() *log.Logger {
-	return info
+	return loggers[LevelInfo].log
 }
 
 // Info 相当于 INFO().Println(v...) 的简写方式
 // Info 函数默认是带换行符的，若需要不带换行符的，请使用 DEBUG().Print() 函数代替。
 // 其它相似函数也有类型功能。
 func Info(v ...interface{}) {
-	info.Output(2, fmt.Sprintln(v...))
+	loggers[LevelInfo].log.Output(2, fmt.Sprintln(v...))
 }
 
 // Infof 相当于 INFO().Printf(format, v...) 的简写方式
 func Infof(format string, v ...interface{}) {
-	info.Output(2, fmt.Sprintf(format, v...))
+	loggers[LevelInfo].log.Output(2, fmt.Sprintf(format, v...))
 }
 
 // DEBUG 获取 DEBUG 级别的 log.Logger 实例，在未指定 debug 级别的日志时，该实例返回一个 nil。
 func DEBUG() *log.Logger {
-	return debug
+	return loggers[LevelDebug].log
 }
 
 // Debug 相当于 DEBUG().Println(v...) 的简写方式
 func Debug(v ...interface{}) {
-	debug.Output(2, fmt.Sprintln(v...))
+	loggers[LevelDebug].log.Output(2, fmt.Sprintln(v...))
 }
 
 // Debugf 相当于 DEBUG().Printf(format, v...) 的简写方式
 func Debugf(format string, v ...interface{}) {
-	debug.Output(2, fmt.Sprintf(format, v...))
+	loggers[LevelDebug].log.Output(2, fmt.Sprintf(format, v...))
 }
 
 // TRACE 获取 TRACE 级别的 log.Logger 实例，在未指定 trace 级别的日志时，该实例返回一个 nil。
 func TRACE() *log.Logger {
-	return trace
+	return loggers[LevelTrace].log
 }
 
 // Trace 相当于 TRACE().Println(v...) 的简写方式
 func Trace(v ...interface{}) {
-	trace.Output(2, fmt.Sprintln(v...))
+	loggers[LevelTrace].log.Output(2, fmt.Sprintln(v...))
 }
 
 // Tracef 相当于 TRACE().Printf(format, v...) 的简写方式
 func Tracef(format string, v ...interface{}) {
-	trace.Output(2, fmt.Sprintf(format, v...))
+	loggers[LevelTrace].log.Output(2, fmt.Sprintf(format, v...))
 }
 
 // WARN 获取 WARN 级别的 log.Logger 实例，在未指定 warn 级别的日志时，该实例返回一个 nil。
 func WARN() *log.Logger {
-	return warn
+	return loggers[LevelWarn].log
 }
 
 // Warn 相当于 WARN().Println(v...) 的简写方式
 func Warn(v ...interface{}) {
-	warn.Output(2, fmt.Sprintln(v...))
+	loggers[LevelWarn].log.Output(2, fmt.Sprintln(v...))
 }
 
 // Warnf 相当于 WARN().Printf(format, v...) 的简写方式
 func Warnf(format string, v ...interface{}) {
-	warn.Output(2, fmt.Sprintf(format, v...))
+	loggers[LevelWarn].log.Output(2, fmt.Sprintf(format, v...))
 }
 
 // ERROR 获取 ERROR 级别的 log.Logger 实例，在未指定 error 级别的日志时，该实例返回一个 nil。
 func ERROR() *log.Logger {
-	return erro
+	return loggers[LevelError].log
 }
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
 func Error(v ...interface{}) {
-	erro.Output(2, fmt.Sprintln(v...))
+	loggers[LevelError].log.Output(2, fmt.Sprintln(v...))
 }
 
 // Errorf 相当于 ERROR().Printf(format, v...) 的简写方式
 func Errorf(format string, v ...interface{}) {
-	erro.Output(2, fmt.Sprintf(format, v...))
+	loggers[LevelError].log.Output(2, fmt.Sprintf(format, v...))
 }
 
 // CRITICAL 获取 CRITICAL 级别的 log.Logger 实例，在未指定 critical 级别的日志时，该实例返回一个 nil。
 func CRITICAL() *log.Logger {
-	return critical
+	return loggers[LevelCritical].log
 }
 
 // Critical 相当于 CRITICAL().Println(v...)的简写方式
 func Critical(v ...interface{}) {
-	critical.Output(2, fmt.Sprintln(v...))
+	loggers[LevelCritical].log.Output(2, fmt.Sprintln(v...))
 }
 
 // Criticalf 相当于 CRITICAL().Printf(format, v...) 的简写方式
 func Criticalf(format string, v ...interface{}) {
-	critical.Output(2, fmt.Sprintf(format, v...))
+	loggers[LevelCritical].log.Output(2, fmt.Sprintf(format, v...))
 }
 
 // All 向所有的日志输出内容。
 func All(v ...interface{}) {
-	Info(v...)
-	Debug(v...)
-	Trace(v...)
-	Warn(v...)
-	Error(v...)
-	Critical(v...)
+	all(v...)
 }
 
 // Allf 向所有的日志输出内容。
 func Allf(format string, v ...interface{}) {
-	Infof(format, v...)
-	Debugf(format, v...)
-	Tracef(format, v...)
-	Warnf(format, v...)
-	Errorf(format, v...)
-	Criticalf(format, v...)
+	allf(format, v...)
 }
 
 // Fatal 输出错误信息，然后退出程序。
 func Fatal(v ...interface{}) {
-	All(v...)
+	all(v...)
 	Flush()
 	os.Exit(2)
 }
 
 // Fatalf 输出错误信息，然后退出程序。
 func Fatalf(format string, v ...interface{}) {
-	Allf(format, v...)
+	allf(format, v...)
 	Flush()
 	os.Exit(2)
 }
@@ -239,14 +246,26 @@ func Fatalf(format string, v ...interface{}) {
 // Panic 输出错误信息，然后触发 panic。
 func Panic(v ...interface{}) {
 	s := fmt.Sprint(v...)
-	All(s)
+	all(s)
 	Flush()
 	panic(s)
 }
 
 // Panicf 输出错误信息，然后触发 panic。
 func Panicf(format string, v ...interface{}) {
-	Allf(format, v...)
+	allf(format, v...)
 	Flush()
 	panic(fmt.Sprintf(format, v...))
+}
+
+func all(v ...interface{}) {
+	for _, l := range loggers {
+		l.log.Output(3, fmt.Sprintln(v...))
+	}
+}
+
+func allf(format string, v ...interface{}) {
+	for _, l := range loggers {
+		l.log.Output(3, fmt.Sprintf(format, v...))
+	}
 }

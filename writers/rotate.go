@@ -36,10 +36,10 @@ type Rotate struct {
 	wSize int       // 当前正在写的文件大小
 }
 
-// NewRotate 新建Rotate。
+// NewRotate 新建 Rotate。
 // prefix 文件名前缀。
-// dir为文件保存的目录，若不存在会尝试创建。
-// size为每个文件的最大尺寸，单位为byte。size应该足够大，如果size
+// dir 为文件保存的目录，若不存在会尝试创建。
+// size 为每个文件的最大尺寸，单位为 byte。size 应该足够大，如果 size
 // 的大小不足够支撑一秒钟产生的量，则会继续在原有文件之后追加内容。
 func NewRotate(prefix, dir string, size int) (*Rotate, error) {
 	// 确保结目录分隔符结尾，如果是文件的话，加上目录分隔符，在os.Stat时会返回error。

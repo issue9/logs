@@ -40,7 +40,7 @@ func toWriter(c *config.Config) (io.Writer, error) {
 
 	cont, ok := w.(writers.Adder)
 	if !ok {
-		return nil, fmt.Errorf("[%v]并未实现writers.Adder接口", c.Name)
+		return nil, fmt.Errorf("[%v]并未实现 writers.Adder 接口", c.Name)
 	}
 
 	for _, cfg := range c.Items {

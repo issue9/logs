@@ -43,17 +43,24 @@ var (
 )
 
 type logger struct {
-	flush writers.Flusher
-	log   *log.Logger // 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
+	flush writers.Flusher // 如果当前的 log 的 io.Writer 实例是个容器，则此处保存此容器的指针。
+	log   *log.Logger     // 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
 }
 
 func (l *logger) set(w io.Writer, prefix string, flag int) {
+	if w == nil {
+		l.flush = nil
+		l.log = discard
+		return
+	}
+
 	if f, ok := w.(writers.Flusher); ok {
 		l.flush = f
 	}
 	l.log = log.New(w, prefix, flag)
 }
 
+// 在包初始化时，将每个日志通道指向空。
 func init() {
 	for index := range loggers {
 		loggers[index] = &logger{
@@ -88,12 +95,6 @@ func InitFromXMLString(xml string) error {
 func SetWriter(level int, w io.Writer, prefix string, flag int) error {
 	if level < 0 || level > levelSize {
 		return errors.New("无效的 level 值")
-	}
-
-	if w == nil {
-		loggers[level].flush = nil
-		loggers[level].log = discard
-		return nil
 	}
 
 	loggers[level].set(w, prefix, flag)

@@ -29,12 +29,12 @@ func check(cfg *Config) error {
 	}
 
 	if len(cfg.Items) == 0 {
-		return errors.New("空的logs元素")
+		return errors.New("空的 logs 元素")
 	}
 
 	for name, item := range cfg.Items {
 		if len(item.Items) == 0 {
-			return fmt.Errorf("check:[%v]并未指定子元素", name)
+			return fmt.Errorf("[%v]并未指定子元素", name)
 		}
 	}
 

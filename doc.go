@@ -4,7 +4,7 @@
 
 // Package logs 是基于 XML 配置的日志系统。
 //
-// logs 定义了6个级别的日志：ERROR、INFO、TRACE、DEBUG、CRITICAL 和 WARN。
+// logs 定义了 6 个级别的日志：ERROR、INFO、TRACE、DEBUG、CRITICAL 和 WARN。
 // 用户可以根据自己的需求，通过 XML 配置文件自定义每个日志输出行为。
 // 以下为一个简短的 XML 配置示例，具体的可参考目录下的 config.xml。
 //  <?xml version="1.0" encoding="utf-8" ?>
@@ -47,8 +47,9 @@
 //
 // - 顶级元素必须为 logs，且不需要带任何属性;
 //
-// - 二级元素只能为 info、deubg、trace、warn、error 和 critical。
-// 分别对应 INFO、DEBUG、TRACE、WARN、ERROR 和 CRITICAL等日志实例。
+// - 二级元素实际上就是一个 log.Logger 实例，
+// 只能为 info、deubg、trace、warn、error 和 critical，
+// 分别对应 INFO、DEBUG、TRACE、WARN、ERROR 和 CRITICAL 等日志通道。
 // 可以带上 prefix 和 flag 属性，分别对应 log.New() 中的相应参数。
 //
 // - 三级及以下元素可以自己根据需求组合，logs 自带以下 writer，

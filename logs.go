@@ -13,7 +13,7 @@ import (
 	"os"
 
 	"github.com/issue9/logs/internal/config"
-	"github.com/issue9/logs/writers"
+	"github.com/issue9/logs/internal/initfunc"
 )
 
 // 定义了一些日志的类型
@@ -42,30 +42,54 @@ var (
 	discard = log.New(ioutil.Discard, "", 0)
 )
 
-type logger struct {
-	flush writers.Flusher // 如果当前的 log 的 io.Writer 实例是个容器，则此处保存此容器的指针。
-	log   *log.Logger     // 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
-}
-
-func (l *logger) set(w io.Writer, prefix string, flag int) {
-	if w == nil {
-		l.flush = nil
-		l.log = discard
-		return
-	}
-
-	if f, ok := w.(writers.Flusher); ok {
-		l.flush = f
-	}
-	l.log = log.New(w, prefix, flag)
-}
-
 // 在包初始化时，将每个日志通道指向空。
 func init() {
 	for index := range loggers {
 		loggers[index] = &logger{
 			log: discard,
 		}
+	}
+
+	if !Register("smtp", initfunc.SMTP) {
+		panic("注册 smtp 时失败")
+	}
+
+	if !Register("console", initfunc.Console) {
+		panic("注册 console 时失败")
+	}
+
+	if !Register("buffer", initfunc.Buffer) {
+		panic("注册 buffer 时失败")
+	}
+
+	if !Register("rotate", initfunc.Rotate) {
+		panic("注册 rotate 时失败")
+	}
+
+	// logContInitializer
+
+	if !Register("info", loggerInitializer) {
+		panic("注册 info 时失败")
+	}
+
+	if !Register("debug", loggerInitializer) {
+		panic("注册 debug 时失败")
+	}
+
+	if !Register("trace", loggerInitializer) {
+		panic("注册 trace 时失败")
+	}
+
+	if !Register("warn", loggerInitializer) {
+		panic("注册 warn 时失败")
+	}
+
+	if !Register("error", loggerInitializer) {
+		panic("注册 error 时失败")
+	}
+
+	if !Register("critical", loggerInitializer) {
+		panic("注册 critical 时失败")
 	}
 }
 
@@ -104,6 +128,11 @@ func SetWriter(level int, w io.Writer, prefix string, flag int) error {
 // 从 config.Config 中初始化整个 logs 系统
 func initFromConfig(cfg *config.Config) error {
 	for name, c := range cfg.Items {
+		index, found := levels[name]
+		if !found {
+			return fmt.Errorf("未知道的二级元素名称:[%v]", name)
+		}
+
 		flag := 0
 		flagStr, found := c.Attrs["flag"]
 		if found && (len(flagStr) > 0) {
@@ -117,10 +146,6 @@ func initFromConfig(cfg *config.Config) error {
 		w, err := toWriter(c)
 		if err != nil {
 			return err
-		}
-		index, found := levels[name]
-		if !found {
-			return fmt.Errorf("未知道的二级元素名称:[%v]", name)
 		}
 
 		loggers[index].set(w, c.Attrs["prefix"], flag)

@@ -9,7 +9,20 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/logs/writers"
 )
+
+func TestLogger_set(t *testing.T) {
+	a := assert.New(t)
+
+	l := &logger{}
+	l.set(nil, "", 0)
+	a.Nil(l.flush).Equal(l.log, discard)
+
+	cont := writers.NewContainer()
+	l.set(cont, "", 0)
+	a.Equal(cont, l.flush).NotEqual(l.log, discard)
+}
 
 func TestParseFlag(t *testing.T) {
 	a := assert.New(t)
@@ -21,4 +34,6 @@ func TestParseFlag(t *testing.T) {
 
 	eq("log.Ldate|log.ltime", log.Ldate|log.Ltime)
 	eq("log.Ldate| log.Ltime", log.Ldate|log.Ltime)
+	eq(" ", 0)
+	eq("", 0)
 }

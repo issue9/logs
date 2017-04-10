@@ -9,8 +9,6 @@ import (
 	"fmt"
 )
 
-// 本文件下声明一系列writer的注册函数。
-
 func argNotFoundErr(wname, argName string) error {
 	return fmt.Errorf("[%v]配置文件中未指定参数:[%v]", wname, argName)
 }

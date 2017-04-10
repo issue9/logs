@@ -13,7 +13,6 @@ import (
 	"os"
 
 	"github.com/issue9/logs/internal/config"
-	"github.com/issue9/logs/internal/initfunc"
 )
 
 // 定义了一些日志的类型
@@ -48,48 +47,6 @@ func init() {
 		loggers[index] = &logger{
 			log: discard,
 		}
-	}
-
-	if !Register("smtp", initfunc.SMTP) {
-		panic("注册 smtp 时失败")
-	}
-
-	if !Register("console", initfunc.Console) {
-		panic("注册 console 时失败")
-	}
-
-	if !Register("buffer", initfunc.Buffer) {
-		panic("注册 buffer 时失败")
-	}
-
-	if !Register("rotate", initfunc.Rotate) {
-		panic("注册 rotate 时失败")
-	}
-
-	// logContInitializer
-
-	if !Register("info", loggerInitializer) {
-		panic("注册 info 时失败")
-	}
-
-	if !Register("debug", loggerInitializer) {
-		panic("注册 debug 时失败")
-	}
-
-	if !Register("trace", loggerInitializer) {
-		panic("注册 trace 时失败")
-	}
-
-	if !Register("warn", loggerInitializer) {
-		panic("注册 warn 时失败")
-	}
-
-	if !Register("error", loggerInitializer) {
-		panic("注册 error 时失败")
-	}
-
-	if !Register("critical", loggerInitializer) {
-		panic("注册 critical 时失败")
 	}
 }
 
@@ -133,14 +90,9 @@ func initFromConfig(cfg *config.Config) error {
 			return fmt.Errorf("未知道的二级元素名称:[%v]", name)
 		}
 
-		flag := 0
-		flagStr, found := c.Attrs["flag"]
-		if found && (len(flagStr) > 0) {
-			var err error
-			flag, err = parseFlag(flagStr)
-			if err != nil {
-				return err
-			}
+		flag, err := parseFlag(c.Attrs["flag"])
+		if err != nil {
+			return err
 		}
 
 		w, err := toWriter(c)

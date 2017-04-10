@@ -41,13 +41,17 @@ func (l *logger) set(w io.Writer, prefix string, flag int) {
 	l.log = log.New(w, prefix, flag)
 }
 
-// Logger 是 error, warn, info 等顶级项，会被当作一个容器放入到 log.Logger 中
 func loggerInitializer(args map[string]string) (io.Writer, error) {
 	return writers.NewContainer(), nil
 }
 
 // 将 log.Ldate|log.Ltime 的字符串转换成正确的值
 func parseFlag(flagStr string) (int, error) {
+	flagStr = strings.TrimSpace(flagStr)
+	if len(flagStr) == 0 {
+		return 0, nil
+	}
+
 	strs := strings.Split(flagStr, "|")
 	ret := 0
 

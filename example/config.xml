@@ -31,7 +31,7 @@
 
     <critical>
         <console output="stderr" foreground="red" />
-        <stmp username=".." password="pwd" host="stmp.example.com" subject="error" sendTo="abc@example.com;abc1@example.com" />
+        <smtp username=".." password="pwd" host="smtp.example.com" subject="error" sendTo="abc@example.com;abc1@example.com" />
         <rotate dir="./testdata/critical/" size="5M" />
     </critical>
 </logs>

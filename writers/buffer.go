@@ -43,8 +43,8 @@ func (b *Buffer) Write(bs []byte) (int, error) {
 		return b.write(bs)
 	}
 
-	// 参数bs来源于log.Logger.buf，该变量会被log.Logger不断
-	// 重复使用，所以此处应该复制一份bs的内容再保存。
+	// 参数 bs 来源于 log.Logger.buf，该变量会被 log.Logger 不断
+	// 重复使用，所以此处应该复制一份 bs 的内容再保存。
 	cp := make([]byte, 0, len(bs))
 	b.buffer = append(b.buffer, append(cp, bs...))
 
@@ -55,7 +55,7 @@ func (b *Buffer) Write(bs []byte) (int, error) {
 	return b.Flush()
 }
 
-// Flusher.Flush()
+// Flush 实现了 Flusher.Flush()
 // 若容器为空时，则相当于不作任何动作。
 func (b *Buffer) Flush() (size int, err error) {
 	for _, buf := range b.buffer {
@@ -68,7 +68,7 @@ func (b *Buffer) Flush() (size int, err error) {
 	return
 }
 
-// 设置缓存的大小，若值小于2，则所有的输出都不会被缓存。
+// SetSize 设置缓存的大小，若值小于 2，则所有的输出都不会被缓存。
 func (b *Buffer) SetSize(size int) {
 	b.size = size
 }

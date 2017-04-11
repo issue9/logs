@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/issue9/logs/internal/config"
+	"github.com/issue9/logs/internal/initfunc"
 	"github.com/issue9/logs/writers"
 )
 
@@ -89,4 +90,30 @@ func Registed() []string {
 	}
 
 	return names
+}
+
+// 注册各类初始化函数
+func init() {
+	if !Register("smtp", initfunc.SMTP) {
+		panic("注册 smtp 时失败，已存在相同名称")
+	}
+
+	if !Register("console", initfunc.Console) {
+		panic("注册 console 时失败，已存在相同名称")
+	}
+
+	if !Register("buffer", initfunc.Buffer) {
+		panic("注册 buffer 时失败，已存在相同名称")
+	}
+
+	if !Register("rotate", initfunc.Rotate) {
+		panic("注册 rotate 时失败，已存在相同名称")
+	}
+
+	// logContInitializer
+	for key := range levels {
+		if !Register(key, loggerInitializer) {
+			panic(fmt.Sprintf("注册 %v 时失败，已存在相同名称", key))
+		}
+	}
 }

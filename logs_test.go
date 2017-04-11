@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/logs/internal/initfunc"
 )
 
 var (
@@ -70,6 +71,15 @@ func TestAllf(t *testing.T) {
 	checkLog(t)
 }
 
+func TestSetWriter(t *testing.T) {
+	a := assert.New(t)
+
+	a.NotError(SetWriter(LevelError, nil, "", 0))
+	a.Equal(loggers[LevelError].log, discard).Equal(loggers[LevelError].flush, nil)
+
+	a.Error(SetWriter(100, nil, "", 0))
+}
+
 func debugWInit(args map[string]string) (io.Writer, error) {
 	return debugW, nil
 }
@@ -77,11 +87,11 @@ func debugWInit(args map[string]string) (io.Writer, error) {
 func TestInitFormXMLString(t *testing.T) {
 	a := assert.New(t)
 
-	// 重新注册以下用到的writer
+	// 重新注册以下用到的 writer
 	clearInitializer()
-	a.True(Register("debug", logContInitializer), "注册debug时失败")
-	a.True(Register("buffer", bufferInitializer), "注册buffer时失败")
-	a.True(Register("debugW", debugWInit), "注册debugW时失败")
+	a.True(Register("debug", loggerInitializer), "注册 debug 时失败")
+	a.True(Register("buffer", initfunc.Buffer), "注册 buffer 时失败")
+	a.True(Register("debugW", debugWInit), "注册 debugW 时失败")
 
 	xml := `
 <?xml version="1.0" encoding="utf-8" ?>
@@ -97,11 +107,11 @@ func TestInitFormXMLString(t *testing.T) {
 	a.NotError(InitFromXMLString(xml))
 
 	Debug("abc")
-	a.True(debugW.Len() == 0) // 缓存未达10，依然为空
+	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
 	Allf("def\n")
-	a.True(debugW.Len() == 0) // 缓存未达10，依然为空
+	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
 
-	// 测试Flush
+	// 测试 Flush
 	Flush()
 	a.True(debugW.Len() > 0)
 }

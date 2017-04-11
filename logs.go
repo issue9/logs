@@ -13,7 +13,6 @@ import (
 	"os"
 
 	"github.com/issue9/logs/internal/config"
-	"github.com/issue9/logs/writers"
 )
 
 // 定义了一些日志的类型
@@ -41,24 +40,6 @@ var (
 
 	discard = log.New(ioutil.Discard, "", 0)
 )
-
-type logger struct {
-	flush writers.Flusher // 如果当前的 log 的 io.Writer 实例是个容器，则此处保存此容器的指针。
-	log   *log.Logger     // 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
-}
-
-func (l *logger) set(w io.Writer, prefix string, flag int) {
-	if w == nil {
-		l.flush = nil
-		l.log = discard
-		return
-	}
-
-	if f, ok := w.(writers.Flusher); ok {
-		l.flush = f
-	}
-	l.log = log.New(w, prefix, flag)
-}
 
 // 在包初始化时，将每个日志通道指向空。
 func init() {
@@ -104,23 +85,19 @@ func SetWriter(level int, w io.Writer, prefix string, flag int) error {
 // 从 config.Config 中初始化整个 logs 系统
 func initFromConfig(cfg *config.Config) error {
 	for name, c := range cfg.Items {
-		flag := 0
-		flagStr, found := c.Attrs["flag"]
-		if found && (len(flagStr) > 0) {
-			var err error
-			flag, err = parseFlag(flagStr)
-			if err != nil {
-				return err
-			}
+		index, found := levels[name]
+		if !found {
+			return fmt.Errorf("未知道的二级元素名称:[%v]", name)
+		}
+
+		flag, err := parseFlag(c.Attrs["flag"])
+		if err != nil {
+			return err
 		}
 
 		w, err := toWriter(c)
 		if err != nil {
 			return err
-		}
-		index, found := levels[name]
-		if !found {
-			return fmt.Errorf("未知道的二级元素名称:[%v]", name)
 		}
 
 		loggers[index].set(w, c.Attrs["prefix"], flag)

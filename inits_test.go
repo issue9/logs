@@ -13,7 +13,7 @@ import (
 	"github.com/issue9/logs/writers"
 )
 
-// configTestWriter.Write的输入内容，写到此变量中
+// configTestWriter.Write 的输入内容，写到此变量中
 var configTestWriterContent []byte
 
 type configTestWriter struct {
@@ -49,8 +49,8 @@ func TestToWriter(t *testing.T) {
 	a.True(Register("logs", logsInit))
 	a.True(Register("debug", debugInit))
 
-	// 构造一个类似于以下结构的config.Config
-	// 不使用config.ParseXML，可以躲避错误检测
+	// 构造一个类似于以下结构的 config.Config
+	// 不使用 config.ParseXML，可以躲避错误检测
 	// <logs>
 	//     <debug></debug>
 	// </logs>
@@ -63,15 +63,15 @@ func TestToWriter(t *testing.T) {
 		},
 	}
 
-	// 转换成writer
+	// 转换成 writer
 	w, err := toWriter(cfg)
 	a.NotError(err).NotNil(w)
 
-	// 转换成writers.Container
+	// 转换成 writers.Container
 	c, ok := w.(*writers.Container)
 	a.True(ok).NotNil(c)
 
-	// 写入c，应该有内容输出到configTestWriterContent
+	// 写入 c，应该有内容输出到 configTestWriterContent
 	c.Write([]byte("hello"))
 	a.Equal(configTestWriterContent, []byte("hello"))
 
@@ -87,7 +87,7 @@ func TestToWriter(t *testing.T) {
 func TestInits(t *testing.T) {
 	a := assert.New(t)
 
-	// 清空，包的init函数有可能会初始化一些数据。
+	// 清空，包的 init 函数有可能会初始化一些数据。
 	clearInitializer()
 
 	a.True(Register("init1", logsInit)).
@@ -97,7 +97,7 @@ func TestInits(t *testing.T) {
 	a.True(Register("init2", debugInit)).
 		True(IsRegisted("init2")).
 		True(IsRegisted("init1")).
-		Contains([]string{"init1", "init2"}, Registed())
+		Equal(2, len(Registed()))
 
 	a.False(IsRegisted("init3"))
 

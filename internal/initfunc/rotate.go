@@ -92,7 +92,7 @@ func toByte(str string) (int64, error) {
 	}
 
 	if size <= 0 {
-		return -1, fmt.Errorf("大小不能小于0，当前值为:[%v]", size)
+		return -1, fmt.Errorf("大小不能小于 0，当前值为:[%d]", size)
 	}
 
 	return int64(size) * scale, nil

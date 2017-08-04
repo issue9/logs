@@ -36,7 +36,7 @@ var levels = map[string]int{
 }
 
 var (
-	loggers [levelSize]*logger
+	loggers = make([]*logger, levelSize, levelSize)
 
 	discard = log.New(ioutil.Discard, "", 0)
 )
@@ -87,7 +87,7 @@ func initFromConfig(cfg *config.Config) error {
 	for name, c := range cfg.Items {
 		index, found := levels[name]
 		if !found {
-			return fmt.Errorf("未知道的二级元素名称:[%v]", name)
+			return fmt.Errorf("未知道的二级元素名称:[%s]", name)
 		}
 
 		flag, err := parseFlag(c.Attrs["flag"])
@@ -126,12 +126,12 @@ func INFO() *log.Logger {
 // Info 函数默认是带换行符的，若需要不带换行符的，请使用 DEBUG().Print() 函数代替。
 // 其它相似函数也有类型功能。
 func Info(v ...interface{}) {
-	loggers[LevelInfo].log.Output(2, fmt.Sprintln(v...))
+	INFO().Output(2, fmt.Sprintln(v...))
 }
 
 // Infof 相当于 INFO().Printf(format, v...) 的简写方式
 func Infof(format string, v ...interface{}) {
-	loggers[LevelInfo].log.Output(2, fmt.Sprintf(format, v...))
+	INFO().Output(2, fmt.Sprintf(format, v...))
 }
 
 // DEBUG 获取 DEBUG 级别的 log.Logger 实例，在未指定 debug 级别的日志时，该实例返回一个 nil。
@@ -141,12 +141,12 @@ func DEBUG() *log.Logger {
 
 // Debug 相当于 DEBUG().Println(v...) 的简写方式
 func Debug(v ...interface{}) {
-	loggers[LevelDebug].log.Output(2, fmt.Sprintln(v...))
+	DEBUG().Output(2, fmt.Sprintln(v...))
 }
 
 // Debugf 相当于 DEBUG().Printf(format, v...) 的简写方式
 func Debugf(format string, v ...interface{}) {
-	loggers[LevelDebug].log.Output(2, fmt.Sprintf(format, v...))
+	DEBUG().Output(2, fmt.Sprintf(format, v...))
 }
 
 // TRACE 获取 TRACE 级别的 log.Logger 实例，在未指定 trace 级别的日志时，该实例返回一个 nil。
@@ -156,12 +156,12 @@ func TRACE() *log.Logger {
 
 // Trace 相当于 TRACE().Println(v...) 的简写方式
 func Trace(v ...interface{}) {
-	loggers[LevelTrace].log.Output(2, fmt.Sprintln(v...))
+	TRACE().Output(2, fmt.Sprintln(v...))
 }
 
 // Tracef 相当于 TRACE().Printf(format, v...) 的简写方式
 func Tracef(format string, v ...interface{}) {
-	loggers[LevelTrace].log.Output(2, fmt.Sprintf(format, v...))
+	TRACE().Output(2, fmt.Sprintf(format, v...))
 }
 
 // WARN 获取 WARN 级别的 log.Logger 实例，在未指定 warn 级别的日志时，该实例返回一个 nil。
@@ -171,12 +171,12 @@ func WARN() *log.Logger {
 
 // Warn 相当于 WARN().Println(v...) 的简写方式
 func Warn(v ...interface{}) {
-	loggers[LevelWarn].log.Output(2, fmt.Sprintln(v...))
+	WARN().Output(2, fmt.Sprintln(v...))
 }
 
 // Warnf 相当于 WARN().Printf(format, v...) 的简写方式
 func Warnf(format string, v ...interface{}) {
-	loggers[LevelWarn].log.Output(2, fmt.Sprintf(format, v...))
+	WARN().Output(2, fmt.Sprintf(format, v...))
 }
 
 // ERROR 获取 ERROR 级别的 log.Logger 实例，在未指定 error 级别的日志时，该实例返回一个 nil。
@@ -186,12 +186,12 @@ func ERROR() *log.Logger {
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
 func Error(v ...interface{}) {
-	loggers[LevelError].log.Output(2, fmt.Sprintln(v...))
+	ERROR().Output(2, fmt.Sprintln(v...))
 }
 
 // Errorf 相当于 ERROR().Printf(format, v...) 的简写方式
 func Errorf(format string, v ...interface{}) {
-	loggers[LevelError].log.Output(2, fmt.Sprintf(format, v...))
+	ERROR().Output(2, fmt.Sprintf(format, v...))
 }
 
 // CRITICAL 获取 CRITICAL 级别的 log.Logger 实例，在未指定 critical 级别的日志时，该实例返回一个 nil。
@@ -201,12 +201,12 @@ func CRITICAL() *log.Logger {
 
 // Critical 相当于 CRITICAL().Println(v...)的简写方式
 func Critical(v ...interface{}) {
-	loggers[LevelCritical].log.Output(2, fmt.Sprintln(v...))
+	CRITICAL().Output(2, fmt.Sprintln(v...))
 }
 
 // Criticalf 相当于 CRITICAL().Printf(format, v...) 的简写方式
 func Criticalf(format string, v ...interface{}) {
-	loggers[LevelCritical].log.Output(2, fmt.Sprintf(format, v...))
+	CRITICAL().Output(2, fmt.Sprintf(format, v...))
 }
 
 // All 向所有的日志输出内容。

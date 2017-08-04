@@ -21,7 +21,7 @@ type Config struct {
 // 检测语法错误及基本的内容错误。
 func check(cfg *Config) error {
 	if cfg.Name != "logs" {
-		return fmt.Errorf("顶级元素必须为logs，当前名称为[%v]", cfg.Name)
+		return fmt.Errorf("顶级元素必须为 logs，当前名称为 %s", cfg.Name)
 	}
 
 	if len(cfg.Attrs) > 0 {
@@ -34,7 +34,7 @@ func check(cfg *Config) error {
 
 	for name, item := range cfg.Items {
 		if len(item.Items) == 0 {
-			return fmt.Errorf("[%v]并未指定子元素", name)
+			return fmt.Errorf("%s 并未指定子元素", name)
 		}
 	}
 

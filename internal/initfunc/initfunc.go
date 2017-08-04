@@ -10,5 +10,5 @@ import (
 )
 
 func argNotFoundErr(wname, argName string) error {
-	return fmt.Errorf("[%v]配置文件中未指定参数:[%v]", wname, argName)
+	return fmt.Errorf("[%s]配置文件中未指定参数:[%s]", wname, argName)
 }

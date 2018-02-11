@@ -23,7 +23,7 @@ type Flusher interface {
 	Flush() (size int, err error)
 }
 
-// io.Writer + Flusher
+// WriteFlusher 表示 io.Writer + Flusher
 type WriteFlusher interface {
 	Flusher
 	io.Writer

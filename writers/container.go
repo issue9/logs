@@ -31,7 +31,7 @@ func (c *Container) Write(bs []byte) (size int, err error) {
 	return
 }
 
-// 添加一个io.Writer实例
+// Add 添加一个 io.Writer 实例
 func (c *Container) Add(w io.Writer) error {
 	if w == nil {
 		return errors.New("参数w不能为一个空值")
@@ -41,7 +41,7 @@ func (c *Container) Add(w io.Writer) error {
 	return nil
 }
 
-// 调用所有子项的Flush函数。
+// Flush 调用所有子项的 Flush 函数。
 func (c *Container) Flush() (size int, err error) {
 	for _, w := range c.ws {
 		b, ok := w.(Flusher)
@@ -56,12 +56,12 @@ func (c *Container) Flush() (size int, err error) {
 	return size, err
 }
 
-// 包含的元素
+// Len 包含的元素
 func (c *Container) Len() int {
 	return len(c.ws)
 }
 
-// 清除所有的writer
+// Clear 清除所有的 writer
 func (c *Container) Clear() {
 	c.ws = c.ws[:0]
 }

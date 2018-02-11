@@ -48,21 +48,20 @@ func NewRotate(prefix, dir string, size int) (*Rotate, error) {
 		return nil, err
 	}
 
-	if stat, err := os.Stat(dir); err != nil && !os.IsExist(err) {
+	stat, err := os.Stat(dir)
+	if (err != nil && !os.IsExist(err)) || !stat.IsDir() {
 		if !os.IsNotExist(err) {
 			return nil, err
 		}
 
-		if !stat.IsDir() {
-			// 尝试创建目录
-			if err := os.MkdirAll(dir, defaultMode); err != nil {
-				return nil, err
-			}
+		// 尝试创建目录
+		if err := os.MkdirAll(dir, defaultMode); err != nil {
+			return nil, err
+		}
 
-			// 创建目录成功，重新获取状态
-			if _, err = os.Stat(dir); err != nil {
-				return nil, err
-			}
+		// 创建目录成功，重新获取状态
+		if _, err = os.Stat(dir); err != nil {
+			return nil, err
 		}
 	}
 

@@ -5,9 +5,8 @@
 package writers
 
 import (
-	//"fmt"
-	"io"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -20,6 +19,8 @@ var (
 
 	// 默认的日志后缀名
 	defaultExt = ".log"
+
+	filenameFormat = "20060102150405"
 )
 
 // Rotate 可按大小进行分割的文件
@@ -32,8 +33,8 @@ type Rotate struct {
 	size     int    // 每个文件的最大尺寸
 	basePath string
 
-	w     io.Writer // 当前正在写的文件
-	wSize int       // 当前正在写的文件大小
+	w     *os.File // 当前正在写的文件
+	wSize int      // 当前正在写的文件大小
 }
 
 // NewRotate 新建 Rotate。
@@ -42,40 +43,43 @@ type Rotate struct {
 // size 为每个文件的最大尺寸，单位为 byte。size 应该足够大，如果 size
 // 的大小不足够支撑一秒钟产生的量，则会继续在原有文件之后追加内容。
 func NewRotate(prefix, dir string, size int) (*Rotate, error) {
-	// 确保以目录分隔符结尾，如果是文件的话，加上目录分隔符，在 os.Stat 时会返回 error。
-	dir = dir + string(os.PathSeparator)
-	if _, err := os.Stat(dir); err != nil && !os.IsExist(err) {
+	dir, err := filepath.Abs(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	if stat, err := os.Stat(dir); err != nil && !os.IsExist(err) {
 		if !os.IsNotExist(err) {
 			return nil, err
 		}
 
-		// 尝试创建目录
-		if err := os.MkdirAll(dir, defaultMode); err != nil {
-			return nil, err
-		}
+		if !stat.IsDir() {
+			// 尝试创建目录
+			if err := os.MkdirAll(dir, defaultMode); err != nil {
+				return nil, err
+			}
 
-		// 创建目录成功，重新获取状态
-		if _, err = os.Stat(dir); err != nil {
-			return nil, err
+			// 创建目录成功，重新获取状态
+			if _, err = os.Stat(dir); err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	return &Rotate{
 		dir:      dir,
-		basePath: dir + prefix,
+		basePath: filepath.Join(dir, prefix),
 		size:     size,
 	}, nil
 }
 
 // 初始化一个新的文件对象
-func (r *Rotate) init() error {
+func (r *Rotate) init() (err error) {
 	if r.w != nil {
-		r.w.(*os.File).Close()
+		r.w.Close()
 	}
 
-	name := r.basePath + time.Now().Format("20060102150405") + defaultExt
-
-	var err error
+	name := r.basePath + time.Now().Format(filenameFormat) + defaultExt
 	if r.w, err = os.OpenFile(name, defaultFlag, defaultMode); err != nil {
 		return err
 	}
@@ -85,7 +89,6 @@ func (r *Rotate) init() error {
 	return nil
 }
 
-// io.WriteCloser.Write()
 func (r *Rotate) Write(buf []byte) (int, error) {
 	if (r.wSize > r.size) || r.w == nil {
 		if err := r.init(); err != nil {
@@ -109,7 +112,7 @@ func (r *Rotate) Close() error {
 		return nil
 	}
 
-	return r.w.(*os.File).Close()
+	return r.w.Close()
 }
 
 // Flush 实现接口 Flusher.Flush()

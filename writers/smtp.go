@@ -83,7 +83,6 @@ func (s *SMTP) init() {
 	s.auth = smtp.PlainAuth("", s.username, s.password, h)
 }
 
-// io.Writer
 func (s *SMTP) Write(msg []byte) (int, error) {
 	s.cache.Write(msg)
 

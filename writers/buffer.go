@@ -26,7 +26,7 @@ func NewBuffer(size int) *Buffer {
 	}
 }
 
-// Adder.Add()
+// Add 添加一个 io.Writer 实例
 func (b *Buffer) Add(w io.Writer) error {
 	if w == nil {
 		return errors.New("参数w不能为一个空值")

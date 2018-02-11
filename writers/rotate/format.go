@@ -9,6 +9,9 @@ import (
 	"strings"
 )
 
+const indexPlaceholder = "%i"
+
+// ErrIndexNotExists 格式化字符串 %i 不存在
 var ErrIndexNotExists = errors.New("必须存在 %i")
 
 var dateRelpacer = strings.NewReplacer("%y", "06",
@@ -17,8 +20,6 @@ var dateRelpacer = strings.NewReplacer("%y", "06",
 	"%d", "02",
 	"%h", "03",
 	"%H", "15")
-
-const indexPlaceholder = "%i"
 
 func parseFormat(format string) (prefix, suffix string, err error) {
 	index := strings.Index(format, indexPlaceholder)

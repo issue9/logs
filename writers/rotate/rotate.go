@@ -2,25 +2,14 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package writers
+package rotate
 
 import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
-)
-
-var (
-	// 默认的日志后缀名
-	defaultExt = ".log"
-
-	filenameFormat = "20060102"
-
-	// 文件名与计数器的分隔符，比如 20180102.0.log, 20180102.1.log
-	filenameSeparator = "."
 )
 
 // Rotate 可按大小进行分割的文件
@@ -32,17 +21,18 @@ type Rotate struct {
 	dir    string // 文件的保存目录
 	size   int64  // 每个文件的最大尺寸
 	prefix string
+	suffix string
 
 	w     *os.File // 当前正在写的文件
 	wSize int64    // 当前正在写的文件大小
 }
 
-// NewRotate 新建 Rotate。
-// prefix 文件名前缀。
+// New 新建 Rotate。
+// prefix 文件名格式。
 // dir 为文件保存的目录，若不存在会尝试创建。
 // size 为每个文件的最大尺寸，单位为 byte。size 应该足够大，如果 size
 // 的大小不足够支撑一秒钟产生的量，则会继续在原有文件之后追加内容。
-func NewRotate(prefix, dir string, size int64) (*Rotate, error) {
+func New(format, dir string, size int64) (*Rotate, error) {
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
@@ -65,9 +55,15 @@ func NewRotate(prefix, dir string, size int64) (*Rotate, error) {
 		}
 	}
 
+	p, s, err := parseFormat(format)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Rotate{
 		dir:    dir,
-		prefix: prefix,
+		prefix: p,
+		suffix: s,
 		size:   size,
 	}, nil
 }
@@ -78,68 +74,45 @@ func (r *Rotate) init() error {
 		r.w.Close()
 	}
 
-	// 获取默认的日志文件名
-	path := r.prefix + time.Now().Format(filenameFormat) + defaultExt
-	path = filepath.Join(r.dir, path)
-
-	stat, err := os.Stat(path)
-	if err != nil && !os.IsExist(err) {
-		goto CREATE
+	now := time.Now()
+	prefix := now.Format(r.prefix)
+	suffix := now.Format(r.suffix)
+	fs, err := ioutil.ReadDir(r.dir)
+	if err != nil {
+		return err
 	}
 
-	if stat.Size() < r.size { // 大小未达标，可以继续写入
+	var index int
+	var path string
+	var stat os.FileInfo
+	for ; index < len(fs); index++ {
+		name := prefix + strconv.Itoa(index) + suffix
+		path = filepath.Join(r.dir, name)
+
+		stat, err = os.Stat(path)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+
+	if stat != nil && stat.Size() < r.size {
 		r.w, err = os.Open(path)
 		if err != nil {
 			return err
 		}
 
-		r.wSize = stat.Size()
+		r.wSize = 0
 		return nil
 	}
 
-	// 重命名旧文件
-	if err = r.rename(path); err != nil {
-		return err
-	}
-
-CREATE:
+	name := prefix + strconv.Itoa(index) + suffix
+	path = filepath.Join(r.dir, name)
 	if r.w, err = os.Create(path); err != nil {
 		return err
 	}
 
 	r.wSize = 0
 	return nil
-}
-
-func (r *Rotate) rename(path string) error {
-	fs, err := ioutil.ReadDir(r.dir)
-	if err != nil {
-		return err
-	}
-
-	var cnt int64
-	p := r.prefix + time.Now().Format(filenameFormat)
-	for _, f := range fs {
-		if f.IsDir() ||
-			f.Name() == p+defaultExt ||
-			!strings.HasPrefix(f.Name(), p+filenameSeparator) {
-			continue
-		}
-
-		name := strings.TrimPrefix(f.Name(), p)
-		name = strings.TrimSuffix(name, defaultExt)
-		count, err := strconv.ParseInt(name, 10, 32)
-		if err != nil {
-			return err
-		}
-
-		if count > cnt {
-			cnt = count
-		}
-	}
-
-	filename := p + filenameSeparator + strconv.FormatInt(cnt, 10) + defaultExt
-	return os.Rename(path, filepath.Join(r.dir, filename))
 }
 
 func (r *Rotate) Write(buf []byte) (int, error) {

@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/issue9/logs/writers"
+	"github.com/issue9/logs/writers/rotate"
 )
 
 const (
@@ -43,7 +43,7 @@ func Rotate(args map[string]string) (io.Writer, error) {
 		return nil, err
 	}
 
-	return writers.NewRotate(prefix, dir, int(size))
+	return rotate.New(prefix, dir, size)
 }
 
 // 将字符串转换成以字节为单位的数值。

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package writers
+package rotate
 
 import (
 	"io"
@@ -16,38 +16,14 @@ import (
 
 var _ io.WriteCloser = &Rotate{}
 
-// 清空指定目录下的所有内容。
-func clearDir(dir string) error {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range files {
-		if file.IsDir() {
-			if err = os.RemoveAll(dir + file.Name()); err != nil {
-				return err
-			}
-		} else {
-			if err = os.Remove(dir + file.Name()); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
 func TestRotate(t *testing.T) {
 	a := assert.New(t)
 
 	a.NotError(os.RemoveAll("./testdata"))
-	w, err := NewRotate("test_", "./testdata", 100)
+	w, err := New("%i", "./testdata", 100)
 	a.NotError(err)
 	a.NotNil(w)
 	a.Equal(w.size, 100)
-
-	//clearDir(w.dir)
 
 	loop := 100
 	for i := 0; i < loop; i++ {

@@ -14,7 +14,8 @@ const indexPlaceholder = "%i"
 // ErrIndexNotExists 格式化字符串 %i 不存在
 var ErrIndexNotExists = errors.New("必须存在 %i")
 
-var dateRelpacer = strings.NewReplacer("%y", "06",
+var dateRelpacer = strings.NewReplacer(
+	"%y", "06",
 	"%Y", "2006",
 	"%m", "01",
 	"%d", "02",

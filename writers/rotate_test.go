@@ -41,12 +41,13 @@ func clearDir(dir string) error {
 func TestRotate(t *testing.T) {
 	a := assert.New(t)
 
+	a.NotError(os.RemoveAll("./testdata"))
 	w, err := NewRotate("test_", "./testdata", 100)
 	a.NotError(err)
 	a.NotNil(w)
 	a.Equal(w.size, 100)
 
-	clearDir(w.dir)
+	//clearDir(w.dir)
 
 	loop := 100
 	for i := 0; i < loop; i++ {
@@ -60,5 +61,5 @@ func TestRotate(t *testing.T) {
 
 	files, err := ioutil.ReadDir(w.dir)
 	a.NotError(err)
-	a.Equal(len(files), loop*len("1024\n")/w.size)
+	a.Equal(len(files), int64(loop*len("1024\n"))/w.size)
 }

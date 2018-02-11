@@ -5,36 +5,36 @@
 package writers
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
 var (
-	// 默认的文件权限
-	defaultMode os.FileMode = os.ModePerm
-
-	// linux 下需加上 O_WRONLY 或是 O_RDWR
-	defaultFlag = os.O_APPEND | os.O_CREATE | os.O_WRONLY
-
 	// 默认的日志后缀名
 	defaultExt = ".log"
 
-	filenameFormat = "20060102150405"
+	filenameFormat = "20060102"
+
+	// 文件名与计数器的分隔符，比如 20180102.0.log, 20180102.1.log
+	filenameSeparator = "."
 )
 
 // Rotate 可按大小进行分割的文件
 //  import "log"
 //  // 每个文件以 100M 大小进行分割，以日期名作为文件名保存在 /var/log 下。
-//  f,_ := NewRotate("/var/log", 100*1024*1024)
+//  f,_ := NewRotate("debug-", "/var/log", 100*1024*1024)
 //  l := log.New(f, "DEBUG", log.LstdFlags)
 type Rotate struct {
-	dir      string // 文件的保存目录
-	size     int    // 每个文件的最大尺寸
-	basePath string
+	dir    string // 文件的保存目录
+	size   int64  // 每个文件的最大尺寸
+	prefix string
 
 	w     *os.File // 当前正在写的文件
-	wSize int      // 当前正在写的文件大小
+	wSize int64    // 当前正在写的文件大小
 }
 
 // NewRotate 新建 Rotate。
@@ -42,7 +42,7 @@ type Rotate struct {
 // dir 为文件保存的目录，若不存在会尝试创建。
 // size 为每个文件的最大尺寸，单位为 byte。size 应该足够大，如果 size
 // 的大小不足够支撑一秒钟产生的量，则会继续在原有文件之后追加内容。
-func NewRotate(prefix, dir string, size int) (*Rotate, error) {
+func NewRotate(prefix, dir string, size int64) (*Rotate, error) {
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func NewRotate(prefix, dir string, size int) (*Rotate, error) {
 		}
 
 		// 尝试创建目录
-		if err := os.MkdirAll(dir, defaultMode); err != nil {
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 			return nil, err
 		}
 
@@ -66,26 +66,80 @@ func NewRotate(prefix, dir string, size int) (*Rotate, error) {
 	}
 
 	return &Rotate{
-		dir:      dir,
-		basePath: filepath.Join(dir, prefix),
-		size:     size,
+		dir:    dir,
+		prefix: prefix,
+		size:   size,
 	}, nil
 }
 
 // 初始化一个新的文件对象
-func (r *Rotate) init() (err error) {
+func (r *Rotate) init() error {
 	if r.w != nil {
 		r.w.Close()
 	}
 
-	name := r.basePath + time.Now().Format(filenameFormat) + defaultExt
-	if r.w, err = os.OpenFile(name, defaultFlag, defaultMode); err != nil {
+	// 获取默认的日志文件名
+	path := r.prefix + time.Now().Format(filenameFormat) + defaultExt
+	path = filepath.Join(r.dir, path)
+
+	stat, err := os.Stat(path)
+	if err != nil && !os.IsExist(err) {
+		goto CREATE
+	}
+
+	if stat.Size() < r.size { // 大小未达标，可以继续写入
+		r.w, err = os.Open(path)
+		if err != nil {
+			return err
+		}
+
+		r.wSize = stat.Size()
+		return nil
+	}
+
+	// 重命名旧文件
+	if err = r.rename(path); err != nil {
+		return err
+	}
+
+CREATE:
+	if r.w, err = os.Create(path); err != nil {
 		return err
 	}
 
 	r.wSize = 0
-
 	return nil
+}
+
+func (r *Rotate) rename(path string) error {
+	fs, err := ioutil.ReadDir(r.dir)
+	if err != nil {
+		return err
+	}
+
+	var cnt int64
+	p := r.prefix + time.Now().Format(filenameFormat)
+	for _, f := range fs {
+		if f.IsDir() ||
+			f.Name() == p+defaultExt ||
+			!strings.HasPrefix(f.Name(), p+filenameSeparator) {
+			continue
+		}
+
+		name := strings.TrimPrefix(f.Name(), p)
+		name = strings.TrimSuffix(name, defaultExt)
+		count, err := strconv.ParseInt(name, 10, 32)
+		if err != nil {
+			return err
+		}
+
+		if count > cnt {
+			cnt = count
+		}
+	}
+
+	filename := p + filenameSeparator + strconv.FormatInt(cnt, 10) + defaultExt
+	return os.Rename(path, filepath.Join(r.dir, filename))
 }
 
 func (r *Rotate) Write(buf []byte) (int, error) {
@@ -100,7 +154,7 @@ func (r *Rotate) Write(buf []byte) (int, error) {
 		return 0, err
 	}
 
-	r.wSize += size
+	r.wSize += int64(size)
 
 	return size, nil
 }

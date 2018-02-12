@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -84,25 +85,22 @@ func (r *Rotate) open() error {
 	now := time.Now()
 	prefix := now.Format(r.prefix)
 	suffix := now.Format(r.suffix)
-	fs, err := ioutil.ReadDir(r.dir)
+
+	index, err := r.getIndex(prefix, suffix)
 	if err != nil {
 		return err
 	}
 
-	var index int
-	var path string
-	var stat os.FileInfo
-	for ; index < len(fs); index++ {
-		name := prefix + strconv.Itoa(index) + suffix
-		path = filepath.Join(r.dir, name)
-
-		stat, err = os.Stat(path)
-		if err != nil && !os.IsNotExist(err) {
-			return err
+	path := filepath.Join(r.dir, prefix+strconv.Itoa(index)+suffix)
+	stat, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			goto CREATE
 		}
+		return err
 	}
 
-	if stat != nil && stat.Size() < r.size {
+	if stat.Size() < r.size {
 		r.w, err = os.Open(path)
 		if err != nil {
 			return err
@@ -112,14 +110,44 @@ func (r *Rotate) open() error {
 		return nil
 	}
 
-	name := prefix + strconv.Itoa(index) + suffix
-	path = filepath.Join(r.dir, name)
+	index++
+
+CREATE:
+	path = filepath.Join(r.dir, prefix+strconv.Itoa(index)+suffix)
 	if r.w, err = os.Create(path); err != nil {
 		return err
 	}
 
 	r.wSize = 0
 	return nil
+}
+
+func (r *Rotate) getIndex(prefix, suffix string) (int, error) {
+	fs, err := ioutil.ReadDir(r.dir)
+	if err != nil {
+		return 0, err
+	}
+
+	var index int
+	for _, f := range fs {
+		name := f.Name()
+
+		if !strings.HasPrefix(name, prefix) || !strings.HasSuffix(name, suffix) {
+			continue
+		}
+
+		istr := strings.TrimSuffix(strings.TrimPrefix(f.Name(), prefix), suffix)
+		i, err := strconv.Atoi(istr)
+		if err != nil {
+			continue
+		}
+
+		if i > index {
+			index = i
+		}
+	}
+
+	return index, nil
 }
 
 func (r *Rotate) Write(buf []byte) (int, error) {

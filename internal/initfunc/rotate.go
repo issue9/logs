@@ -23,9 +23,9 @@ const (
 
 // Rotate 的初始化函数。
 func Rotate(args map[string]string) (io.Writer, error) {
-	prefix, found := args["prefix"]
+	format, found := args["filename"]
 	if !found {
-		prefix = ""
+		return nil, argNotFoundErr("rotate", "filename")
 	}
 
 	dir, found := args["dir"]
@@ -43,7 +43,7 @@ func Rotate(args map[string]string) (io.Writer, error) {
 		return nil, err
 	}
 
-	return rotate.New(prefix, dir, size)
+	return rotate.New(format, dir, size)
 }
 
 // 将字符串转换成以字节为单位的数值。

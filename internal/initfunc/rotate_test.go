@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/logs/writers"
+	"github.com/issue9/logs/writers/rotate"
 )
 
 func TestToByte(t *testing.T) {
@@ -59,6 +59,6 @@ func TestRotate(t *testing.T) {
 	w, err = Rotate(args)
 	a.NotError(err).NotNil(w)
 
-	_, ok := w.(*writers.Rotate)
+	_, ok := w.(*rotate.Rotate)
 	a.True(ok)
 }

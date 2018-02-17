@@ -5,7 +5,11 @@
 package rotate
 
 import (
+	"io/ioutil"
+	"os"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/issue9/assert"
 )
@@ -30,4 +34,27 @@ func TestParseFormat(t *testing.T) {
 	a.NotError(err).
 		Equal(p, "test-200602").
 		Equal(s, "06y01-15")
+}
+
+func TestGetIndex(t *testing.T) {
+	a := assert.New(t)
+	now := time.Now()
+	prefixValue := now.Format("2006.")
+	suffixValue := now.Format(".01")
+
+	i, err := getIndex("./testdata", prefixValue, suffixValue)
+	a.NotError(err).Equal(i, 0)
+
+	w := func(i int) {
+		name := "./testdata/" + prefixValue + strconv.Itoa(i) + suffixValue
+		ioutil.WriteFile(name, []byte("123"), os.ModePerm)
+	}
+
+	w(5)
+	i, err = getIndex("./testdata", prefixValue, suffixValue)
+	a.NotError(err).Equal(i, 5)
+
+	w(8)
+	i, err = getIndex("./testdata", prefixValue, suffixValue)
+	a.NotError(err).Equal(i, 8)
 }

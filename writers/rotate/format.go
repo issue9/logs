@@ -6,6 +6,8 @@ package rotate
 
 import (
 	"errors"
+	"io/ioutil"
+	"strconv"
 	"strings"
 )
 
@@ -32,4 +34,33 @@ func parseFormat(format string) (prefix, suffix string, err error) {
 	suffix = format[index+len(indexPlaceholder):]
 
 	return dateRelpacer.Replace(prefix), dateRelpacer.Replace(suffix), nil
+}
+
+// 获取指定目录下，去掉前后缀之后，最大的索引值。
+func getIndex(dir, prefix, suffix string) (int, error) {
+	fs, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return 0, err
+	}
+
+	var index int
+	for _, f := range fs {
+		name := f.Name()
+
+		if !strings.HasPrefix(name, prefix) || !strings.HasSuffix(name, suffix) {
+			continue
+		}
+
+		istr := strings.TrimSuffix(strings.TrimPrefix(f.Name(), prefix), suffix)
+		i, err := strconv.Atoi(istr)
+		if err != nil {
+			continue
+		}
+
+		if i > index {
+			index = i
+		}
+	}
+
+	return index, nil
 }

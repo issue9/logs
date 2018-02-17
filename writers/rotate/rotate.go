@@ -2,14 +2,13 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
+// Package rotate 提供一个可以按文件大小进行分割的 io.Writer 实例。
 package rotate
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -86,7 +85,7 @@ func (r *Rotate) open() error {
 	prefix := now.Format(r.prefix)
 	suffix := now.Format(r.suffix)
 
-	index, err := r.getIndex(prefix, suffix)
+	index, err := getIndex(r.dir, prefix, suffix)
 	if err != nil {
 		return err
 	}
@@ -120,34 +119,6 @@ CREATE:
 
 	r.wSize = 0
 	return nil
-}
-
-func (r *Rotate) getIndex(prefix, suffix string) (int, error) {
-	fs, err := ioutil.ReadDir(r.dir)
-	if err != nil {
-		return 0, err
-	}
-
-	var index int
-	for _, f := range fs {
-		name := f.Name()
-
-		if !strings.HasPrefix(name, prefix) || !strings.HasSuffix(name, suffix) {
-			continue
-		}
-
-		istr := strings.TrimSuffix(strings.TrimPrefix(f.Name(), prefix), suffix)
-		i, err := strconv.Atoi(istr)
-		if err != nil {
-			continue
-		}
-
-		if i > index {
-			index = i
-		}
-	}
-
-	return index, nil
 }
 
 func (r *Rotate) Write(buf []byte) (int, error) {

@@ -21,8 +21,7 @@ func TestRotate(t *testing.T) {
 
 	a.NotError(os.RemoveAll("./testdata"))
 	w, err := New("%i", "./testdata", 100)
-	a.NotError(err)
-	a.NotNil(w)
+	a.NotError(err).NotNil(w)
 	a.Equal(w.size, 100)
 
 	loop := 100

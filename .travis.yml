@@ -7,6 +7,6 @@ go:
     - 1.7
 
 install:
-    - mkdir ./writers/testdata/
+    - mkdir ./writers/rotate/testdata/
     - go get github.com/issue9/assert
     - go get github.com/issue9/term/colors

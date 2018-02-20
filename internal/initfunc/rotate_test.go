@@ -56,6 +56,7 @@ func TestRotate(t *testing.T) {
 
 	// 正常
 	args["size"] = "12"
+	args["filename"] = "%Y%i.log"
 	w, err = Rotate(args)
 	a.NotError(err).NotNil(w)
 

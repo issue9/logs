@@ -1,18 +1,18 @@
 language: go
 
 os:
-    - linux
-    - windows
-    - osx
+  - linux
+  - windows
+  - osx
 
 go:
-    - tip
-    - "1.10"
-    - 1.9
-    - 1.8
-    - 1.7
+  - tip
+  - "1.10"
+  - 1.9
+  - 1.8
+  - 1.7
 
 install:
-    - mkdir ./writers/rotate/testdata/
-    - go get github.com/issue9/assert
-    - go get github.com/issue9/term/colors
+  - mkdir ./writers/rotate/testdata/
+  - go get github.com/issue9/assert
+  - go get github.com/issue9/term/colors

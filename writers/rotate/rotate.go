@@ -100,7 +100,7 @@ func (r *Rotate) open() error {
 	}
 
 	if stat.Size() < r.size {
-		r.w, err = os.Open(path)
+		r.w, err = os.OpenFile(path, os.O_APPEND|os.O_RDWR, os.ModePerm)
 		if err != nil {
 			return err
 		}

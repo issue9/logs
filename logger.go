@@ -7,6 +7,7 @@ package logs
 import (
 	"errors"
 	"io"
+	"io/ioutil"
 	"log"
 	"strings"
 
@@ -31,14 +32,16 @@ type logger struct {
 func (l *logger) set(w io.Writer, prefix string, flag int) {
 	if w == nil {
 		l.flush = nil
-		l.log = discard
+		l.log.SetOutput(ioutil.Discard)
 		return
 	}
 
+	l.log.SetFlags(flag)
+	l.log.SetPrefix(prefix)
+	l.log.SetOutput(w)
 	if f, ok := w.(writers.Flusher); ok {
 		l.flush = f
 	}
-	l.log = log.New(w, prefix, flag)
 }
 
 func loggerInitializer(args map[string]string) (io.Writer, error) {

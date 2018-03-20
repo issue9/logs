@@ -75,7 +75,7 @@ func TestSetWriter(t *testing.T) {
 	a := assert.New(t)
 
 	a.NotError(SetWriter(LevelError, nil, "", 0))
-	a.Equal(loggers[LevelError].log, discard).Equal(loggers[LevelError].flush, nil)
+	a.Equal(loggers[LevelError].flush, nil)
 
 	a.Error(SetWriter(100, nil, "", 0))
 }

@@ -35,22 +35,19 @@ var levels = map[string]int{
 	"critical": LevelCritical,
 }
 
-var (
-	loggers = make([]*logger, levelSize, levelSize)
-
-	discard = log.New(ioutil.Discard, "", 0)
-)
+var loggers = make([]*logger, levelSize, levelSize)
 
 // 在包初始化时，将每个日志通道指向空。
 func init() {
 	for index := range loggers {
 		loggers[index] = &logger{
-			log: discard,
+			log: log.New(ioutil.Discard, "", 0),
 		}
 	}
 }
 
 // InitFromXMLFile 从一个 XML 文件中初始化日志系统。
+//
 // 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
 func InitFromXMLFile(path string) error {
 	cfg, err := config.ParseXMLFile(path)
@@ -61,6 +58,7 @@ func InitFromXMLFile(path string) error {
 }
 
 // InitFromXMLString 从一个 XML 字符串初始化日志系统。
+//
 // 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
 func InitFromXMLString(xml string) error {
 	cfg, err := config.ParseXMLString(xml)

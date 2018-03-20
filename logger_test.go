@@ -5,6 +5,7 @@
 package logs
 
 import (
+	"io/ioutil"
 	"log"
 	"testing"
 
@@ -15,13 +16,18 @@ import (
 func TestLogger_set(t *testing.T) {
 	a := assert.New(t)
 
-	l := &logger{}
+	l := &logger{
+		log: log.New(ioutil.Discard, "", 0),
+	}
 	l.set(nil, "", 0)
-	a.Nil(l.flush).Equal(l.log, discard)
+	a.Nil(l.flush)
 
 	cont := writers.NewContainer()
 	l.set(cont, "", 0)
-	a.Equal(cont, l.flush).NotEqual(l.log, discard)
+	a.Equal(cont, l.flush)
+
+	l.set(cont, "abc", 2)
+	a.Equal(cont, l.flush)
 }
 
 func TestParseFlag(t *testing.T) {

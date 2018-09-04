@@ -6,11 +6,17 @@ os:
 
 go:
   - tip
+  - 1.11
   - "1.10"
-  - 1.9
-  - 1.8
 
 install:
   - mkdir ./writers/rotate/testdata/
   - go get github.com/issue9/assert
   - go get github.com/issue9/term/colors
+
+script:
+  - go test -v -coverprofile=coverage.txt -covermode=atomic $(go list ./...| grep -v /vendor/)
+
+matrix:
+  allow_failures:
+    - go: tip

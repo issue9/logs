@@ -30,7 +30,14 @@ type logger struct {
 	log   *log.Logger     // 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
 }
 
+// 重新设置输出信息
+//
+// 如果还有内容未输出，则会先输出内容。
 func (l *logger) set(w io.Writer, prefix string, flag int) {
+	if l.flush != nil {
+		l.flush.Flush()
+	}
+
 	if w == nil {
 		l.flush = nil
 		l.log.SetOutput(ioutil.Discard)

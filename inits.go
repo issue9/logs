@@ -56,6 +56,7 @@ func toWriter(c *config.Config) (io.Writer, error) {
 }
 
 // Register 注册一个 WriterInitializer。
+//
 // writer 初始化函数原型可参考: WriterInitializer。
 // 返回值反映是否注册成功。若已经存在相同名称的，则返回 false
 func Register(name string, init WriterInitializer) bool {

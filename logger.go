@@ -24,6 +24,7 @@ var flagMap = map[string]int{
 	"log.lstdflags":     log.LstdFlags,
 }
 
+// 扩展 log.Logger，使可以同时输出到多个日志通道
 type logger struct {
 	flush writers.Flusher // 如果当前的 log 的 io.Writer 实例是个容器，则此处保存此容器的指针。
 	log   *log.Logger     // 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。

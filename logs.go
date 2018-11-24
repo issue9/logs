@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -41,9 +40,7 @@ var loggers = make([]*logger, levelSize, levelSize)
 // 在包初始化时，将每个日志通道指向空。
 func init() {
 	for index := range loggers {
-		loggers[index] = &logger{
-			log: log.New(ioutil.Discard, "", 0),
-		}
+		loggers[index] = newLogger("", 0)
 	}
 }
 
@@ -89,17 +86,17 @@ func initFromConfig(cfg *config.Config) error {
 			return fmt.Errorf("未知道的二级元素名称:[%s]", name)
 		}
 
-		flag, err := parseFlag(c.Attrs["flag"])
+		l, err := toWriter(c)
 		if err != nil {
 			return err
 		}
 
-		w, err := toWriter(c)
-		if err != nil {
-			return err
+		ll, ok := l.(*logger)
+		if !ok {
+			return errors.New("无效的日志类型")
 		}
 
-		loggers[index].set(w, c.Attrs["prefix"], flag)
+		loggers[index] = ll
 	}
 
 	return nil
@@ -110,9 +107,7 @@ func initFromConfig(cfg *config.Config) error {
 // 一定记得调用 Flush() 输出可能缓存的日志内容。
 func Flush() {
 	for _, l := range loggers {
-		if l.flush != nil {
-			l.flush.Flush()
-		}
+		l.container.Flush()
 	}
 }
 

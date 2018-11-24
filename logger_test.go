@@ -5,14 +5,13 @@
 package logs
 
 import (
-	"io/ioutil"
 	"log"
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/logs/writers"
 )
 
+/*
 func TestLogger_set(t *testing.T) {
 	a := assert.New(t)
 
@@ -29,6 +28,7 @@ func TestLogger_set(t *testing.T) {
 	l.set(cont, "abc", 2)
 	a.Equal(cont, l.flush)
 }
+*/
 
 func TestParseFlag(t *testing.T) {
 	a := assert.New(t)

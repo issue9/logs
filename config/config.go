@@ -18,8 +18,8 @@ type Config struct {
 	Items  map[string]*Config // 若是容器，则还有子项
 }
 
-// 检测语法错误及基本的内容错误。
-func check(cfg *Config) error {
+// Sanitize 检测语法错误及基本的内容错误。
+func (cfg *Config) Sanitize() error {
 	if cfg.Name != "logs" {
 		return fmt.Errorf("顶级元素必须为 logs，当前名称为 %s", cfg.Name)
 	}

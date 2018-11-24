@@ -2,7 +2,7 @@
 // Use of this source code is governed by a MIT
 // license that can be found in the LICENSE file.
 
-package config
+package xml
 
 import (
 	"encoding/xml"
@@ -10,10 +10,12 @@ import (
 	"io"
 	"os"
 	"strings"
+
+	"github.com/issue9/logs/config"
 )
 
 // ParseXMLFile 从一个 XML 文件初始化 Config 实例。
-func ParseXMLFile(path string) (*Config, error) {
+func ParseXMLFile(path string) (*config.Config, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -24,13 +26,13 @@ func ParseXMLFile(path string) (*Config, error) {
 }
 
 // ParseXMLString 从一个 XML 字符串初始化 Config 实例。
-func ParseXMLString(xml string) (*Config, error) {
+func ParseXMLString(xml string) (*config.Config, error) {
 	return parseXML(strings.NewReader(xml))
 }
 
 // 从一个 XML 格式的 reader 初始化 Config
-func parseXML(r io.Reader) (*Config, error) {
-	var cfg *Config
+func parseXML(r io.Reader) (*config.Config, error) {
+	var cfg *config.Config
 	var t xml.Token
 	var err error
 
@@ -38,7 +40,7 @@ func parseXML(r io.Reader) (*Config, error) {
 	for t, err = d.Token(); err == nil; t, err = d.Token() {
 		switch token := t.(type) {
 		case xml.StartElement:
-			c := &Config{
+			c := &config.Config{
 				Parent: cfg,
 				Name:   token.Name.Local,
 				Attrs:  make(map[string]string),
@@ -49,7 +51,7 @@ func parseXML(r io.Reader) (*Config, error) {
 
 			if cfg != nil {
 				if cfg.Items == nil {
-					cfg.Items = make(map[string]*Config)
+					cfg.Items = make(map[string]*config.Config)
 				}
 
 				if _, found := cfg.Items[token.Name.Local]; found {
@@ -72,7 +74,7 @@ func parseXML(r io.Reader) (*Config, error) {
 		return nil, err
 	}
 
-	if err = check(cfg); err != nil {
+	if err = cfg.Sanitize(); err != nil {
 		return nil, err
 	}
 

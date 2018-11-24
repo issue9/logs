@@ -8,24 +8,26 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writers"
 )
 
 func TestBuffer(t *testing.T) {
 	a := assert.New(t)
-	args := map[string]string{}
+	cfg := &config.Config{Attrs: map[string]string{}}
 
-	w, err := Buffer(args)
+	w, err := Buffer(cfg)
 	a.Error(err).Nil(w)
 
-	args["size"] = "5"
-	w, err = Buffer(args)
+	cfg.Attrs["size"] = "5"
+	w, err = Buffer(cfg)
 	a.NotError(err).NotNil(w)
 	_, ok := w.(*writers.Buffer)
 	a.True(ok)
 
 	// 无法解析的 size 参数
-	args["size"] = "5l"
-	w, err = Buffer(args)
+	cfg.Attrs["size"] = "5l"
+	w, err = Buffer(cfg)
 	a.Error(err).Nil(w)
 }

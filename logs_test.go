@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/internal/initfunc"
 )
 
@@ -80,7 +82,7 @@ func TestSetWriter(t *testing.T) {
 	a.Error(SetWriter(100, nil, "", 0))
 }
 
-func debugWInit(args map[string]string) (io.Writer, error) {
+func debugWInit(cfg *config.Config) (io.Writer, error) {
 	return debugW, nil
 }
 

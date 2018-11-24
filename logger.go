@@ -11,6 +11,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writers"
 )
 
@@ -52,7 +53,7 @@ func (l *logger) set(w io.Writer, prefix string, flag int) {
 	}
 }
 
-func loggerInitializer(args map[string]string) (io.Writer, error) {
+func loggerInitializer(cfg *config.Config) (io.Writer, error) {
 	return writers.NewContainer(), nil
 }
 

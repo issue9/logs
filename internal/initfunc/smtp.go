@@ -8,32 +8,33 @@ import (
 	"io"
 	"strings"
 
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writers"
 )
 
 // SMTP 是 writers.SMTP 的初始化函数
-func SMTP(args map[string]string) (io.Writer, error) {
-	username, found := args["username"]
+func SMTP(cfg *config.Config) (io.Writer, error) {
+	username, found := cfg.Attrs["username"]
 	if !found {
 		return nil, argNotFoundErr("stmp", "username")
 	}
 
-	password, found := args["password"]
+	password, found := cfg.Attrs["password"]
 	if !found {
 		return nil, argNotFoundErr("stmp", "password")
 	}
 
-	subject, found := args["subject"]
+	subject, found := cfg.Attrs["subject"]
 	if !found {
 		return nil, argNotFoundErr("stmp", "subject")
 	}
 
-	host, found := args["host"]
+	host, found := cfg.Attrs["host"]
 	if !found {
 		return nil, argNotFoundErr("stmp", "host")
 	}
 
-	sendToStr, found := args["sendTo"]
+	sendToStr, found := cfg.Attrs["sendTo"]
 	if !found {
 		return nil, argNotFoundErr("stmp", "sendTo")
 	}

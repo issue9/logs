@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writers/rotate"
 )
 
@@ -22,18 +23,18 @@ const (
 )
 
 // Rotate 的初始化函数。
-func Rotate(args map[string]string) (io.Writer, error) {
-	format, found := args["filename"]
+func Rotate(cfg *config.Config) (io.Writer, error) {
+	format, found := cfg.Attrs["filename"]
 	if !found {
 		return nil, argNotFoundErr("rotate", "filename")
 	}
 
-	dir, found := args["dir"]
+	dir, found := cfg.Attrs["dir"]
 	if !found {
 		return nil, argNotFoundErr("rotate", "dir")
 	}
 
-	sizeStr, found := args["size"]
+	sizeStr, found := cfg.Attrs["size"]
 	if !found {
 		return nil, argNotFoundErr("rotate", "size")
 	}

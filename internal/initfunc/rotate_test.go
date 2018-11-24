@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writers/rotate"
 )
 
@@ -39,25 +41,25 @@ func TestToByte(t *testing.T) {
 
 func TestRotate(t *testing.T) {
 	a := assert.New(t)
-	args := map[string]string{}
+	cfg := &config.Config{Attrs: map[string]string{}}
 
-	w, err := Rotate(args)
+	w, err := Rotate(cfg)
 	a.Error(err).Nil(w)
 
 	// 缺少 size
-	args["dir"] = "./testdata"
-	w, err = Rotate(args)
+	cfg.Attrs["dir"] = "./testdata"
+	w, err = Rotate(cfg)
 	a.Error(err).Nil(w)
 
 	// 错误的 size 参数
-	args["size"] = "12P"
-	w, err = Rotate(args)
+	cfg.Attrs["size"] = "12P"
+	w, err = Rotate(cfg)
 	a.Error(err).Nil(w)
 
 	// 正常
-	args["size"] = "12"
-	args["filename"] = "%Y%i.log"
-	w, err = Rotate(args)
+	cfg.Attrs["size"] = "12"
+	cfg.Attrs["filename"] = "%Y%i.log"
+	w, err = Rotate(cfg)
 	a.NotError(err).NotNil(w)
 
 	_, ok := w.(*rotate.Rotate)

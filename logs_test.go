@@ -42,12 +42,12 @@ func resetLog(t *testing.T) {
 	a.True(warnW.Len() == 0)
 	a.True(criticalW.Len() == 0)
 
-	loggers[LevelInfo].set(infoW, "[INFO]", log.LstdFlags)
-	loggers[LevelDebug].set(debugW, "[DEBUG]", log.LstdFlags)
-	loggers[LevelError].set(errorW, "[ERROR]", log.LstdFlags)
-	loggers[LevelTrace].set(traceW, "[TRACE]", log.LstdFlags)
-	loggers[LevelWarn].set(warnW, "[WARN]", log.LstdFlags)
-	loggers[LevelCritical].set(criticalW, "[CRITICAL]", log.LstdFlags)
+	loggers[LevelInfo].setOutput(infoW, "[INFO]", log.LstdFlags)
+	loggers[LevelDebug].setOutput(debugW, "[DEBUG]", log.LstdFlags)
+	loggers[LevelError].setOutput(errorW, "[ERROR]", log.LstdFlags)
+	loggers[LevelTrace].setOutput(traceW, "[TRACE]", log.LstdFlags)
+	loggers[LevelWarn].setOutput(warnW, "[WARN]", log.LstdFlags)
+	loggers[LevelCritical].setOutput(criticalW, "[CRITICAL]", log.LstdFlags)
 }
 
 func checkLog(t *testing.T) {

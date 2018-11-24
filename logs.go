@@ -74,7 +74,7 @@ func SetWriter(level int, w io.Writer, prefix string, flag int) error {
 		return errors.New("无效的 level 值")
 	}
 
-	loggers[level].set(w, prefix, flag)
+	loggers[level].setOutput(w, prefix, flag)
 	return nil
 }
 

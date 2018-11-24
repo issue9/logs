@@ -27,8 +27,15 @@ var flagMap = map[string]int{
 
 // 扩展 log.Logger，使可以同时输出到多个日志通道
 type logger struct {
+	// 保存着添加到 log 中的所有 io.Writer 实例
+	//
+	// 当然如果是通赤 log.SetOutput 修改的，则不会出现在此处
 	container *writers.Container
-	log       *log.Logger // 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
+
+	// 指向日志输出实例。
+	//
+	// 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
+	log *log.Logger
 }
 
 func newLogger(prefix string, flag int) *logger {
@@ -43,7 +50,7 @@ func newLogger(prefix string, flag int) *logger {
 // 重新设置输出信息
 //
 // 如果还有内容未输出，则会先输出内容。
-func (l *logger) set(w io.Writer, prefix string, flag int) {
+func (l *logger) setOutput(w io.Writer, prefix string, flag int) {
 	l.container.Flush()
 
 	if w == nil {
@@ -57,8 +64,11 @@ func (l *logger) set(w io.Writer, prefix string, flag int) {
 	l.log.SetOutput(w)
 }
 
-func (l *logger) Write([]byte) (int, error) {
-	return 0, errors.New("未实现")
+// 该接口仅为兼容 toWriter 所使用。不应该直接调用。
+//
+// 当然如果直接调用该接口，也能将内容正确输出到日志。
+func (l *logger) Write(data []byte) (int, error) {
+	return l.container.Write(data)
 }
 
 func (l *logger) Add(w io.Writer) error {

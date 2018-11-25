@@ -9,8 +9,8 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/writers/rotate"
+	"github.com/issue9/logs/v2/config"
+	"github.com/issue9/logs/v2/writers/rotate"
 )
 
 func TestToByte(t *testing.T) {

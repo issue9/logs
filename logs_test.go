@@ -12,8 +12,8 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/internal/initfunc"
+	"github.com/issue9/logs/v2/config"
+	"github.com/issue9/logs/v2/internal/initfunc"
 )
 
 var (

@@ -11,8 +11,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/writers"
+	"github.com/issue9/logs/v2/config"
+	"github.com/issue9/logs/v2/writers"
 )
 
 var flagMap = map[string]int{

@@ -9,8 +9,8 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/writers"
+	"github.com/issue9/logs/v2/config"
+	"github.com/issue9/logs/v2/writers"
 )
 
 func TestSMTP(t *testing.T) {

@@ -7,7 +7,7 @@ package main
 import (
 	"os"
 
-	"github.com/issue9/logs"
+	"github.com/issue9/logs/v2"
 )
 
 func main() {

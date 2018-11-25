@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/writers/rotate"
+	"github.com/issue9/logs/v2/config"
+	"github.com/issue9/logs/v2/writers/rotate"
 )
 
 const (

@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/writers"
+	"github.com/issue9/logs/v2/config"
+	"github.com/issue9/logs/v2/writers"
 )
 
 // configTestWriter.Write 的输入内容，写到此变量中

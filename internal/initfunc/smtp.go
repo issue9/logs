@@ -8,8 +8,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/writers"
+	"github.com/issue9/logs/v2/config"
+	"github.com/issue9/logs/v2/writers"
 )
 
 // SMTP 是 writers.SMTP 的初始化函数

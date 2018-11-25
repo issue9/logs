@@ -9,9 +9,9 @@ import (
 	"io"
 	"sync"
 
-	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/internal/initfunc"
-	"github.com/issue9/logs/writers"
+	"github.com/issue9/logs/v2/config"
+	"github.com/issue9/logs/v2/internal/initfunc"
+	"github.com/issue9/logs/v2/writers"
 )
 
 // WriterInitializer io.Writer 实例的初始化函数。

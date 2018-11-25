@@ -7,15 +7,12 @@ os:
 go:
   - tip
   - 1.11
-  - "1.10"
 
 install:
   - mkdir ./writers/rotate/testdata/
-  - go get github.com/issue9/assert
-  - go get github.com/issue9/term/colors
 
 script:
-  - env GO111MODULE=on go test -v -coverprofile=coverage.txt -covermode=atomic $(go list ./...| grep -v /vendor/)
+  - env GO111MODULE=on go test -v -coverprofile=coverage.txt -covermode=atomic $(go list ./...)
 
 matrix:
   allow_failures:

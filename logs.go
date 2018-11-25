@@ -12,7 +12,6 @@ import (
 	"os"
 
 	"github.com/issue9/logs/config"
-	"github.com/issue9/logs/internal/xml"
 )
 
 // 定义了一些日志的类型
@@ -80,7 +79,7 @@ func (logs *Logs) Init(cfg *config.Config) error {
 //
 // 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
 func (logs *Logs) InitFromXMLFile(path string) error {
-	cfg, err := xml.ParseXMLFile(path)
+	cfg, err := config.ParseXMLFile(path)
 	if err != nil {
 		return err
 	}
@@ -91,7 +90,7 @@ func (logs *Logs) InitFromXMLFile(path string) error {
 //
 // 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
 func (logs *Logs) InitFromXMLString(str string) error {
-	cfg, err := xml.ParseXMLString(str)
+	cfg, err := config.ParseXMLString(str)
 	if err != nil {
 		return err
 	}

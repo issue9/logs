@@ -4,7 +4,6 @@
 
 package config
 
-/*
 import (
 	"testing"
 
@@ -66,5 +65,3 @@ func TestConfig_Sanitize(t *testing.T) {
 	cfg, err = ParseXMLString(xml)
 	a.NotError(err).NotNil(cfg)
 }
-
-*/

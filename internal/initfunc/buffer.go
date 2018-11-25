@@ -8,12 +8,13 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writers"
 )
 
 // Buffer 是 writers.Buffer 的初始化函数
-func Buffer(args map[string]string) (io.Writer, error) {
-	size, found := args["size"]
+func Buffer(cfg *config.Config) (io.Writer, error) {
+	size, found := cfg.Attrs["size"]
 	if !found {
 		return nil, argNotFoundErr("buffer", "size")
 	}

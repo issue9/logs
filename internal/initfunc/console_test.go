@@ -8,36 +8,38 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writers"
 )
 
 func TestConsole(t *testing.T) {
 	a := assert.New(t)
-	args := map[string]string{}
+	cfg := &config.Config{Attrs: map[string]string{}}
 
 	// 可以接受空参数，Console 的 args 都有默认值
-	w, err := Console(args)
+	w, err := Console(cfg)
 	a.NotError(err).NotNil(w)
 
 	// 无效的 output
-	args["output"] = "file"
-	w, err = Console(args)
+	cfg.Attrs["output"] = "file"
+	w, err = Console(cfg)
 	a.Error(err).Nil(w)
-	args["output"] = "stderr"
+	cfg.Attrs["output"] = "stderr"
 
 	// 无效的 foreground
-	args["foreground"] = "red1"
-	w, err = Console(args)
+	cfg.Attrs["foreground"] = "red1"
+	w, err = Console(cfg)
 	a.Error(err).Nil(w)
-	args["foreground"] = "red"
+	cfg.Attrs["foreground"] = "red"
 
 	// 无效的 background
-	args["background"] = "red1"
-	w, err = Console(args)
+	cfg.Attrs["background"] = "red1"
+	w, err = Console(cfg)
 	a.Error(err).Nil(w)
 
-	args["background"] = "blue"
-	w, err = Console(args)
+	cfg.Attrs["background"] = "blue"
+	w, err = Console(cfg)
 	a.NotError(err).NotNil(w)
 
 	_, ok := w.(*writers.Console)

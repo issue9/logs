@@ -11,6 +11,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writers"
 )
 
@@ -26,20 +27,34 @@ var flagMap = map[string]int{
 
 // 扩展 log.Logger，使可以同时输出到多个日志通道
 type logger struct {
-	flush writers.Flusher // 如果当前的 log 的 io.Writer 实例是个容器，则此处保存此容器的指针。
-	log   *log.Logger     // 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
+	// 保存着添加到 log 中的所有 io.Writer 实例
+	//
+	// 当然如果是通赤 log.SetOutput 修改的，则不会出现在此处
+	container *writers.Container
+
+	// 指向日志输出实例。
+	//
+	// 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
+	log *log.Logger
+}
+
+func newLogger(prefix string, flag int) *logger {
+	cont := writers.NewContainer()
+
+	return &logger{
+		container: cont,
+		log:       log.New(cont, prefix, flag),
+	}
 }
 
 // 重新设置输出信息
 //
 // 如果还有内容未输出，则会先输出内容。
-func (l *logger) set(w io.Writer, prefix string, flag int) {
-	if l.flush != nil {
-		l.flush.Flush()
-	}
+func (l *logger) setOutput(w io.Writer, prefix string, flag int) {
+	l.container.Flush()
 
 	if w == nil {
-		l.flush = nil
+		l.container.Clear()
 		l.log.SetOutput(ioutil.Discard)
 		return
 	}
@@ -47,13 +62,27 @@ func (l *logger) set(w io.Writer, prefix string, flag int) {
 	l.log.SetFlags(flag)
 	l.log.SetPrefix(prefix)
 	l.log.SetOutput(w)
-	if f, ok := w.(writers.Flusher); ok {
-		l.flush = f
-	}
 }
 
-func loggerInitializer(args map[string]string) (io.Writer, error) {
-	return writers.NewContainer(), nil
+// 该接口仅为兼容 toWriter 所使用。不应该直接调用。
+//
+// 当然如果直接调用该接口，也能将内容正确输出到日志。
+func (l *logger) Write(data []byte) (int, error) {
+	return l.container.Write(data)
+}
+
+// 可以让 toWriter 直接调用添加 io.Writer 实现
+func (l *logger) Add(w io.Writer) error {
+	return l.container.Add(w)
+}
+
+func loggerInitializer(cfg *config.Config) (io.Writer, error) {
+	flag, err := parseFlag(cfg.Attrs["flag"])
+	if err != nil {
+		return nil, err
+	}
+
+	return newLogger(cfg.Attrs["prefix"], flag), nil
 }
 
 // 将 log.Ldate|log.Ltime 的字符串转换成正确的值

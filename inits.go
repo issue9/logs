@@ -9,14 +9,14 @@ import (
 	"io"
 	"sync"
 
-	"github.com/issue9/logs/internal/config"
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/internal/initfunc"
 	"github.com/issue9/logs/writers"
 )
 
 // WriterInitializer io.Writer 实例的初始化函数。
 // args 参数为对应的 XML 节点的属性列表。
-type WriterInitializer func(args map[string]string) (io.Writer, error)
+type WriterInitializer func(cfg *config.Config) (io.Writer, error)
 
 var (
 	funs   = map[string]WriterInitializer{}
@@ -30,7 +30,7 @@ func toWriter(c *config.Config) (io.Writer, error) {
 		return nil, fmt.Errorf("未注册的初始化函数:[%v]", c.Name)
 	}
 
-	w, err := fun(c.Attrs)
+	w, err := fun(c)
 	if err != nil {
 		return nil, err
 	}

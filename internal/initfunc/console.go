@@ -9,8 +9,10 @@ import (
 	"io"
 	"os"
 
-	"github.com/issue9/logs/writers"
 	"github.com/issue9/term/colors"
+
+	"github.com/issue9/logs/config"
+	"github.com/issue9/logs/writers"
 )
 
 var consoleOutputMap = map[string]*os.File{
@@ -32,8 +34,8 @@ var consoleColorMap = map[string]colors.Color{
 }
 
 // Console 是 writers.Console 的初始化函数
-func Console(args map[string]string) (io.Writer, error) {
-	outputIndex, found := args["output"]
+func Console(cfg *config.Config) (io.Writer, error) {
+	outputIndex, found := cfg.Attrs["output"]
 	if !found {
 		outputIndex = "stderr"
 	}
@@ -43,7 +45,7 @@ func Console(args map[string]string) (io.Writer, error) {
 		return nil, fmt.Errorf("[%v]不是一个有效的控制台输出项", outputIndex)
 	}
 
-	fcIndex, found := args["foreground"]
+	fcIndex, found := cfg.Attrs["foreground"]
 	if !found { // 默认用红色前景色
 		fcIndex = "red"
 	}
@@ -52,7 +54,7 @@ func Console(args map[string]string) (io.Writer, error) {
 		return nil, fmt.Errorf("无效的前景色[%v]", fcIndex)
 	}
 
-	bcIndex, found := args["background"]
+	bcIndex, found := cfg.Attrs["background"]
 	if !found {
 		bcIndex = "default"
 	}

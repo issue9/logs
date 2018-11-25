@@ -63,7 +63,7 @@ func parseXML(r io.Reader) (*Config, error) {
 			if cfg.Parent != nil {
 				cfg = cfg.Parent
 			}
-		default: // 可能还有 ProcInst,CharData,Comment 等用不到的标签
+		default: // 可能还有 ProcInst、CharData、Comment 等用不到的标签
 			continue
 		}
 	} // end for
@@ -72,7 +72,7 @@ func parseXML(r io.Reader) (*Config, error) {
 		return nil, err
 	}
 
-	if err = check(cfg); err != nil {
+	if err = cfg.sanitize(); err != nil {
 		return nil, err
 	}
 

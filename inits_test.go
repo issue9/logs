@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/logs/internal/config"
+	"github.com/issue9/logs/config"
 	"github.com/issue9/logs/writers"
 )
 
@@ -34,11 +34,11 @@ func (t *configTestWriter) Write(bs []byte) (int, error) {
 }
 
 // 容器类初始化函数
-func logsInit(args map[string]string) (io.Writer, error) {
+func logsInit(cfg *config.Config) (io.Writer, error) {
 	return writers.NewContainer(), nil
 }
 
-func debugInit(args map[string]string) (io.Writer, error) {
+func debugInit(cfg *config.Config) (io.Writer, error) {
 	return &configTestWriter{}, nil
 }
 

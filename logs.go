@@ -43,6 +43,8 @@ type Logs struct {
 }
 
 // New 声明 Logs 变量
+//
+// 需要调用 InitFromXMLFile 或是 InitFromXMLString 进行具体的初始化。
 func New() *Logs {
 	logs := &Logs{
 		loggers: make([]*logger, levelSize, levelSize),
@@ -55,6 +57,25 @@ func New() *Logs {
 	return logs
 }
 
+// Init 从 config.Config 中初始化整个 logs 系统
+func (logs *Logs) Init(cfg *config.Config) error {
+	for name, c := range cfg.Items {
+		index, found := levels[name]
+		if !found {
+			panic("未知的二级元素名称:" + name)
+		}
+
+		l, err := toWriter(c)
+		if err != nil {
+			return err
+		}
+
+		logs.loggers[index] = l.(*logger)
+	}
+
+	return nil
+}
+
 // InitFromXMLFile 从一个 XML 文件中初始化日志系统。
 //
 // 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
@@ -63,7 +84,7 @@ func (logs *Logs) InitFromXMLFile(path string) error {
 	if err != nil {
 		return err
 	}
-	return logs.initFromConfig(cfg)
+	return logs.Init(cfg)
 }
 
 // InitFromXMLString 从一个 XML 字符串初始化日志系统。
@@ -74,7 +95,7 @@ func (logs *Logs) InitFromXMLString(str string) error {
 	if err != nil {
 		return err
 	}
-	return logs.initFromConfig(cfg)
+	return logs.Init(cfg)
 }
 
 // SetOutput 设置某一个类型的输出通道
@@ -86,30 +107,6 @@ func (logs *Logs) SetOutput(level int, w io.Writer, prefix string, flag int) err
 	}
 
 	logs.loggers[level].setOutput(w, prefix, flag)
-	return nil
-}
-
-// 从 config.Config 中初始化整个 logs 系统
-func (logs *Logs) initFromConfig(cfg *config.Config) error {
-	for name, c := range cfg.Items {
-		index, found := levels[name]
-		if !found {
-			return fmt.Errorf("未知道的二级元素名称:[%s]", name)
-		}
-
-		l, err := toWriter(c)
-		if err != nil {
-			return err
-		}
-
-		ll, ok := l.(*logger)
-		if !ok {
-			return errors.New("无效的日志类型")
-		}
-
-		logs.loggers[index] = ll
-	}
-
 	return nil
 }
 
@@ -263,6 +260,11 @@ func (logs *Logs) allf(format string, v ...interface{}) {
 	for _, l := range logs.loggers {
 		l.log.Output(3, fmt.Sprintf(format, v...))
 	}
+}
+
+// Init 从 config.Config 中初始化整个 logs 系统
+func Init(cfg *config.Config) error {
+	return defaultLogs.Init(cfg)
 }
 
 // InitFromXMLFile 从一个 XML 文件中初始化日志系统。

@@ -71,6 +71,7 @@ func (l *logger) Write(data []byte) (int, error) {
 	return l.container.Write(data)
 }
 
+// 可以让 toWriter 直接调用添加 io.Writer 实现
 func (l *logger) Add(w io.Writer) error {
 	return l.container.Add(w)
 }

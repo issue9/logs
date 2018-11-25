@@ -101,4 +101,4 @@
 //
 // NOTE: 不能对 logs.Error() 等函数进行再次封闭，若非要这样做的话，
 // 建议使用 logs.ERROR().Output()，否则会造成输出的错误信息定位不准确的问题。
-package logs
+package logs // import "github.com/issue9/logs"

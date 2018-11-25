@@ -76,9 +76,9 @@ func TestAllf(t *testing.T) {
 func TestSetWriter(t *testing.T) {
 	a := assert.New(t)
 
-	a.NotError(defaultLogs.SetWriter(LevelError, nil, "", 0))
+	a.NotError(defaultLogs.SetOutput(LevelError, nil, "", 0))
 
-	a.Error(defaultLogs.SetWriter(100, nil, "", 0))
+	a.Error(defaultLogs.SetOutput(100, nil, "", 0))
 }
 
 func debugWInit(cfg *config.Config) (io.Writer, error) {

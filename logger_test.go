@@ -5,10 +5,18 @@
 package logs
 
 import (
+	"io"
 	"log"
 	"testing"
 
 	"github.com/issue9/assert"
+
+	"github.com/issue9/logs/writers"
+)
+
+var (
+	_ io.Writer     = &logger{}
+	_ writers.Adder = &logger{}
 )
 
 /*

@@ -77,10 +77,10 @@ func (logs *Logs) InitFromXMLString(str string) error {
 	return logs.initFromConfig(cfg)
 }
 
-// SetWriter 设置某一个类型的输出通道
+// SetOutput 设置某一个类型的输出通道
 //
 // 若将 w 设置为 nil 等同于 iotuil.Discard，即关闭此类型的输出。
-func (logs *Logs) SetWriter(level int, w io.Writer, prefix string, flag int) error {
+func (logs *Logs) SetOutput(level int, w io.Writer, prefix string, flag int) error {
 	if level < 0 || level > levelSize {
 		return errors.New("无效的 level 值")
 	}
@@ -279,11 +279,11 @@ func InitFromXMLString(str string) error {
 	return defaultLogs.InitFromXMLString(str)
 }
 
-// SetWriter 设置某一个类型的输出通道
+// SetOutput 设置某一个类型的输出通道
 //
 // 若将 w 设置为 nil 等同于 iotuil.Discard，即关闭此类型的输出。
-func SetWriter(level int, w io.Writer, prefix string, flag int) error {
-	return defaultLogs.SetWriter(level, w, prefix, flag)
+func SetOutput(level int, w io.Writer, prefix string, flag int) error {
+	return defaultLogs.SetOutput(level, w, prefix, flag)
 }
 
 // Flush 输出所有的缓存内容。

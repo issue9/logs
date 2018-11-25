@@ -25,7 +25,7 @@ var (
 	criticalW = new(bytes.Buffer)
 )
 
-func resetLog(t *testing.T) {
+func resetLog(logs *Logs, t *testing.T) {
 	a := assert.New(t)
 
 	infoW.Reset()
@@ -42,12 +42,12 @@ func resetLog(t *testing.T) {
 	a.True(warnW.Len() == 0)
 	a.True(criticalW.Len() == 0)
 
-	loggers[LevelInfo].setOutput(infoW, "[INFO]", log.LstdFlags)
-	loggers[LevelDebug].setOutput(debugW, "[DEBUG]", log.LstdFlags)
-	loggers[LevelError].setOutput(errorW, "[ERROR]", log.LstdFlags)
-	loggers[LevelTrace].setOutput(traceW, "[TRACE]", log.LstdFlags)
-	loggers[LevelWarn].setOutput(warnW, "[WARN]", log.LstdFlags)
-	loggers[LevelCritical].setOutput(criticalW, "[CRITICAL]", log.LstdFlags)
+	logs.loggers[LevelInfo].setOutput(infoW, "[INFO]", log.LstdFlags)
+	logs.loggers[LevelDebug].setOutput(debugW, "[DEBUG]", log.LstdFlags)
+	logs.loggers[LevelError].setOutput(errorW, "[ERROR]", log.LstdFlags)
+	logs.loggers[LevelTrace].setOutput(traceW, "[TRACE]", log.LstdFlags)
+	logs.loggers[LevelWarn].setOutput(warnW, "[WARN]", log.LstdFlags)
+	logs.loggers[LevelCritical].setOutput(criticalW, "[CRITICAL]", log.LstdFlags)
 }
 
 func checkLog(t *testing.T) {
@@ -62,13 +62,13 @@ func checkLog(t *testing.T) {
 }
 
 func TestAll(t *testing.T) {
-	resetLog(t)
+	resetLog(defaultLogs, t)
 	All("abc")
 	checkLog(t)
 }
 
 func TestAllf(t *testing.T) {
-	resetLog(t)
+	resetLog(defaultLogs, t)
 	Allf("abc")
 	checkLog(t)
 }
@@ -76,9 +76,9 @@ func TestAllf(t *testing.T) {
 func TestSetWriter(t *testing.T) {
 	a := assert.New(t)
 
-	a.NotError(SetWriter(LevelError, nil, "", 0))
+	a.NotError(defaultLogs.SetWriter(LevelError, nil, "", 0))
 
-	a.Error(SetWriter(100, nil, "", 0))
+	a.Error(defaultLogs.SetWriter(100, nil, "", 0))
 }
 
 func debugWInit(cfg *config.Config) (io.Writer, error) {
@@ -105,7 +105,7 @@ func TestInitFormXMLString(t *testing.T) {
 </logs>
 `
 	debugW.Reset()
-	a.NotError(InitFromXMLString(xml))
+	a.NotError(defaultLogs.InitFromXMLString(xml))
 
 	Debug("abc")
 	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空

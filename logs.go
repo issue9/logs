@@ -221,17 +221,17 @@ func (logs *Logs) Allf(format string, v ...interface{}) {
 }
 
 // Fatal 输出错误信息，然后退出程序。
-func (logs *Logs) Fatal(v ...interface{}) {
+func (logs *Logs) Fatal(code int, v ...interface{}) {
 	logs.all(v...)
 	logs.Flush()
-	os.Exit(2)
+	os.Exit(code)
 }
 
 // Fatalf 输出错误信息，然后退出程序。
-func (logs *Logs) Fatalf(format string, v ...interface{}) {
+func (logs *Logs) Fatalf(code int, format string, v ...interface{}) {
 	logs.allf(format, v...)
 	logs.Flush()
-	os.Exit(2)
+	os.Exit(code)
 }
 
 // Panic 输出错误信息，然后触发 panic。
@@ -397,13 +397,13 @@ func Allf(format string, v ...interface{}) {
 }
 
 // Fatal 输出错误信息，然后退出程序。
-func Fatal(v ...interface{}) {
-	defaultLogs.Fatal(v...)
+func Fatal(code int, v ...interface{}) {
+	defaultLogs.Fatal(code, v...)
 }
 
 // Fatalf 输出错误信息，然后退出程序。
-func Fatalf(format string, v ...interface{}) {
-	defaultLogs.Fatalf(format, v...)
+func Fatalf(code int, format string, v ...interface{}) {
+	defaultLogs.Fatalf(code, format, v...)
 }
 
 // Panic 输出错误信息，然后触发 panic。

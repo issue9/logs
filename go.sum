@@ -1,4 +1,6 @@
 github.com/issue9/assert v1.0.0 h1:NkLKrreEZgOdyl0aHlF8Yq2+Id7GsfEtU0rTK8nsN4E=
 github.com/issue9/assert v1.0.0/go.mod h1:KLwR3U/5rbCxqwAnV3aCr+dz07aoIyIfk2lefIVr2BA=
+github.com/issue9/assert v1.1.0/go.mod h1:KLwR3U/5rbCxqwAnV3aCr+dz07aoIyIfk2lefIVr2BA=
+github.com/issue9/assert v1.2.0/go.mod h1:KLwR3U/5rbCxqwAnV3aCr+dz07aoIyIfk2lefIVr2BA=
 github.com/issue9/term v1.0.0 h1:Gz7VoKwJJEC3ljAmCk82YyEia8prkXxdrzvkLujYamE=
 github.com/issue9/term v1.0.0/go.mod h1:NUstPS3ZNncPNM1mI5G6KZTd83SHmqjtciqKZTVFO1s=

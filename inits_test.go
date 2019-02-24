@@ -22,10 +22,7 @@ type configTestWriter struct {
 
 // 清除已经注册的初始化函数。
 func clearInitializer() {
-	funsMu.Lock()
-	defer funsMu.Unlock()
-
-	funs = make(map[string]WriterInitializer)
+	defaultLogs.funs = make(map[string]WriterInitializer)
 }
 
 func (t *configTestWriter) Write(bs []byte) (int, error) {
@@ -64,7 +61,7 @@ func TestToWriter(t *testing.T) {
 	}
 
 	// 转换成 writer
-	w, err := toWriter(cfg)
+	w, err := defaultLogs.toWriter(cfg)
 	a.NotError(err).NotNil(w)
 
 	// 转换成 writers.Container
@@ -80,7 +77,7 @@ func TestToWriter(t *testing.T) {
 
 	// 未注册的初始化函数
 	cfg.Name = "unregister"
-	w, err = toWriter(cfg)
+	w, err = defaultLogs.toWriter(cfg)
 	a.Error(err).Nil(w)
 }
 
@@ -106,5 +103,5 @@ func TestInits(t *testing.T) {
 	a.True(IsRegisted("init1"))
 
 	clearInitializer()
-	a.Equal(0, len(funs))
+	a.Equal(0, len(defaultLogs.funs))
 }

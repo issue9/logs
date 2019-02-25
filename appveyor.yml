@@ -9,6 +9,7 @@ environment:
 stack: go 1.11
 
 before_test:
+  - mkdir .\writers\rotate\testdata
   - go vet ./...
 
 test_script:

@@ -7,6 +7,7 @@ package rotate
 import (
 	"errors"
 	"io/ioutil"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -38,6 +39,11 @@ func parseFormat(format string) (prefix, suffix string, err error) {
 
 // 获取指定目录下，去掉前后缀之后，最大的索引值。
 func getIndex(dir, prefix, suffix string) (int, error) {
+	dir, err := filepath.Abs(dir)
+	if err != nil {
+		return 0, err
+	}
+
 	fs, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return 0, err

@@ -1,6 +1,5 @@
 logs
 [![Build Status](https://travis-ci.org/issue9/logs.svg?branch=master)](https://travis-ci.org/issue9/logs)
-[![Build status](https://ci.appveyor.com/api/projects/status/24apsc4molt7pmwh?svg=true)](https://ci.appveyor.com/project/caixw/logs)
 ======
 
 一个可配置的日志服务包。可以通过 XML 自定义日志输出：

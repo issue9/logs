@@ -6,6 +6,7 @@ os:
 
 go:
   - tip
+  - 1.12
   - 1.11.4
 
 install:

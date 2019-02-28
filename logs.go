@@ -38,7 +38,6 @@ var defaultLogs = New()
 
 // Logs 日志输出
 type Logs struct {
-	funs    map[string]WriterInitializer
 	loggers []*logger
 }
 
@@ -47,10 +46,8 @@ type Logs struct {
 // 需要调用 InitFromXMLFile 或是 InitFromXMLString 进行具体的初始化。
 func New() *Logs {
 	logs := &Logs{
-		funs:    map[string]WriterInitializer{},
 		loggers: make([]*logger, levelSize, levelSize),
 	}
-	logs.initFuncs()
 
 	for index := range logs.loggers {
 		logs.loggers[index] = newLogger("", 0)
@@ -67,7 +64,7 @@ func (logs *Logs) Init(cfg *config.Config) error {
 			panic("未知的二级元素名称:" + name)
 		}
 
-		l, err := logs.toWriter(c)
+		l, err := toWriter(c)
 		if err != nil {
 			return err
 		}

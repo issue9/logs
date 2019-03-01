@@ -5,7 +5,6 @@
 package config
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -31,8 +30,8 @@ func TestParseXMLString(t *testing.T) {
 	a.NotError(err).NotNil(cfg)
 }
 
-func TestParseXML(t *testing.T) {
-	var xmlCfg = `
+func TestXMLUnmarshal(t *testing.T) {
+	var xmlCfg = []byte(`
 <?xml version="1.0" encoding="utf-8" ?>
 <logs>
     <!-- comment -->
@@ -49,13 +48,11 @@ func TestParseXML(t *testing.T) {
         <console foreground="red" />
     </debug>
 </logs>
-`
+`)
 	a := assert.New(t)
-	r := bytes.NewReader([]byte(xmlCfg))
-	a.NotNil(r)
 
-	cfg, err := parseXML(r)
-	a.NotError(err).NotNil(cfg)
+	cfg := &Config{}
+	a.NotError(XMLUnmarshal(xmlCfg, cfg))
 	a.Equal(2, len(cfg.Items)) // info debug
 
 	info, found := cfg.Items["info"]
@@ -66,17 +63,15 @@ func TestParseXML(t *testing.T) {
 	a.True(found).NotNil(buf)
 	a.Equal(buf.Attrs["size"], "5")
 
-	// 测试错误的xml配置文件，重复info元素名
-	xmlCfg = `
+	// 测试错误的 xml 配置文件，重复 info 元素名
+	xmlCfg = []byte(`
 <?xml version="1.0" encoding="utf-8" ?>
 <logs>
     <info></info>
     <info></info>
 </logs>
-`
-	r = bytes.NewReader([]byte(xmlCfg))
-	a.NotNil(r)
+`)
 
-	cfg, err = parseXML(r)
-	a.Error(err).Nil(cfg)
+	cfg = &Config{}
+	a.Error(XMLUnmarshal(xmlCfg, cfg))
 }

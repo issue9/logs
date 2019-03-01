@@ -12,7 +12,7 @@ import (
 
 // Config 用于表示配置文件中的数据。
 type Config struct {
-	Parent *Config
+	parent *Config
 	Name   string             // writer 的名称，一般为节点名
 	Attrs  map[string]string  // 参数列表
 	Items  map[string]*Config // 若是容器，则还有子项

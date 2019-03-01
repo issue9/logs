@@ -57,7 +57,7 @@ func XMLUnmarshal(bs []byte, v interface{}) error {
 		switch token := t.(type) {
 		case xml.StartElement:
 			c := &Config{
-				Parent: cfg,
+				parent: cfg,
 				Name:   token.Name.Local,
 				Attrs:  make(map[string]string, len(token.Attr)),
 			}
@@ -78,8 +78,8 @@ func XMLUnmarshal(bs []byte, v interface{}) error {
 			}
 			cfg = c
 		case xml.EndElement:
-			if cfg.Parent != nil {
-				cfg = cfg.Parent
+			if cfg.parent != nil {
+				cfg = cfg.parent
 			}
 		default: // 可能还有 ProcInst、CharData、Comment 等用不到的标签
 			continue

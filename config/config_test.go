@@ -8,7 +8,10 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/config"
 )
+
+var _ config.Sanitizer = &Config{}
 
 func TestConfig_sanitize(t *testing.T) {
 	a := assert.New(t)

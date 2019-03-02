@@ -30,6 +30,8 @@ func ParseXMLFile(path string) (*Config, error) {
 	if err := XMLUnmarshal([]byte(bs), conf); err != nil {
 		return nil, err
 	}
+
+	// TODO Sanitize
 	return conf, nil
 }
 
@@ -87,10 +89,6 @@ func XMLUnmarshal(bs []byte, v interface{}) error {
 	} // end for
 
 	if err != io.EOF {
-		return err
-	}
-
-	if err = cfg.sanitize(); err != nil {
 		return err
 	}
 

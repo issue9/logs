@@ -8,7 +8,10 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
+	"github.com/issue9/config"
 )
+
+var _ config.UnmarshalFunc = XMLUnmarshal
 
 func TestParseXMLFile(t *testing.T) {
 	a := assert.New(t)

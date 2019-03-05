@@ -78,6 +78,8 @@ func (logs *Logs) Init(cfg *config.Config) error {
 // InitFromXMLFile 从一个 XML 文件中初始化日志系统。
 //
 // 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
+//
+// Deprecated: 只能由 Init 进行初始化
 func (logs *Logs) InitFromXMLFile(path string) error {
 	cfg, err := config.ParseXMLFile(path)
 	if err != nil {
@@ -89,6 +91,8 @@ func (logs *Logs) InitFromXMLFile(path string) error {
 // InitFromXMLString 从一个 XML 字符串初始化日志系统。
 //
 // 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
+//
+// Deprecated: 只能由 Init 进行初始化
 func (logs *Logs) InitFromXMLString(str string) error {
 	cfg, err := config.ParseXMLString(str)
 	if err != nil {

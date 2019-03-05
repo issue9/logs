@@ -1,6 +1,5 @@
 # logs.yml
 
-name: logs
 items:
   debug:
     attrs:

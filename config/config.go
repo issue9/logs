@@ -11,7 +11,6 @@ import "github.com/issue9/config"
 type Config struct {
 	parent *Config // TODO 仅 xml 使用，考虑去掉
 
-	Name  string             `yaml:"name"`  // writer 的名称，一般为节点名
 	Attrs map[string]string  `yaml:"attrs"` // 参数列表
 	Items map[string]*Config `yaml:"items"` // 若是容器，则还有子项
 }
@@ -20,10 +19,6 @@ type Config struct {
 //
 // 同时也是实现 config.Sanitizer 接口。
 func (cfg *Config) Sanitize() error {
-	if cfg.Name != "logs" {
-		return config.NewError("", "name", "顶级元素必须为 logs")
-	}
-
 	if len(cfg.Attrs) > 0 {
 		return config.NewError("", "attrs", "根元素不能存在任何属性")
 	}

@@ -59,7 +59,7 @@ func TestXMLUnmarshal(t *testing.T) {
 	a.Equal(2, len(cfg.Items)) // info debug
 
 	info, found := cfg.Items["info"]
-	a.True(found).NotNil(info).Equal(info.Name, "info")
+	a.True(found).NotNil(info)
 	a.Equal(2, len(info.Items)) // buffer,console
 
 	buf, found := info.Items["buffer"]

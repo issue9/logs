@@ -31,7 +31,9 @@ func ParseXMLFile(path string) (*Config, error) {
 		return nil, err
 	}
 
-	// TODO Sanitize
+	if err := conf.Sanitize(); err != nil {
+		return nil, err
+	}
 	return conf, nil
 }
 
@@ -39,6 +41,10 @@ func ParseXMLFile(path string) (*Config, error) {
 func ParseXMLString(xml string) (*Config, error) {
 	conf := &Config{}
 	if err := XMLUnmarshal([]byte(xml), conf); err != nil {
+		return nil, err
+	}
+
+	if err := conf.Sanitize(); err != nil {
 		return nil, err
 	}
 	return conf, nil
@@ -60,7 +66,6 @@ func XMLUnmarshal(bs []byte, v interface{}) error {
 		case xml.StartElement:
 			c := &Config{
 				parent: cfg,
-				Name:   token.Name.Local,
 				Attrs:  make(map[string]string, len(token.Attr)),
 			}
 			for _, v := range token.Attr {

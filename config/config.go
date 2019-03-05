@@ -67,11 +67,9 @@ func (cfg *Config) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 			if cfg.Items == nil {
 				cfg.Items = make(map[string]*Config)
 			}
-
 			if _, found := cfg.Items[token.Name.Local]; found {
 				return fmt.Errorf("重复的元素名[%v]", token.Name.Local)
 			}
-
 			cfg.Items[token.Name.Local] = c
 
 			cfg = c

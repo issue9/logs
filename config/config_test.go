@@ -5,18 +5,22 @@
 package config
 
 import (
+	"encoding/xml"
 	"testing"
 
 	"github.com/issue9/assert"
 	"github.com/issue9/config"
 )
 
-var _ config.Sanitizer = &Config{}
+var (
+	_ config.Sanitizer = &Config{}
+	_ xml.Unmarshaler  = &Config{}
+)
 
 func TestConfig_sanitize(t *testing.T) {
 	a := assert.New(t)
 
-	// 错误的xml内容
+	// 错误的 xml 内容
 	xml := `
 <?xml version="1.0" encoding="utf-8"?>
 <logs>
@@ -25,7 +29,7 @@ func TestConfig_sanitize(t *testing.T) {
 	cfg, err := ParseXMLString(xml)
 	a.Error(err).Nil(cfg)
 
-	// 错误的xml内容,顶级只能为logs
+	// 错误的 xml 内容,顶级只能为 logs
 	xml = `
 <?xml version="1.0" encoding="utf-8"?>
 <log>
@@ -35,7 +39,7 @@ func TestConfig_sanitize(t *testing.T) {
 	cfg, err = ParseXMLString(xml)
 	a.Error(err).Nil(cfg)
 
-	// 错误的xml内容,未知的debug1元素
+	// 错误的 xml 内容,未知的 debug1 元素
 	xml = `
 <?xml version="1.0" encoding="utf-8"?>
 <logs>
@@ -45,7 +49,7 @@ func TestConfig_sanitize(t *testing.T) {
 	cfg, err = ParseXMLString(xml)
 	a.Error(err).Nil(cfg)
 
-	// 错误的xml内容,debug必须要有子元素。
+	// 错误的 xml 内容,debug 必须要有子元素。
 	xml = `
 <?xml version="1.0" encoding="utf-8"?>
 <logs>

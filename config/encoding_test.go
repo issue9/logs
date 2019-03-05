@@ -5,6 +5,7 @@
 package config
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"testing"
 
@@ -12,7 +13,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-func TestConfig_MarshalYAML(t *testing.T) {
+func TestConfig_yaml(t *testing.T) {
 	a := assert.New(t)
 
 	data, err := ioutil.ReadFile("./config.yml")
@@ -20,6 +21,25 @@ func TestConfig_MarshalYAML(t *testing.T) {
 
 	cfg := &Config{}
 	a.NotError(yaml.Unmarshal(data, cfg))
+	a.Equal(5, len(cfg.Items))
+
+	erro, found := cfg.Items["error"]
+	a.True(found).NotNil(erro)
+	a.Equal(3, len(erro.Items))
+
+	console, found := erro.Items["console"]
+	a.True(found).NotNil(console)
+	a.Equal(console.Attrs["output"], "stderr")
+}
+
+func TestConfig_json(t *testing.T) {
+	a := assert.New(t)
+
+	data, err := ioutil.ReadFile("./config.json")
+	a.NotError(err).NotEmpty(data)
+
+	cfg := &Config{}
+	a.NotError(json.Unmarshal(data, cfg))
 	a.Equal(5, len(cfg.Items))
 
 	erro, found := cfg.Items["error"]

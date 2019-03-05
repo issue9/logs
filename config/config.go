@@ -11,8 +11,8 @@ import "github.com/issue9/config"
 type Config struct {
 	parent *Config // TODO 仅 xml 使用，考虑去掉
 
-	Attrs map[string]string  `yaml:"attrs"` // 参数列表
-	Items map[string]*Config `yaml:"items"` // 若是容器，则还有子项
+	Attrs map[string]string  `yaml:"attrs" json:"attrs"` // 参数列表
+	Items map[string]*Config `yaml:"items" json:"items"` // 若是容器，则还有子项
 }
 
 // Sanitize 检测语法错误及基本的内容错误。

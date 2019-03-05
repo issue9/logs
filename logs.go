@@ -64,7 +64,7 @@ func (logs *Logs) Init(cfg *config.Config) error {
 			panic("未知的二级元素名称:" + name)
 		}
 
-		l, err := toWriter(c)
+		l, err := toWriter(name, c)
 		if err != nil {
 			return err
 		}

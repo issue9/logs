@@ -20,10 +20,10 @@ type WriterInitializer func(cfg *config.Config) (io.Writer, error)
 var funs = map[string]WriterInitializer{}
 
 // 将当前的 config.Config 转换成 io.Writer
-func toWriter(c *config.Config) (io.Writer, error) {
-	fun, found := funs[c.Name]
+func toWriter(name string, c *config.Config) (io.Writer, error) {
+	fun, found := funs[name]
 	if !found {
-		return nil, fmt.Errorf("未注册的初始化函数:[%v]", c.Name)
+		return nil, fmt.Errorf("未注册的初始化函数:[%v]", name)
 	}
 
 	w, err := fun(c)
@@ -37,11 +37,11 @@ func toWriter(c *config.Config) (io.Writer, error) {
 
 	cont, ok := w.(writers.Adder)
 	if !ok {
-		return nil, fmt.Errorf("[%v]并未实现 writers.Adder 接口", c.Name)
+		return nil, fmt.Errorf("[%v]并未实现 writers.Adder 接口", name)
 	}
 
-	for _, cfg := range c.Items {
-		wr, err := toWriter(cfg)
+	for name, cfg := range c.Items {
+		wr, err := toWriter(name, cfg)
 		if err != nil {
 			return nil, err
 		}

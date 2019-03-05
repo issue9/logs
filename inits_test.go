@@ -52,16 +52,13 @@ func TestToWriter(t *testing.T) {
 	//     <debug></debug>
 	// </logs>
 	cfg := &config.Config{
-		Name: "logs",
 		Items: map[string]*config.Config{
-			"debug": &config.Config{
-				Name: "debug",
-			},
+			"debug": &config.Config{},
 		},
 	}
 
 	// 转换成 writer
-	w, err := toWriter(cfg)
+	w, err := toWriter("logs", cfg)
 	a.NotError(err).NotNil(w)
 
 	// 转换成 writers.Container
@@ -76,8 +73,7 @@ func TestToWriter(t *testing.T) {
 	a.Equal(configTestWriterContent, []byte("hello world"))
 
 	// 未注册的初始化函数
-	cfg.Name = "unregister"
-	w, err = toWriter(cfg)
+	w, err = toWriter("unregister", cfg)
 	a.Error(err).Nil(w)
 }
 

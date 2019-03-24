@@ -6,14 +6,17 @@ os:
 
 go:
   - tip
-  - 1.12
-  - 1.11.4
+  - 1.12.x
+  - 1.11.x
 
+env:
+  - GO111MODULE=on
+ 
 install:
   - mkdir ./writers/rotate/testdata/
 
 script:
-  - env GO111MODULE=on go test -v -coverprofile=coverage.txt -covermode=atomic ./...
+  - go test -v -coverprofile=coverage.txt -covermode=atomic ./...
 
 matrix:
   allow_failures:

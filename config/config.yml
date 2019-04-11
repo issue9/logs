@@ -3,7 +3,7 @@
 items:
   debug:
     attrs:
-      prefix: INFO
+      prefix: DEBUG
     items:
       buffer:
         attrs:

@@ -15,7 +15,41 @@ import (
 var (
 	_ config.Sanitizer = &Config{}
 	_ xml.Unmarshaler  = &Config{}
+	_ xml.Marshaler    = &Config{}
 )
+
+func TestConfig_MarshalXML(t *testing.T) {
+	a := assert.New(t)
+	cfg := &Config{
+		Items: map[string]*Config{
+			"debug": &Config{
+				Attrs: map[string]string{"prefix": "DEBUG"},
+			},
+			"info": &Config{
+				Attrs: map[string]string{"prefix": "INFO"},
+				Items: map[string]*Config{
+					"buffer": &Config{
+						Attrs: map[string]string{"size": "5"},
+					},
+				},
+			},
+		},
+	}
+
+	bs, err := xml.MarshalIndent(cfg, "", "    ")
+	a.NotError(err).NotNil(bs)
+	a.Contains([]string{`<logs>
+    <debug prefix="DEBUG"></debug>
+    <info prefix="INFO">
+        <buffer size="5"></buffer>
+    </info>
+</logs>`, `<logs>
+    <info prefix="INFO">
+        <buffer size="5"></buffer>
+    </info>
+    <debug prefix="DEBUG"></debug>
+</logs>`}, string(bs))
+}
 
 func TestConfig_sanitize(t *testing.T) {
 	a := assert.New(t)

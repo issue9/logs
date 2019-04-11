@@ -80,3 +80,32 @@ func (cfg *Config) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		} // end switch
 	} // end for
 }
+
+// MarshalXML xml.Unmarshaler 接口实现
+func (cfg *Config) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	return cfg.marshalXML(e, xml.StartElement{Name: xml.Name{Local: "logs"}})
+}
+
+func (cfg *Config) marshalXML(e *xml.Encoder, start xml.StartElement) error {
+	if err := e.EncodeToken(start); err != nil {
+		return err
+	}
+
+	for k, v := range cfg.Items {
+		s := xml.StartElement{
+			Name: xml.Name{Local: k},
+			Attr: make([]xml.Attr, 0, len(v.Attrs)),
+		}
+		for name, val := range v.Attrs {
+			s.Attr = append(s.Attr, xml.Attr{
+				Name:  xml.Name{Local: name},
+				Value: val,
+			})
+		}
+		if err := v.marshalXML(e, s); err != nil {
+			return err
+		}
+	}
+
+	return e.EncodeToken(xml.EndElement{Name: start.Name})
+}

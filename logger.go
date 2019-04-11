@@ -29,7 +29,7 @@ var flagMap = map[string]int{
 type logger struct {
 	// 保存着添加到 log 中的所有 io.Writer 实例
 	//
-	// 当然如果是通赤 log.SetOutput 修改的，则不会出现在此处
+	// 当然如果是通过 log.SetOutput 修改的，则不会出现在此处
 	container *writers.Container
 
 	// 指向日志输出实例。

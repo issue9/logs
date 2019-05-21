@@ -216,24 +216,24 @@ func (logs *Logs) Criticalf(format string, v ...interface{}) {
 
 // All 向所有的日志输出内容。
 func (logs *Logs) All(v ...interface{}) {
-	logs.all(v...)
+	logs.all(fmt.Sprint(v...))
 }
 
 // Allf 向所有的日志输出内容。
 func (logs *Logs) Allf(format string, v ...interface{}) {
-	logs.allf(format, v...)
+	logs.all(fmt.Sprintf(format, v...))
 }
 
 // Fatal 输出错误信息，然后退出程序。
 func (logs *Logs) Fatal(code int, v ...interface{}) {
-	logs.all(v...)
+	logs.all(fmt.Sprintln(v...))
 	logs.Flush()
 	os.Exit(code)
 }
 
 // Fatalf 输出错误信息，然后退出程序。
 func (logs *Logs) Fatalf(code int, format string, v ...interface{}) {
-	logs.allf(format, v...)
+	logs.all(fmt.Sprintf(format, v...))
 	logs.Flush()
 	os.Exit(code)
 }
@@ -248,20 +248,15 @@ func (logs *Logs) Panic(v ...interface{}) {
 
 // Panicf 输出错误信息，然后触发 panic。
 func (logs *Logs) Panicf(format string, v ...interface{}) {
-	logs.allf(format, v...)
+	msg := fmt.Sprintf(format, v...)
+	logs.all(msg)
 	logs.Flush()
-	panic(fmt.Sprintf(format, v...))
+	panic(msg)
 }
 
-func (logs *Logs) all(v ...interface{}) {
+func (logs *Logs) all(msg string) {
 	for _, l := range logs.loggers {
-		l.log.Output(3, fmt.Sprintln(v...))
-	}
-}
-
-func (logs *Logs) allf(format string, v ...interface{}) {
-	for _, l := range logs.loggers {
-		l.log.Output(3, fmt.Sprintf(format, v...))
+		l.log.Output(3, msg)
 	}
 }
 
@@ -392,30 +387,40 @@ func Criticalf(format string, v ...interface{}) {
 
 // All 向所有的日志输出内容。
 func All(v ...interface{}) {
-	defaultLogs.All(v...)
+	defaultLogs.all(fmt.Sprintln(v...))
 }
 
 // Allf 向所有的日志输出内容。
 func Allf(format string, v ...interface{}) {
-	defaultLogs.Allf(format, v...)
+	defaultLogs.all(fmt.Sprintf(format, v...))
 }
 
 // Fatal 输出错误信息，然后退出程序。
 func Fatal(code int, v ...interface{}) {
-	defaultLogs.Fatal(code, v...)
+	defaultLogs.all(fmt.Sprint(v...))
+	defaultLogs.Flush()
+	os.Exit(code)
 }
 
 // Fatalf 输出错误信息，然后退出程序。
 func Fatalf(code int, format string, v ...interface{}) {
-	defaultLogs.Fatalf(code, format, v...)
+	defaultLogs.all(fmt.Sprintf(format, v...))
+	defaultLogs.Flush()
+	os.Exit(code)
 }
 
 // Panic 输出错误信息，然后触发 panic。
 func Panic(v ...interface{}) {
-	defaultLogs.Panic(v...)
+	s := fmt.Sprint(v...)
+	defaultLogs.all(s)
+	defaultLogs.Flush()
+	panic(s)
 }
 
 // Panicf 输出错误信息，然后触发 panic。
 func Panicf(format string, v ...interface{}) {
-	defaultLogs.Panicf(format, v...)
+	s := fmt.Sprintf(format, v...)
+	defaultLogs.all(s)
+	defaultLogs.Flush()
+	panic(s)
 }

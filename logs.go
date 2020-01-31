@@ -103,7 +103,7 @@ func (logs *Logs) InitFromXMLString(str string) error {
 
 // SetOutput 设置某一个类型的输出通道
 //
-// 若将 w 设置为 nil 等同于 iotuil.Discard，即关闭此类型的输出。
+// 若将 w 设置为 nil 等同于 ioutil.Discard，即关闭此类型的输出。
 func (logs *Logs) SetOutput(level int, w io.Writer, prefix string, flag int) error {
 	if level < 0 || level > levelSize {
 		return errors.New("无效的 level 值")

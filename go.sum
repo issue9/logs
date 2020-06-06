@@ -6,6 +6,8 @@ github.com/issue9/assert v1.3.4 h1:m9O+Nmi0ejRsLaTfQa349WTQtryQYHynBn6DFv6+sNY=
 github.com/issue9/assert v1.3.4/go.mod h1:9Ger+iz8X7r1zMYYwEhh++2wMGWcNN2oVI+zIQXxcio=
 github.com/issue9/config v0.1.0 h1:MzA9Db32z02lfIKCCI0Tpul9e1NTp33k6gd2oRRXS7M=
 github.com/issue9/config v0.1.0/go.mod h1:+AOuG7X4zHEFUaXGBWBQ0x6WjkwIhlONm9cqNS5fw4c=
+github.com/issue9/errwrap v0.1.1 h1:akAQ1z726dnwhNzI7eAmCvYXYPbvF6OTGwct/vRVev0=
+github.com/issue9/errwrap v0.1.1/go.mod h1:H9mdt7KifDebeRecMn5yt7F25f+4N0V2sqIqyZnNjzQ=
 github.com/issue9/term v1.1.0 h1:vKTjD4c0rxw+B7LLfwSypMaVTkyP9DrqyLLgFWsVTVw=
 github.com/issue9/term v1.1.0/go.mod h1:9/YTi/aRSKOIy44Wso2xDWXJvMLAEYWskjutTkyUBN0=
 golang.org/x/sys v0.0.0-20190310054646-10058d7d4faa h1:lqti/xP+yD/6zH5TqEwx2MilNIJY5Vbc6Qr8J3qyPIQ=
@@ -14,3 +16,5 @@ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v2 v2.2.2 h1:ZCJp+EgiOT7lHqUV2J862kp8Qj64Jo6az82+3Td9dZw=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
+gopkg.in/yaml.v2 v2.3.0 h1:clyUAQHOM3G0M3f5vQj7LuJrETvjVot3Z5el9nffUtU=
+gopkg.in/yaml.v2 v2.3.0/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=

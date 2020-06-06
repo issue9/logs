@@ -5,9 +5,10 @@
 package writers
 
 import (
-	"bytes"
 	"net/smtp"
 	"strings"
+
+	"github.com/issue9/errwrap"
 )
 
 // SMTP 实现 io.Writer 接口的邮件发送。
@@ -19,7 +20,7 @@ type SMTP struct {
 	subject  string   // 邮件主题。
 
 	// 邮件内容的缓存
-	cache *bytes.Buffer
+	cache errwrap.Buffer
 	// 邮件头部分的长度
 	headerLen int
 
@@ -47,34 +48,25 @@ func NewSMTP(username, password, subject, host string, sendTo []string) *SMTP {
 
 // 初始化一些基本内容。
 //
-// 像To,From这些内容都是固定的，可以先写入到缓存中，这样
+// 像 To,From 这些内容都是固定的，可以先写入到缓存中，这样
 // 这后就不需要再次构造这些内容。
 func (s *SMTP) init() {
-	s.cache = bytes.NewBufferString("")
 	s.cache.Grow(1024)
 
 	// to
-	s.cache.WriteString("To: ")
-	s.cache.WriteString(strings.Join(s.sendTo, ";"))
-	s.cache.WriteString("\r\n")
+	s.cache.WString("To: ").WString(strings.Join(s.sendTo, ";")).WString("\r\n")
 
 	// from
-	s.cache.WriteString("From: ")
-	s.cache.WriteString(s.username) // <...>有需要吗？
-	s.cache.WriteString("\r\n")
+	s.cache.WString("From: ").WString(s.username).WString("\r\n")
 
 	// subject
-	s.cache.WriteString("Subject: ")
-	s.cache.WriteString(s.subject)
-	s.cache.WriteString("\r\n")
+	s.cache.WString("Subject: ").WString(s.subject).WString("\r\n")
 
 	// mime-version
-	s.cache.WriteString("MIME-Version: ")
-	s.cache.WriteString("1.0\r\n")
+	s.cache.WString("MIME-Version: ").WString("1.0\r\n")
 
 	// contentType
-	s.cache.WriteString(`Content-Type: text/plain; charset="utf-8"`)
-	s.cache.WriteString("\r\n\r\n")
+	s.cache.WString(`Content-Type: text/plain; charset="utf-8"`).WString("\r\n\r\n")
 
 	s.headerLen = s.cache.Len()
 
@@ -84,7 +76,10 @@ func (s *SMTP) init() {
 }
 
 func (s *SMTP) Write(msg []byte) (int, error) {
-	s.cache.Write(msg)
+	s.cache.WBytes(msg)
+	if s.cache.Err != nil {
+		return 0, s.cache.Err
+	}
 
 	err := smtp.SendMail(
 		s.host,

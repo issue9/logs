@@ -27,7 +27,10 @@ _testmain.go
 *.swp
 
 # 测试内容
-testdata
+/example/testdata/*
+!/example/testdata/.gitkeep
+/writers/rotate/testdata/*
+!/writers/rotate/testdata/.gitkeep
 
 # osx
 .DS_Store

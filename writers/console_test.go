@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/issue9/term/colors"
+	"github.com/issue9/term/v2/colors"
 )
 
 var _ io.Writer = &Console{}

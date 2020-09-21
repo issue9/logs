@@ -7,7 +7,7 @@ package writers
 import (
 	"os"
 
-	"github.com/issue9/term/colors"
+	"github.com/issue9/term/v2/colors"
 )
 
 // Console 带色彩输出的控制台。
@@ -23,7 +23,7 @@ type Console struct {
 func NewConsole(out *os.File, foreground, background colors.Color) *Console {
 	return &Console{
 		out: out,
-		c:   colors.New(foreground, background),
+		c:   colors.New(colors.Normal, foreground, background),
 	}
 }
 

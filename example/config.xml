@@ -3,7 +3,7 @@
     <!-- info内容，先缓存到一定10条，再一次性输出 -->
     <info prefix="INFO" flag="">
         <buffer size="100">
-            <rotate filename="%y%m%d.%i.log" prefix="info-" dir="./testdata/" size="5M" />
+            <rotate filename="%y%m%d.%i.log" dir="./testdata/" size="5M" />
         </buffer>
     </info>
 

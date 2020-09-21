@@ -40,8 +40,6 @@ type Logs struct {
 }
 
 // New 声明 Logs 变量
-//
-// 需要调用 InitFromXMLFile 或是 InitFromXMLString 进行具体的初始化。
 func New() *Logs {
 	logs := &Logs{
 		loggers: make([]*logger, levelSize, levelSize),
@@ -71,32 +69,6 @@ func (logs *Logs) Init(cfg *config.Config) error {
 	}
 
 	return nil
-}
-
-// InitFromXMLFile 从一个 XML 文件中初始化日志系统。
-//
-// 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
-//
-// Deprecated: 只能由 Init 进行初始化
-func (logs *Logs) InitFromXMLFile(path string) error {
-	cfg, err := config.ParseXMLFile(path)
-	if err != nil {
-		return err
-	}
-	return logs.Init(cfg)
-}
-
-// InitFromXMLString 从一个 XML 字符串初始化日志系统。
-//
-// 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
-//
-// Deprecated: 只能由 Init 进行初始化
-func (logs *Logs) InitFromXMLString(str string) error {
-	cfg, err := config.ParseXMLString(str)
-	if err != nil {
-		return err
-	}
-	return logs.Init(cfg)
 }
 
 // SetOutput 设置某一个类型的输出通道
@@ -261,20 +233,6 @@ func (logs *Logs) all(msg string) {
 // Init 从 config.Config 中初始化整个 logs 系统
 func Init(cfg *config.Config) error {
 	return defaultLogs.Init(cfg)
-}
-
-// InitFromXMLFile 从一个 XML 文件中初始化日志系统。
-//
-// 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
-func InitFromXMLFile(path string) error {
-	return defaultLogs.InitFromXMLFile(path)
-}
-
-// InitFromXMLString 从一个 XML 字符串初始化日志系统。
-//
-// 再次调用该函数，将会根据新的配置文件重新初始化日志系统。
-func InitFromXMLString(str string) error {
-	return defaultLogs.InitFromXMLString(str)
 }
 
 // SetOutput 设置某一个类型的输出通道

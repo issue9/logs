@@ -12,7 +12,7 @@ import (
 	"github.com/issue9/logs/v2/config"
 )
 
-// 定义了一些日志的类型
+// 目前支持的日志类型
 const (
 	LevelInfo = iota
 	LevelTrace
@@ -83,7 +83,8 @@ func (logs *Logs) SetOutput(level int, w io.Writer, prefix string, flag int) err
 	return nil
 }
 
-// Flush 输出所有的缓存内容。
+// Flush 输出所有的缓存内容
+//
 // 若是通过 os.Exit() 退出程序的，在执行之前，
 // 一定记得调用 Flush() 输出可能缓存的日志内容。
 func (logs *Logs) Flush() {
@@ -98,6 +99,7 @@ func (logs *Logs) INFO() *log.Logger {
 }
 
 // Info 相当于 INFO().Println(v...) 的简写方式
+//
 // Info 函数默认是带换行符的，若需要不带换行符的，请使用 DEBUG().Print() 函数代替。
 // 其它相似函数也有类型功能。
 func (logs *Logs) Info(v ...interface{}) {
@@ -154,7 +156,9 @@ func (logs *Logs) Warnf(format string, v ...interface{}) {
 	logs.WARN().Output(2, fmt.Sprintf(format, v...))
 }
 
-// ERROR 获取 ERROR 级别的 log.Logger 实例，在未指定 error 级别的日志时，该实例返回一个 nil。
+// ERROR 获取 ERROR 级别的 log.Logger 实例
+//
+// 在未指定 error 级别的日志时，该实例返回一个 nil。
 func (logs *Logs) ERROR() *log.Logger {
 	return logs.loggers[LevelError].log
 }
@@ -184,31 +188,31 @@ func (logs *Logs) Criticalf(format string, v ...interface{}) {
 	logs.CRITICAL().Output(2, fmt.Sprintf(format, v...))
 }
 
-// All 向所有的日志输出内容。
+// All 向所有的日志输出内容
 func (logs *Logs) All(v ...interface{}) {
 	logs.all(fmt.Sprint(v...))
 }
 
-// Allf 向所有的日志输出内容。
+// Allf 向所有的日志输出内容
 func (logs *Logs) Allf(format string, v ...interface{}) {
 	logs.all(fmt.Sprintf(format, v...))
 }
 
-// Fatal 输出错误信息，然后退出程序。
+// Fatal 输出错误信息然后退出程序
 func (logs *Logs) Fatal(code int, v ...interface{}) {
 	logs.all(fmt.Sprintln(v...))
 	logs.Flush()
 	os.Exit(code)
 }
 
-// Fatalf 输出错误信息，然后退出程序。
+// Fatalf 输出错误信息然后退出程序
 func (logs *Logs) Fatalf(code int, format string, v ...interface{}) {
 	logs.all(fmt.Sprintf(format, v...))
 	logs.Flush()
 	os.Exit(code)
 }
 
-// Panic 输出错误信息，然后触发 panic。
+// Panic 输出错误信息然后触发 panic
 func (logs *Logs) Panic(v ...interface{}) {
 	s := fmt.Sprint(v...)
 	logs.all(s)
@@ -216,7 +220,7 @@ func (logs *Logs) Panic(v ...interface{}) {
 	panic(s)
 }
 
-// Panicf 输出错误信息，然后触发 panic。
+// Panicf 输出错误信息然后触发 panic
 func (logs *Logs) Panicf(format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
 	logs.all(msg)
@@ -237,24 +241,28 @@ func Init(cfg *config.Config) error {
 
 // SetOutput 设置某一个类型的输出通道
 //
-// 若将 w 设置为 nil 等同于 iotuil.Discard，即关闭此类型的输出。
+// 若将 w 设置为 nil 等同于 ioutil.Discard，即关闭此类型的输出。
 func SetOutput(level int, w io.Writer, prefix string, flag int) error {
 	return defaultLogs.SetOutput(level, w, prefix, flag)
 }
 
-// Flush 输出所有的缓存内容。
+// Flush 输出所有的缓存内容
+//
 // 若是通过 os.Exit() 退出程序的，在执行之前，
 // 一定记得调用 Flush() 输出可能缓存的日志内容。
 func Flush() {
 	defaultLogs.Flush()
 }
 
-// INFO 获取 INFO 级别的 log.Logger 实例，在未指定 info 级别的日志时，该实例返回一个 nil。
+// INFO 获取 INFO 级别的 log.Logger 实例
+//
+// 在未指定 info 级别的日志时，该实例返回一个 nil。
 func INFO() *log.Logger {
 	return defaultLogs.INFO()
 }
 
 // Info 相当于 INFO().Println(v...) 的简写方式
+//
 // Info 函数默认是带换行符的，若需要不带换行符的，请使用 DEBUG().Print() 函数代替。
 // 其它相似函数也有类型功能。
 func Info(v ...interface{}) {
@@ -341,31 +349,31 @@ func Criticalf(format string, v ...interface{}) {
 	defaultLogs.CRITICAL().Output(2, fmt.Sprintf(format, v...))
 }
 
-// All 向所有的日志输出内容。
+// All 向所有的日志输出内容
 func All(v ...interface{}) {
 	defaultLogs.all(fmt.Sprintln(v...))
 }
 
-// Allf 向所有的日志输出内容。
+// Allf 向所有的日志输出内容
 func Allf(format string, v ...interface{}) {
 	defaultLogs.all(fmt.Sprintf(format, v...))
 }
 
-// Fatal 输出错误信息，然后退出程序。
+// Fatal 输出错误信息然后退出程序
 func Fatal(code int, v ...interface{}) {
 	defaultLogs.all(fmt.Sprint(v...))
 	defaultLogs.Flush()
 	os.Exit(code)
 }
 
-// Fatalf 输出错误信息，然后退出程序。
+// Fatalf 输出错误信息然后退出程序
 func Fatalf(code int, format string, v ...interface{}) {
 	defaultLogs.all(fmt.Sprintf(format, v...))
 	defaultLogs.Flush()
 	os.Exit(code)
 }
 
-// Panic 输出错误信息，然后触发 panic。
+// Panic 输出错误信息然后触发 panic
 func Panic(v ...interface{}) {
 	s := fmt.Sprint(v...)
 	defaultLogs.all(s)
@@ -373,7 +381,7 @@ func Panic(v ...interface{}) {
 	panic(s)
 }
 
-// Panicf 输出错误信息，然后触发 panic。
+// Panicf 输出错误信息然后触发 panic
 func Panicf(format string, v ...interface{}) {
 	s := fmt.Sprintf(format, v...)
 	defaultLogs.all(s)

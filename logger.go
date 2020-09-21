@@ -31,7 +31,7 @@ type logger struct {
 	// 当然如果是通过 log.SetOutput 修改的，则不会出现在此处
 	container *writers.Container
 
-	// 指向日志输出实例。
+	// 指向日志输出实例
 	//
 	// 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
 	log *log.Logger

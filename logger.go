@@ -20,6 +20,7 @@ var flagMap = map[string]int{
 	"log.lmicroseconds": log.Lmicroseconds,
 	"log.llongfile":     log.Llongfile,
 	"log.lshortfile":    log.Lshortfile,
+	"log.lmsgprefix":    log.Lmsgprefix,
 	"log.lstdflags":     log.LstdFlags,
 }
 

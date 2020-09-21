@@ -5,10 +5,9 @@ package config
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
-
-	"github.com/issue9/config"
 )
 
 // Config 用于表示配置文件中的数据。
@@ -26,16 +25,16 @@ type Config struct {
 // 同时也是实现 config.Sanitizer 接口。
 func (cfg *Config) Sanitize() error {
 	if len(cfg.Attrs) > 0 {
-		return config.NewError("", "attrs", "根元素不能存在任何属性")
+		return errors.New("根元素不能存在任何属性")
 	}
 
 	if len(cfg.Items) == 0 {
-		return config.NewError("", "items", "不能为空")
+		return errors.New("items 子项不能为空")
 	}
 
 	for name, item := range cfg.Items {
 		if len(item.Items) == 0 {
-			return config.NewError("", name+".items", "不能为空")
+			return fmt.Errorf("子项 %s 不能为空", name+".items")
 		}
 	}
 

@@ -7,13 +7,11 @@ import (
 	"testing"
 
 	"github.com/issue9/assert"
-	"github.com/issue9/config"
 )
 
 var (
-	_ config.Sanitizer = &Config{}
-	_ xml.Unmarshaler  = &Config{}
-	_ xml.Marshaler    = &Config{}
+	_ xml.Unmarshaler = &Config{}
+	_ xml.Marshaler   = &Config{}
 )
 
 func TestConfig_MarshalXML(t *testing.T) {

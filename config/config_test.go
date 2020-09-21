@@ -1,6 +1,4 @@
-// Copyright 2015 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 package config
 
@@ -22,13 +20,13 @@ func TestConfig_MarshalXML(t *testing.T) {
 	a := assert.New(t)
 	cfg := &Config{
 		Items: map[string]*Config{
-			"debug": &Config{
+			"debug": {
 				Attrs: map[string]string{"prefix": "DEBUG"},
 			},
-			"info": &Config{
+			"info": {
 				Attrs: map[string]string{"prefix": "INFO"},
 				Items: map[string]*Config{
-					"buffer": &Config{
+					"buffer": {
 						Attrs: map[string]string{"size": "5"},
 					},
 				},

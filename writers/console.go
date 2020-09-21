@@ -1,6 +1,4 @@
-// Copyright 2014 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 package writers
 
@@ -10,7 +8,7 @@ import (
 	"github.com/issue9/term/v2/colors"
 )
 
-// Console 带色彩输出的控制台。
+// Console 带色彩输出的控制台
 type Console struct {
 	out *os.File
 	c   colors.Colorize

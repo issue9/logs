@@ -1,6 +1,4 @@
-// Copyright 2014 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 // Package rotate 提供一个可以按文件大小进行分割的 io.Writer 实例。
 package rotate
@@ -27,7 +25,7 @@ type Rotate struct {
 	wSize int64    // 当前正在写的文件大小
 }
 
-// New 新建 Rotate。
+// New 新建 Rotate
 //
 // format 文件名格式，可以包含以下格式内容：
 //  %y 表示两位数的年份；

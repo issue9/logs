@@ -1,6 +1,4 @@
-// Copyright 2017 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 package initfunc
 
@@ -22,7 +20,7 @@ const (
 	gb
 )
 
-// Rotate 的初始化函数。
+// Rotate 的初始化函数
 func Rotate(cfg *config.Config) (io.Writer, error) {
 	format, found := cfg.Attrs["filename"]
 	if !found {

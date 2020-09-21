@@ -1,6 +1,4 @@
-// Copyright 2014 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 package writers
 
@@ -9,15 +7,17 @@ import (
 	"io"
 )
 
-// Buffer 实现对输出内容的缓存，只有输出数量达到指定的值
-// 才会真正地向指定的 io.Writer 输出。
+// Buffer 实现对输出内容的缓存
+//
+// 只有输出数量达到指定的值才会真正地向指定的 io.Writer 输出。
 type Buffer struct {
 	size   int         // 最大的缓存数量
 	buffer [][]byte    // 缓存的内容
 	ws     []io.Writer // 输出的 io.Writer
 }
 
-// NewBuffer 新建一个 Buffer。
+// NewBuffer 新建一个 Buffer
+//
 // w 最终输出的方向；当 size<=1 时，所有的内容都不会缓存，直接向 w 输出。
 func NewBuffer(size int) *Buffer {
 	return &Buffer{size: size,
@@ -68,7 +68,9 @@ func (b *Buffer) Flush() (size int, err error) {
 	return
 }
 
-// SetSize 设置缓存的大小，若值小于 2，则所有的输出都不会被缓存。
+// SetSize 设置缓存的大小
+//
+// 若值小于 2，则所有的输出都不会被缓存。
 func (b *Buffer) SetSize(size int) {
 	b.size = size
 }

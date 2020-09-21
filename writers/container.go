@@ -1,6 +1,4 @@
-// Copyright 2014 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 package writers
 
@@ -9,7 +7,7 @@ import (
 	"io"
 )
 
-// Container 为 io.Writer 的容器。
+// Container 为 io.Writer 的容器
 type Container struct {
 	ws []io.Writer
 }
@@ -41,7 +39,7 @@ func (c *Container) Add(w io.Writer) error {
 	return nil
 }
 
-// Flush 调用所有子项的 Flush 函数。
+// Flush 调用所有子项的 Flush 函数
 func (c *Container) Flush() (size int, err error) {
 	for _, w := range c.ws {
 		b, ok := w.(Flusher)

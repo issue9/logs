@@ -1,6 +1,4 @@
-// Copyright 2014 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 package writers
 
@@ -11,7 +9,7 @@ import (
 	"github.com/issue9/errwrap"
 )
 
-// SMTP 实现 io.Writer 接口的邮件发送。
+// SMTP 实现 io.Writer 接口的邮件发送
 type SMTP struct {
 	username string   // smtp账号
 	password string   // smtp密码
@@ -27,7 +25,8 @@ type SMTP struct {
 	auth smtp.Auth
 }
 
-// NewSMTP 新建 SMTP 对象。
+// NewSMTP 新建 SMTP 对象
+//
 // username 为smtp 的账号；
 // password 为 smtp 对应的密码；
 // subject 为发送邮件的主题；
@@ -46,7 +45,7 @@ func NewSMTP(username, password, subject, host string, sendTo []string) *SMTP {
 	return ret
 }
 
-// 初始化一些基本内容。
+// 初始化一些基本内容
 //
 // 像 To,From 这些内容都是固定的，可以先写入到缓存中，这样
 // 这后就不需要再次构造这些内容。

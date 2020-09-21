@@ -1,6 +1,4 @@
-// Copyright 2014 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 package logs
 
@@ -53,7 +51,7 @@ func TestToWriter(t *testing.T) {
 	// </logs>
 	cfg := &config.Config{
 		Items: map[string]*config.Config{
-			"debug": &config.Config{},
+			"debug": {},
 		},
 	}
 

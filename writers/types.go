@@ -1,6 +1,4 @@
-// Copyright 2014 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 package writers
 
@@ -23,25 +21,21 @@ type Flusher interface {
 	Flush() (size int, err error)
 }
 
-// WriteFlusher 表示 io.Writer + Flusher
 type WriteFlusher interface {
 	Flusher
 	io.Writer
 }
 
-// io.Writer + Adder
 type WriteAdder interface {
 	Adder
 	io.Writer
 }
 
-// Flusher + Adder
 type FlushAdder interface {
 	Flusher
 	Adder
 }
 
-// io.Writer + Flusher + Adder
 type WriteFlushAdder interface {
 	io.Writer
 	Flusher

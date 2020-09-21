@@ -1,6 +1,6 @@
 logs
-[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Fissue9%2Flogs%2Fbadge%3Fref%3Dmaster&style=flat)](https://actions-badge.atrox.dev/issue9/logs/goto?ref=master)
-[![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white&style=flat-square)](https://pkg.go.dev/github.com/issue9/logs/v2)
+[![Go](https://github.com/issue9/logs/workflows/Go/badge.svg)](https://github.com/issue9/logs/actions?query=workflow%3AGo)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/logs/v2)](https://pkg.go.dev/github.com/issue9/logs/v2)
 ======
 
 一个可配置的日志服务包。可以通过 XML 自定义日志输出：
@@ -31,7 +31,7 @@ logs.DEBUG().Println("debug start...")
 ---
 
 ```shell
-go get github.com/issue9/logs
+go get github.com/issue9/logs/v2
 ```
 
 版权

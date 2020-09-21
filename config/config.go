@@ -1,6 +1,4 @@
-// Copyright 2015 by caixw, All rights reserved.
-// Use of this source code is governed by a MIT
-// license that can be found in the LICENSE file.
+// SPDX-License-Identifier: MIT
 
 // Package config 表示 logs 包的配置文件处理。
 package config
@@ -23,7 +21,7 @@ type Config struct {
 	Items map[string]*Config `yaml:"items" json:"items"` // 若是容器，则还有子项
 }
 
-// Sanitize 检测语法错误及基本的内容错误。
+// Sanitize 检测语法错误及基本的内容错误
 //
 // 同时也是实现 config.Sanitizer 接口。
 func (cfg *Config) Sanitize() error {

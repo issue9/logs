@@ -72,22 +72,27 @@ func (l *Logs) Init(cfg *config.Config) error {
 // SetOutput 设置某一个类型的输出通道
 //
 // 若将 w 设置为 nil 表示关闭此类型的输出。
+//
+// NOTE: 如果直接调用诸如 ERROR().SetOutput() 设置输出通道，
+// 那么 Logs 将失去对该对象的管控，之后再调用 Logs.SetOutput 不会再启作用。
 func (l *Logs) SetOutput(level int, w io.Writer) error {
 	if level >= LevelInfo && level < levelSize {
-		return l.loggers[level].setOutput(w)
+		return l.loggers[level].SetOutput(w)
 	}
 	panic(fmt.Sprintf("无效的 level 值：%d", level))
 }
 
+// SetFlags 为所有的日志对象调用 SetFlags
 func (l *Logs) SetFlags(flag int) {
 	for _, l := range l.loggers {
-		l.log.SetFlags(flag)
+		l.SetFlags(flag)
 	}
 }
 
+// SetPrefix 为所有的日志对象调用 SetPrefix
 func (l *Logs) SetPrefix(p string) {
 	for _, l := range l.loggers {
-		l.log.SetPrefix(p)
+		l.SetPrefix(p)
 	}
 }
 
@@ -115,7 +120,7 @@ func (l *Logs) Close() error {
 }
 
 // INFO 获取 INFO 级别的 log.Logger 实例
-func (l *Logs) INFO() *log.Logger { return l.loggers[LevelInfo].log }
+func (l *Logs) INFO() *log.Logger { return l.loggers[LevelInfo].Logger }
 
 // Info 相当于 INFO().Println(v...) 的简写方式
 //
@@ -131,9 +136,7 @@ func (l *Logs) Infof(format string, v ...interface{}) error {
 }
 
 // DEBUG 获取 DEBUG 级别的 log.Logger 实例
-func (l *Logs) DEBUG() *log.Logger {
-	return l.loggers[LevelDebug].log
-}
+func (l *Logs) DEBUG() *log.Logger { return l.loggers[LevelDebug].Logger }
 
 // Debug 相当于 DEBUG().Println(v...) 的简写方式
 func (l *Logs) Debug(v ...interface{}) error {
@@ -146,7 +149,7 @@ func (l *Logs) Debugf(format string, v ...interface{}) error {
 }
 
 // TRACE 获取 TRACE 级别的 log.Logger 实例
-func (l *Logs) TRACE() *log.Logger { return l.loggers[LevelTrace].log }
+func (l *Logs) TRACE() *log.Logger { return l.loggers[LevelTrace].Logger }
 
 // Trace 相当于 TRACE().Println(v...) 的简写方式
 func (l *Logs) Trace(v ...interface{}) error {
@@ -159,7 +162,7 @@ func (l *Logs) Tracef(format string, v ...interface{}) error {
 }
 
 // WARN 获取 WARN 级别的 log.Logger 实例
-func (l *Logs) WARN() *log.Logger { return l.loggers[LevelWarn].log }
+func (l *Logs) WARN() *log.Logger { return l.loggers[LevelWarn].Logger }
 
 // Warn 相当于 WARN().Println(v...) 的简写方式
 func (l *Logs) Warn(v ...interface{}) error {
@@ -174,7 +177,7 @@ func (l *Logs) Warnf(format string, v ...interface{}) error {
 // ERROR 获取 ERROR 级别的 log.Logger 实例
 //
 // 在未指定 error 级别的日志时，该实例返回一个 nil。
-func (l *Logs) ERROR() *log.Logger { return l.loggers[LevelError].log }
+func (l *Logs) ERROR() *log.Logger { return l.loggers[LevelError].Logger }
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
 func (l *Logs) Error(v ...interface{}) error {
@@ -187,7 +190,7 @@ func (l *Logs) Errorf(format string, v ...interface{}) error {
 }
 
 // CRITICAL 获取 CRITICAL 级别的 log.Logger 实例
-func (l *Logs) CRITICAL() *log.Logger { return l.loggers[LevelCritical].log }
+func (l *Logs) CRITICAL() *log.Logger { return l.loggers[LevelCritical].Logger }
 
 // Critical 相当于 CRITICAL().Println(v...)的简写方式
 func (l *Logs) Critical(v ...interface{}) error {
@@ -239,19 +242,15 @@ func (l *Logs) Panicf(format string, v ...interface{}) {
 
 func (l *Logs) all(msg string) {
 	for _, l := range l.loggers {
-		l.log.Output(3, msg)
+		l.Output(3, msg)
 	}
 }
 
 // Default 返回当前模块中全局函数使用的 *Logs 对象
-func Default() *Logs {
-	return defaultLogs
-}
+func Default() *Logs { return defaultLogs }
 
 // Init 从 config.Config 中初始化整个 logs 系统
-func Init(cfg *config.Config) error {
-	return Default().Init(cfg)
-}
+func Init(cfg *config.Config) error { return Default().Init(cfg) }
 
 // Flush 输出所有的缓存内容
 func Flush() error { return Default().Flush() }

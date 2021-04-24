@@ -41,12 +41,12 @@ func resetLog(logs *Logs, t *testing.T) {
 	a.True(warnW.Len() == 0)
 	a.True(criticalW.Len() == 0)
 
-	a.NotError(logs.loggers[LevelInfo].setOutput(infoW))
-	a.NotError(logs.loggers[LevelDebug].setOutput(debugW))
-	a.NotError(logs.loggers[LevelError].setOutput(errorW))
-	a.NotError(logs.loggers[LevelTrace].setOutput(traceW))
-	a.NotError(logs.loggers[LevelWarn].setOutput(warnW))
-	a.NotError(logs.loggers[LevelCritical].setOutput(criticalW))
+	a.NotError(logs.loggers[LevelInfo].SetOutput(infoW))
+	a.NotError(logs.loggers[LevelDebug].SetOutput(debugW))
+	a.NotError(logs.loggers[LevelError].SetOutput(errorW))
+	a.NotError(logs.loggers[LevelTrace].SetOutput(traceW))
+	a.NotError(logs.loggers[LevelWarn].SetOutput(warnW))
+	a.NotError(logs.loggers[LevelCritical].SetOutput(criticalW))
 }
 
 func checkLog(t *testing.T) {
@@ -129,12 +129,12 @@ func TestLogs_SetFlags(t *testing.T) {
 
 	Default().SetFlags(log.Ldate)
 	for _, l := range Default().loggers {
-		a.Equal(l.log.Flags(), log.Ldate)
+		a.Equal(l.Flags(), log.Ldate)
 	}
 
 	Default().SetFlags(log.Lmsgprefix)
 	for _, l := range Default().loggers {
-		a.Equal(l.log.Flags(), log.Lmsgprefix)
+		a.Equal(l.Flags(), log.Lmsgprefix)
 	}
 }
 
@@ -143,12 +143,12 @@ func TestLogs_SetPrefix(t *testing.T) {
 
 	Default().SetPrefix("p")
 	for _, l := range Default().loggers {
-		a.Equal(l.log.Prefix(), "p")
+		a.Equal(l.Prefix(), "p")
 	}
 
 	Default().SetPrefix("")
 	for _, l := range Default().loggers {
-		a.Equal(l.log.Prefix(), "")
+		a.Equal(l.Prefix(), "")
 	}
 }
 

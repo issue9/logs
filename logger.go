@@ -25,30 +25,22 @@ var flagMap = map[string]int{
 
 // 扩展 log.Logger，使可以同时输出到多个日志通道
 type logger struct {
-	// 保存着添加到 log 中的所有 io.Writer 实例
-	//
-	// 当然如果是通过 log.SetOutput 修改的，则不会出现在此处
+	*log.Logger
 	container *writers.Container
-
-	// 指向日志输出实例
-	//
-	// 要确保这些值不能为空，因为要保证对应的 ERROR() 等函数的返回值是始终可用的。
-	log *log.Logger
 }
 
 func newLogger(prefix string, flag int) *logger {
-	cont := writers.NewContainer()
+	c := writers.NewContainer()
 	return &logger{
-		container: cont,
-		log:       log.New(cont, prefix, flag),
+		Logger:    log.New(c, prefix, flag),
+		container: c,
 	}
 }
 
-// 重新设置输出通道
+// SetOutput 重新设置输出通道
 //
-// 如果还有内容未输出，则会先输出内容。
-// 如果 w 为 nil，取消该通道的输出。
-func (l *logger) setOutput(w io.Writer) error {
+// 如果还有内容未输出，则会先输出内容。 如果 w 为 nil，取消该通道的输出。
+func (l *logger) SetOutput(w io.Writer) error {
 	if err := l.container.Flush(); err != nil {
 		return err
 	}

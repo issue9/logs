@@ -17,21 +17,21 @@ var (
 	_ writers.Adder = &logger{}
 )
 
-func TestLogger_setOutput(t *testing.T) {
+func TestLogger_SetOutput(t *testing.T) {
 	a := assert.New(t)
 
 	l := newLogger("", 0)
 	a.Equal(l.container.Len(), 0)
 
 	cont := writers.NewContainer()
-	a.NotError(l.setOutput(cont))
+	a.NotError(l.SetOutput(cont))
 	a.Equal(l.container.Len(), 1)
 
 	// setOutput 会替换旧有的 writer
-	a.NotError(l.setOutput(cont))
+	a.NotError(l.SetOutput(cont))
 	a.Equal(l.container.Len(), 1)
 
-	a.NotError(l.setOutput(nil))
+	a.NotError(l.SetOutput(nil))
 	a.Equal(l.container.Len(), 0)
 }
 

@@ -52,19 +52,18 @@ func New() *Logs {
 }
 
 // Init 从 config.Config 中初始化整个 logs 系统
-func (logs *Logs) Init(cfg *config.Config) error {
+func (l *Logs) Init(cfg *config.Config) error {
 	for name, c := range cfg.Items {
 		index, found := levels[name]
 		if !found {
 			panic("未知的二级元素名称:" + name)
 		}
 
-		l, err := toWriter(name, c)
+		ll, err := toWriter(name, c)
 		if err != nil {
 			return err
 		}
-
-		logs.loggers[index] = l.(*logger)
+		l.loggers[index] = ll.(*logger)
 	}
 
 	return nil
@@ -73,28 +72,28 @@ func (logs *Logs) Init(cfg *config.Config) error {
 // SetOutput 设置某一个类型的输出通道
 //
 // 若将 w 设置为 nil 表示关闭此类型的输出。
-func (logs *Logs) SetOutput(level int, w io.Writer) error {
+func (l *Logs) SetOutput(level int, w io.Writer) error {
 	if level >= LevelInfo && level < levelSize {
-		return logs.loggers[level].setOutput(w)
+		return l.loggers[level].setOutput(w)
 	}
 	panic(fmt.Sprintf("无效的 level 值：%d", level))
 }
 
-func (logs *Logs) SetFlags(flag int) {
-	for _, l := range logs.loggers {
+func (l *Logs) SetFlags(flag int) {
+	for _, l := range l.loggers {
 		l.log.SetFlags(flag)
 	}
 }
 
-func (logs *Logs) SetPrefix(p string) {
-	for _, l := range logs.loggers {
+func (l *Logs) SetPrefix(p string) {
+	for _, l := range l.loggers {
 		l.log.SetPrefix(p)
 	}
 }
 
 // Flush 输出所有的缓存内容
-func (logs *Logs) Flush() error {
-	for _, l := range logs.loggers {
+func (l *Logs) Flush() error {
+	for _, l := range l.loggers {
 		if err := l.container.Flush(); err != nil {
 			return err
 		}
@@ -106,8 +105,8 @@ func (logs *Logs) Flush() error {
 //
 // 若是通过 os.Exit() 退出程序的，在执行之前，
 // 一定记得调用 Close() 输出可能缓存的日志内容。
-func (logs *Logs) Close() error {
-	for _, l := range logs.loggers {
+func (l *Logs) Close() error {
+	for _, l := range l.loggers {
 		if err := l.container.Close(); err != nil {
 			return err
 		}
@@ -116,140 +115,130 @@ func (logs *Logs) Close() error {
 }
 
 // INFO 获取 INFO 级别的 log.Logger 实例
-func (logs *Logs) INFO() *log.Logger { return logs.loggers[LevelInfo].log }
+func (l *Logs) INFO() *log.Logger { return l.loggers[LevelInfo].log }
 
 // Info 相当于 INFO().Println(v...) 的简写方式
 //
 // Info 函数默认是带换行符的，若需要不带换行符的，请使用 DEBUG().Print() 函数代替。
 // 其它相似函数也有类型功能。
-func (logs *Logs) Info(v ...interface{}) {
-	logs.INFO().Output(2, fmt.Sprintln(v...))
+func (l *Logs) Info(v ...interface{}) error {
+	return l.INFO().Output(2, fmt.Sprintln(v...))
 }
 
 // Infof 相当于 INFO().Printf(format, v...) 的简写方式
-func (logs *Logs) Infof(format string, v ...interface{}) {
-	logs.INFO().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Infof(format string, v ...interface{}) error {
+	return l.INFO().Output(2, fmt.Sprintf(format, v...))
 }
 
 // DEBUG 获取 DEBUG 级别的 log.Logger 实例
-func (logs *Logs) DEBUG() *log.Logger {
-	return logs.loggers[LevelDebug].log
+func (l *Logs) DEBUG() *log.Logger {
+	return l.loggers[LevelDebug].log
 }
 
 // Debug 相当于 DEBUG().Println(v...) 的简写方式
-func (logs *Logs) Debug(v ...interface{}) {
-	logs.DEBUG().Output(2, fmt.Sprintln(v...))
+func (l *Logs) Debug(v ...interface{}) error {
+	return l.DEBUG().Output(2, fmt.Sprintln(v...))
 }
 
 // Debugf 相当于 DEBUG().Printf(format, v...) 的简写方式
-func (logs *Logs) Debugf(format string, v ...interface{}) {
-	logs.DEBUG().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Debugf(format string, v ...interface{}) error {
+	return l.DEBUG().Output(2, fmt.Sprintf(format, v...))
 }
 
 // TRACE 获取 TRACE 级别的 log.Logger 实例
-func (logs *Logs) TRACE() *log.Logger {
-	return logs.loggers[LevelTrace].log
-}
+func (l *Logs) TRACE() *log.Logger { return l.loggers[LevelTrace].log }
 
 // Trace 相当于 TRACE().Println(v...) 的简写方式
-func (logs *Logs) Trace(v ...interface{}) {
-	logs.TRACE().Output(2, fmt.Sprintln(v...))
+func (l *Logs) Trace(v ...interface{}) error {
+	return l.TRACE().Output(2, fmt.Sprintln(v...))
 }
 
 // Tracef 相当于 TRACE().Printf(format, v...) 的简写方式
-func (logs *Logs) Tracef(format string, v ...interface{}) {
-	logs.TRACE().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Tracef(format string, v ...interface{}) error {
+	return l.TRACE().Output(2, fmt.Sprintf(format, v...))
 }
 
 // WARN 获取 WARN 级别的 log.Logger 实例
-func (logs *Logs) WARN() *log.Logger {
-	return logs.loggers[LevelWarn].log
-}
+func (l *Logs) WARN() *log.Logger { return l.loggers[LevelWarn].log }
 
 // Warn 相当于 WARN().Println(v...) 的简写方式
-func (logs *Logs) Warn(v ...interface{}) {
-	logs.WARN().Output(2, fmt.Sprintln(v...))
+func (l *Logs) Warn(v ...interface{}) error {
+	return l.WARN().Output(2, fmt.Sprintln(v...))
 }
 
 // Warnf 相当于 WARN().Printf(format, v...) 的简写方式
-func (logs *Logs) Warnf(format string, v ...interface{}) {
-	logs.WARN().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Warnf(format string, v ...interface{}) error {
+	return l.WARN().Output(2, fmt.Sprintf(format, v...))
 }
 
 // ERROR 获取 ERROR 级别的 log.Logger 实例
 //
 // 在未指定 error 级别的日志时，该实例返回一个 nil。
-func (logs *Logs) ERROR() *log.Logger {
-	return logs.loggers[LevelError].log
-}
+func (l *Logs) ERROR() *log.Logger { return l.loggers[LevelError].log }
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
-func (logs *Logs) Error(v ...interface{}) {
-	logs.ERROR().Output(2, fmt.Sprintln(v...))
+func (l *Logs) Error(v ...interface{}) error {
+	return l.ERROR().Output(2, fmt.Sprintln(v...))
 }
 
 // Errorf 相当于 ERROR().Printf(format, v...) 的简写方式
-func (logs *Logs) Errorf(format string, v ...interface{}) {
-	logs.ERROR().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Errorf(format string, v ...interface{}) error {
+	return l.ERROR().Output(2, fmt.Sprintf(format, v...))
 }
 
 // CRITICAL 获取 CRITICAL 级别的 log.Logger 实例
-func (logs *Logs) CRITICAL() *log.Logger {
-	return logs.loggers[LevelCritical].log
-}
+func (l *Logs) CRITICAL() *log.Logger { return l.loggers[LevelCritical].log }
 
 // Critical 相当于 CRITICAL().Println(v...)的简写方式
-func (logs *Logs) Critical(v ...interface{}) {
-	logs.CRITICAL().Output(2, fmt.Sprintln(v...))
+func (l *Logs) Critical(v ...interface{}) error {
+	return l.CRITICAL().Output(2, fmt.Sprintln(v...))
 }
 
 // Criticalf 相当于 CRITICAL().Printf(format, v...) 的简写方式
-func (logs *Logs) Criticalf(format string, v ...interface{}) {
-	logs.CRITICAL().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Criticalf(format string, v ...interface{}) error {
+	return l.CRITICAL().Output(2, fmt.Sprintf(format, v...))
 }
 
 // All 向所有的日志输出内容
-func (logs *Logs) All(v ...interface{}) {
-	logs.all(fmt.Sprint(v...))
-}
+func (l *Logs) All(v ...interface{}) { l.all(fmt.Sprint(v...)) }
 
 // Allf 向所有的日志输出内容
-func (logs *Logs) Allf(format string, v ...interface{}) {
-	logs.all(fmt.Sprintf(format, v...))
+func (l *Logs) Allf(format string, v ...interface{}) {
+	l.all(fmt.Sprintf(format, v...))
 }
 
 // Fatal 输出错误信息然后退出程序
-func (logs *Logs) Fatal(code int, v ...interface{}) {
-	logs.all(fmt.Sprintln(v...))
-	logs.Close()
+func (l *Logs) Fatal(code int, v ...interface{}) {
+	l.all(fmt.Sprintln(v...))
+	l.Close()
 	os.Exit(code)
 }
 
 // Fatalf 输出错误信息然后退出程序
-func (logs *Logs) Fatalf(code int, format string, v ...interface{}) {
-	logs.all(fmt.Sprintf(format, v...))
-	logs.Close()
+func (l *Logs) Fatalf(code int, format string, v ...interface{}) {
+	l.all(fmt.Sprintf(format, v...))
+	l.Close()
 	os.Exit(code)
 }
 
 // Panic 输出错误信息然后触发 panic
-func (logs *Logs) Panic(v ...interface{}) {
+func (l *Logs) Panic(v ...interface{}) {
 	s := fmt.Sprint(v...)
-	logs.all(s)
-	logs.Close()
+	l.all(s)
+	l.Close()
 	panic(s)
 }
 
 // Panicf 输出错误信息然后触发 panic
-func (logs *Logs) Panicf(format string, v ...interface{}) {
+func (l *Logs) Panicf(format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
-	logs.all(msg)
-	logs.Close()
+	l.all(msg)
+	l.Close()
 	panic(msg)
 }
 
-func (logs *Logs) all(msg string) {
-	for _, l := range logs.loggers {
+func (l *Logs) all(msg string) {
+	for _, l := range l.loggers {
 		l.log.Output(3, msg)
 	}
 }
@@ -261,141 +250,129 @@ func Default() *Logs {
 
 // Init 从 config.Config 中初始化整个 logs 系统
 func Init(cfg *config.Config) error {
-	return defaultLogs.Init(cfg)
+	return Default().Init(cfg)
 }
 
 // Flush 输出所有的缓存内容
-func Flush() error { return defaultLogs.Flush() }
+func Flush() error { return Default().Flush() }
 
 // Close 关闭所有的输出通道
 //
 // 若是通过 os.Exit() 退出程序的，在执行之前，
 // 一定记得调用 Close() 输出可能缓存的日志内容。
-func Close() error { return defaultLogs.Close() }
+func Close() error { return Default().Close() }
 
 // INFO 获取 INFO 级别的 log.Logger 实例
-func INFO() *log.Logger { return defaultLogs.INFO() }
+func INFO() *log.Logger { return Default().INFO() }
 
 // Info 相当于 INFO().Println(v...) 的简写方式
 //
 // Info 函数默认是带换行符的，若需要不带换行符的，请使用 DEBUG().Print() 函数代替。
 // 其它相似函数也有类型功能。
-func Info(v ...interface{}) {
-	defaultLogs.INFO().Output(2, fmt.Sprintln(v...))
-}
+func Info(v ...interface{}) error { return INFO().Output(2, fmt.Sprintln(v...)) }
 
 // Infof 相当于 INFO().Printf(format, v...) 的简写方式
-func Infof(format string, v ...interface{}) {
-	defaultLogs.INFO().Output(2, fmt.Sprintf(format, v...))
+func Infof(format string, v ...interface{}) error {
+	return INFO().Output(2, fmt.Sprintf(format, v...))
 }
 
 // DEBUG 获取 DEBUG 级别的 log.Logger 实例
-func DEBUG() *log.Logger {
-	return defaultLogs.loggers[LevelDebug].log
-}
+func DEBUG() *log.Logger { return Default().DEBUG() }
 
 // Debug 相当于 DEBUG().Println(v...) 的简写方式
-func Debug(v ...interface{}) {
-	defaultLogs.DEBUG().Output(2, fmt.Sprintln(v...))
+func Debug(v ...interface{}) error {
+	return DEBUG().Output(2, fmt.Sprintln(v...))
 }
 
 // Debugf 相当于 DEBUG().Printf(format, v...) 的简写方式
-func Debugf(format string, v ...interface{}) {
-	defaultLogs.DEBUG().Output(2, fmt.Sprintf(format, v...))
+func Debugf(format string, v ...interface{}) error {
+	return DEBUG().Output(2, fmt.Sprintf(format, v...))
 }
 
 // TRACE 获取 TRACE 级别的 log.Logger 实例
-func TRACE() *log.Logger {
-	return defaultLogs.loggers[LevelTrace].log
-}
+func TRACE() *log.Logger { return Default().TRACE() }
 
 // Trace 相当于 TRACE().Println(v...) 的简写方式
-func Trace(v ...interface{}) {
-	defaultLogs.TRACE().Output(2, fmt.Sprintln(v...))
+func Trace(v ...interface{}) error {
+	return TRACE().Output(2, fmt.Sprintln(v...))
 }
 
 // Tracef 相当于 TRACE().Printf(format, v...) 的简写方式
-func Tracef(format string, v ...interface{}) {
-	defaultLogs.TRACE().Output(2, fmt.Sprintf(format, v...))
+func Tracef(format string, v ...interface{}) error {
+	return TRACE().Output(2, fmt.Sprintf(format, v...))
 }
 
 // WARN 获取 WARN 级别的 log.Logger 实例
-func WARN() *log.Logger {
-	return defaultLogs.loggers[LevelWarn].log
-}
+func WARN() *log.Logger { return Default().WARN() }
 
 // Warn 相当于 WARN().Println(v...) 的简写方式
-func Warn(v ...interface{}) {
-	defaultLogs.WARN().Output(2, fmt.Sprintln(v...))
+func Warn(v ...interface{}) error {
+	return WARN().Output(2, fmt.Sprintln(v...))
 }
 
 // Warnf 相当于 WARN().Printf(format, v...) 的简写方式
-func Warnf(format string, v ...interface{}) {
-	defaultLogs.WARN().Output(2, fmt.Sprintf(format, v...))
+func Warnf(format string, v ...interface{}) error {
+	return WARN().Output(2, fmt.Sprintf(format, v...))
 }
 
 // ERROR 获取 ERROR 级别的 log.Logger 实例
-func ERROR() *log.Logger {
-	return defaultLogs.loggers[LevelError].log
-}
+func ERROR() *log.Logger { return Default().ERROR() }
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
-func Error(v ...interface{}) {
-	defaultLogs.ERROR().Output(2, fmt.Sprintln(v...))
+func Error(v ...interface{}) error {
+	return ERROR().Output(2, fmt.Sprintln(v...))
 }
 
 // Errorf 相当于 ERROR().Printf(format, v...) 的简写方式
-func Errorf(format string, v ...interface{}) {
-	defaultLogs.ERROR().Output(2, fmt.Sprintf(format, v...))
+func Errorf(format string, v ...interface{}) error {
+	return ERROR().Output(2, fmt.Sprintf(format, v...))
 }
 
 // CRITICAL 获取 CRITICAL 级别的 log.Logger 实例
-func CRITICAL() *log.Logger {
-	return defaultLogs.loggers[LevelCritical].log
-}
+func CRITICAL() *log.Logger { return Default().CRITICAL() }
 
 // Critical 相当于 CRITICAL().Println(v...)的简写方式
-func Critical(v ...interface{}) {
-	defaultLogs.CRITICAL().Output(2, fmt.Sprintln(v...))
+func Critical(v ...interface{}) error {
+	return CRITICAL().Output(2, fmt.Sprintln(v...))
 }
 
 // Criticalf 相当于 CRITICAL().Printf(format, v...) 的简写方式
-func Criticalf(format string, v ...interface{}) {
-	defaultLogs.CRITICAL().Output(2, fmt.Sprintf(format, v...))
+func Criticalf(format string, v ...interface{}) error {
+	return CRITICAL().Output(2, fmt.Sprintf(format, v...))
 }
 
 // All 向所有的日志输出内容
-func All(v ...interface{}) { defaultLogs.all(fmt.Sprintln(v...)) }
+func All(v ...interface{}) { Default().all(fmt.Sprintln(v...)) }
 
 // Allf 向所有的日志输出内容
-func Allf(format string, v ...interface{}) { defaultLogs.all(fmt.Sprintf(format, v...)) }
+func Allf(format string, v ...interface{}) { Default().all(fmt.Sprintf(format, v...)) }
 
 // Fatal 输出错误信息然后退出程序
 func Fatal(code int, v ...interface{}) {
-	defaultLogs.all(fmt.Sprint(v...))
-	defaultLogs.Close()
+	Default().all(fmt.Sprint(v...))
+	Default().Close()
 	os.Exit(code)
 }
 
 // Fatalf 输出错误信息然后退出程序
 func Fatalf(code int, format string, v ...interface{}) {
-	defaultLogs.all(fmt.Sprintf(format, v...))
-	defaultLogs.Close()
+	Default().all(fmt.Sprintf(format, v...))
+	Default().Close()
 	os.Exit(code)
 }
 
 // Panic 输出错误信息然后触发 panic
 func Panic(v ...interface{}) {
 	s := fmt.Sprint(v...)
-	defaultLogs.all(s)
-	defaultLogs.Close()
+	Default().all(s)
+	Default().Close()
 	panic(s)
 }
 
 // Panicf 输出错误信息然后触发 panic
 func Panicf(format string, v ...interface{}) {
 	s := fmt.Sprintf(format, v...)
-	defaultLogs.all(s)
-	defaultLogs.Close()
+	Default().all(s)
+	Default().Close()
 	panic(s)
 }

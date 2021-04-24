@@ -32,7 +32,7 @@ func (c *Container) Write(bs []byte) (size int, err error) {
 // Add 添加一个 io.Writer 实例
 func (c *Container) Add(w io.Writer) error {
 	if w == nil {
-		return errors.New("参数w不能为一个空值")
+		return errors.New("参数 w 不能为一个空值")
 	}
 
 	c.ws = append(c.ws, w)
@@ -40,18 +40,15 @@ func (c *Container) Add(w io.Writer) error {
 }
 
 // Flush 调用所有子项的 Flush 函数
-func (c *Container) Flush() (size int, err error) {
+func (c *Container) Flush() error {
 	for _, w := range c.ws {
-		b, ok := w.(Flusher)
-		if !ok {
-			continue
-		}
-
-		if size, err = b.Flush(); err != nil {
-			return size, err
+		if b, ok := w.(Flusher); ok {
+			if err := b.Flush(); err != nil {
+				return err
+			}
 		}
 	}
-	return size, err
+	return nil
 }
 
 // Len 包含的元素

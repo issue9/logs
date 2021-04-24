@@ -4,6 +4,7 @@
 package rotate
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -46,7 +47,7 @@ func New(format, dir string, size int64) (*Rotate, error) {
 
 	stat, err := os.Stat(dir)
 	if (err != nil && !os.IsExist(err)) || !stat.IsDir() {
-		if !os.IsNotExist(err) {
+		if !errors.Is(err, os.ErrNotExist) {
 			return nil, err
 		}
 
@@ -147,6 +148,6 @@ func (r *Rotate) Close() error {
 }
 
 // Flush 实现接口 Flusher.Flush()
-func (r *Rotate) Flush() {
-	r.Close()
+func (r *Rotate) Flush() error {
+	return r.Close()
 }

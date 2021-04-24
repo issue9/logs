@@ -10,9 +10,14 @@ import (
 	"time"
 
 	"github.com/issue9/assert"
+
+	"github.com/issue9/logs/v2/writers"
 )
 
-var _ io.WriteCloser = &Rotate{}
+var (
+	_ io.WriteCloser  = &Rotate{}
+	_ writers.Flusher = &Rotate{}
+)
 
 func TestRotate(t *testing.T) {
 	a := assert.New(t)

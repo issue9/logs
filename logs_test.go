@@ -77,7 +77,9 @@ func TestSetWriter(t *testing.T) {
 
 	a.NotError(defaultLogs.SetOutput(LevelError, nil, "", 0))
 
-	a.Error(defaultLogs.SetOutput(100, nil, "", 0))
+	a.Panic(func() {
+		defaultLogs.SetOutput(100, nil, "", 0)
+	})
 }
 
 func debugWInit(*config.Config) (io.Writer, error) {

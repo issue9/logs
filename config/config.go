@@ -21,8 +21,6 @@ type Config struct {
 }
 
 // Sanitize 检测语法错误及基本的内容错误
-//
-// 同时也是实现 config.Sanitizer 接口。
 func (cfg *Config) Sanitize() error {
 	if len(cfg.Attrs) > 0 {
 		return errors.New("根元素不能存在任何属性")
@@ -43,6 +41,7 @@ func (cfg *Config) Sanitize() error {
 
 // UnmarshalXML xml.Unmarshaler 接口实现
 func (cfg *Config) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	node := cfg
 	for t, err := d.Token(); ; t, err = d.Token() {
 		if err != nil {
 			if err != io.EOF {
@@ -54,25 +53,25 @@ func (cfg *Config) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		switch token := t.(type) {
 		case xml.StartElement:
 			c := &Config{
-				parent: cfg,
+				parent: node,
 				Attrs:  make(map[string]string, len(token.Attr)),
 			}
 			for _, v := range token.Attr {
 				c.Attrs[v.Name.Local] = v.Value
 			}
 
-			if cfg.Items == nil {
-				cfg.Items = make(map[string]*Config)
+			if node.Items == nil {
+				node.Items = make(map[string]*Config)
 			}
-			if _, found := cfg.Items[token.Name.Local]; found {
+			if _, found := node.Items[token.Name.Local]; found {
 				return fmt.Errorf("重复的元素名[%v]", token.Name.Local)
 			}
-			cfg.Items[token.Name.Local] = c
+			node.Items[token.Name.Local] = c
 
-			cfg = c
+			node = c
 		case xml.EndElement:
-			if cfg.parent != nil {
-				cfg = cfg.parent
+			if node.parent != nil {
+				node = node.parent
 			}
 		} // end switch
 	} // end for

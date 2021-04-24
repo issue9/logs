@@ -4,7 +4,6 @@ package main
 
 import (
 	"encoding/xml"
-	"io/ioutil"
 	"os"
 
 	"github.com/issue9/logs/v2"
@@ -12,7 +11,7 @@ import (
 )
 
 func main() {
-	data, err := ioutil.ReadFile("./config.xml")
+	data, err := os.ReadFile("./config.xml")
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)

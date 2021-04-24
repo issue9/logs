@@ -10,13 +10,13 @@
 //      <debug>
 //          <buffer size="10">
 //              <rotate dir="/var/log/" size="5M" />
-//              <stmp username=".." password=".." />
+//              <smtp username=".." password=".." />
 //          </buffer>
 //      </debug>
 //      <info>
 //          <console output="stderr" color="yellow" />
 //      </info>
-//      <!-- 除了 debug 和 info，其它 4 个依然输出到 ioutil.Discard -->
+//      <!-- 除了 debug 和 info，其它 4 个依然输出到 os.Discard -->
 //  </logs>
 //
 // 然后就可以调用 Go 代码输出日志内容:
@@ -31,8 +31,8 @@
 //  logs.All(...)
 //
 // 上面的配置文件表示 DEBUG 级别的内容输出前都进被缓存，当量达到 10 条时，
-// 一次性向 rotate 和 stmp 输出。
-// 其中 buffer、rotate、stmp、debug 和 info 都是实现了 io.Writer 接口的结
+// 一次性向 rotate 和 smtp 输出。
+// 其中 buffer、rotate、smtp、debug 和 info 都是实现了 io.Writer 接口的结
 // 构。通过 Register() 注册成功之后，即可以使用。
 //
 //
@@ -46,7 +46,7 @@
 // - 顶级元素必须为 logs，且不需要带任何属性;
 //
 // - 二级元素实际上就是一个 log.Logger 实例，
-// 只能为 info、deubg、trace、warn、error 和 critical，
+// 只能为 info、debug、trace、warn、error 和 critical，
 // 分别对应 INFO、DEBUG、TRACE、WARN、ERROR 和 CRITICAL 等日志通道。
 // 可以带上 prefix 和 flag 属性，分别对应 log.New() 中的相应参数。
 //
@@ -57,7 +57,7 @@
 //
 // 缓存工具，当数量达到指定值时，一起向所有的子元素输出。
 // 比如上面的示例中，所有向 debug 输出的内容，都会被 buffer 缓存，
-// 直到数量达到 10 条，才会一起向 rotate 和 stmp 输出内容。
+// 直到数量达到 10 条，才会一起向 rotate 和 smtp 输出内容。
 // 仅有 size 一个参数：
 //  size: 用于指定缓存的数量，必填参数。
 //
@@ -70,12 +70,12 @@
 //  size：    表示的是每个日志的大概大小，默认单位为 byte，可以带字符单位，
 //            如 5M、10G 等(支持 k、m 和 g 三个后缀，不区分大小写)。
 //
-// 3. stmp:
+// 3. smtp:
 //
 // 将日志内容发送给指定邮件，可定义的属性为：
 //  username: 发送邮件的账号；
 //  password: 账号对应的密码；
-//  host:	  stmp的主机；
+//  host:	  smtp 的主机；
 //  subject:  邮件的主题；
 //  sendTo:   接收人地址，多个收件地址使用分号分隔。
 //

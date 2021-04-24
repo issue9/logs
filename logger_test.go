@@ -17,24 +17,23 @@ var (
 	_ writers.Adder = &logger{}
 )
 
-/*
-func TestLogger_set(t *testing.T) {
+func TestLogger_setOutput(t *testing.T) {
 	a := assert.New(t)
 
-	l := &logger{
-		log: log.New(ioutil.Discard, "", 0),
-	}
-	l.set(nil, "", 0)
-	a.Nil(l.flush)
+	l := newLogger("", 0)
+	a.Equal(l.container.Len(), 0)
 
 	cont := writers.NewContainer()
-	l.set(cont, "", 0)
-	a.Equal(cont, l.flush)
+	a.NotError(l.setOutput(cont, "", 0))
+	a.Equal(l.container.Len(), 1)
 
-	l.set(cont, "abc", 2)
-	a.Equal(cont, l.flush)
+	// setOutput 会替换旧有的 writer
+	a.NotError(l.setOutput(cont, "abc", log.Ldate))
+	a.Equal(l.container.Len(), 1)
+
+	a.NotError(l.setOutput(nil, "", 0))
+	a.Equal(l.container.Len(), 0)
 }
-*/
 
 func TestParseFlag(t *testing.T) {
 	a := assert.New(t)

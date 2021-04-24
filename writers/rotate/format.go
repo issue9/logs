@@ -4,7 +4,7 @@ package rotate
 
 import (
 	"errors"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -42,7 +42,7 @@ func getIndex(dir, prefix, suffix string) (int, error) {
 		return 0, err
 	}
 
-	fs, err := ioutil.ReadDir(dir)
+	fs, err := os.ReadDir(dir)
 	if err != nil {
 		return 0, err
 	}

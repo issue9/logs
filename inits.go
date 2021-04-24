@@ -11,7 +11,8 @@ import (
 	"github.com/issue9/logs/v2/writers"
 )
 
-// WriterInitializer io.Writer 实例的初始化函数。
+// WriterInitializer io.Writer 实例的初始化函数
+//
 // args 参数为对应的 XML 节点的属性列表。
 type WriterInitializer func(cfg *config.Config) (io.Writer, error)
 
@@ -43,7 +44,9 @@ func toWriter(name string, c *config.Config) (io.Writer, error) {
 		if err != nil {
 			return nil, err
 		}
-		cont.Add(wr)
+		if err := cont.Add(wr); err != nil {
+			return nil, err
+		}
 	}
 
 	return w, nil

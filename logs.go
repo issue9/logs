@@ -3,7 +3,6 @@
 package logs
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -73,14 +72,12 @@ func (logs *Logs) Init(cfg *config.Config) error {
 
 // SetOutput 设置某一个类型的输出通道
 //
-// 若将 w 设置为 nil 等同于 ioutil.Discard，即关闭此类型的输出。
+// 若将 w 设置为 nil 等同于 io.Discard，即关闭此类型的输出。
 func (logs *Logs) SetOutput(level int, w io.Writer, prefix string, flag int) error {
-	if level < 0 || level > levelSize {
-		return errors.New("无效的 level 值")
+	if level >= LevelInfo && level < levelSize {
+		return logs.loggers[level].setOutput(w, prefix, flag)
 	}
-
-	logs.loggers[level].setOutput(w, prefix, flag)
-	return nil
+	panic(fmt.Sprintf("无效的 level 值：%d", level))
 }
 
 // Flush 输出所有的缓存内容

@@ -3,7 +3,6 @@
 package rotate
 
 import (
-	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
@@ -45,7 +44,7 @@ func TestGetIndex(t *testing.T) {
 
 	w := func(i int) {
 		name := "./testdata/" + prefixValue + strconv.Itoa(i) + suffixValue
-		ioutil.WriteFile(name, []byte("123"), os.ModePerm)
+		a.NotError(os.WriteFile(name, []byte("123"), os.ModePerm))
 	}
 
 	w(5)

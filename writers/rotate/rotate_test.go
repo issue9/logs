@@ -4,7 +4,6 @@ package rotate
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -37,7 +36,7 @@ func TestRotate(t *testing.T) {
 		a.NotError(err)
 	}
 
-	files, err := ioutil.ReadDir(w.dir)
+	files, err := os.ReadDir(w.dir)
 	a.NotError(err)
 	a.Equal(len(files), int64(loop*len("1024\n"))/w.size)
 }

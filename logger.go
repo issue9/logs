@@ -5,7 +5,6 @@ package logs
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"log"
 	"strings"
 
@@ -46,21 +45,26 @@ func newLogger(prefix string, flag int) *logger {
 	}
 }
 
-// 重新设置输出信息
+// 重新设置输出通道
 //
 // 如果还有内容未输出，则会先输出内容。
-func (l *logger) setOutput(w io.Writer, prefix string, flag int) {
-	l.container.Flush()
+func (l *logger) setOutput(w io.Writer, prefix string, flag int) error {
+	if err := l.container.Flush(); err != nil {
+		return err
+	}
+	l.container.Clear()
 
 	if w == nil {
-		l.container.Clear()
-		l.log.SetOutput(ioutil.Discard)
-		return
+		return nil
 	}
 
+	if err := l.container.Add(w); err != nil {
+		return err
+	}
 	l.log.SetFlags(flag)
 	l.log.SetPrefix(prefix)
-	l.log.SetOutput(w)
+
+	return nil
 }
 
 // 该接口仅为兼容 toWriter 所使用。不应该直接调用。
@@ -70,7 +74,7 @@ func (l *logger) Write(data []byte) (int, error) {
 	return l.container.Write(data)
 }
 
-// 可以让 toWriter 直接调用添加 io.Writer 实现
+// Add 可以让 toWriter 直接调用添加 io.Writer 实现
 func (l *logger) Add(w io.Writer) error {
 	return l.container.Add(w)
 }

@@ -8,7 +8,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/issue9/logs/v2/config"
+	"github.com/issue9/logs/v3/config"
 )
 
 // 目前支持的日志类型

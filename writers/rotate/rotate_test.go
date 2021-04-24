@@ -10,7 +10,7 @@ import (
 
 	"github.com/issue9/assert"
 
-	"github.com/issue9/logs/v2/writers"
+	"github.com/issue9/logs/v3/writers"
 )
 
 var (
@@ -22,7 +22,7 @@ func TestRotate(t *testing.T) {
 	a := assert.New(t)
 
 	a.NotError(os.RemoveAll("./testdata"))
-	w, err := New("%y-%m-%d-%i", "./testdata", 100)
+	w, err := New("%m-%d-%i", "./testdata", 100)
 	a.NotError(err).NotNil(w)
 	a.Equal(w.size, 100)
 
@@ -32,8 +32,7 @@ func TestRotate(t *testing.T) {
 		time.Sleep(60 * time.Millisecond)
 
 		size, err := w.Write([]byte("1024\n"))
-		a.NotEqual(size, 0)
-		a.NotError(err)
+		a.NotEqual(size, 0).NotError(err)
 	}
 
 	files, err := os.ReadDir(w.dir)

@@ -1,6 +1,6 @@
 logs
 [![Go](https://github.com/issue9/logs/workflows/Go/badge.svg)](https://github.com/issue9/logs/actions?query=workflow%3AGo)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/logs/v2)](https://pkg.go.dev/github.com/issue9/logs/v2)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/logs/v3)](https://pkg.go.dev/github.com/issue9/logs/v3)
 ======
 
 一个可配置的日志服务包。可以通过 XML 自定义日志输出：
@@ -21,8 +21,8 @@ logs
 ```
 
 ```go
-import "github.com/issue9/logs/v2/config"
-import "github.com/issue9/logs/v2"
+import "github.com/issue9/logs/v3/config"
+import "github.com/issue9/logs/v3"
 
 cfg, _ := config.ParseFile("./logs.xml")
 l := logs.New()

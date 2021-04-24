@@ -16,7 +16,7 @@
 //      <info>
 //          <console output="stderr" color="yellow" />
 //      </info>
-//      <!-- 除了 debug 和 info，其它 4 个依然输出到 os.Discard -->
+//      <!-- 除了 debug 和 info，其它 4 个依然输出到 io.Discard -->
 //  </logs>
 //
 // 然后就可以调用 Go 代码输出日志内容:
@@ -39,7 +39,7 @@
 //
 // 配置文件：
 //
-// - 只支持 utf-8 编码的 XML 文件。
+// - 只支持 utf-8 编码的 XML、JSON 和 YAML 格式文件。
 //
 // - 节点名称和节点属性区分大小写，但是属性值不区分大小写。
 //
@@ -97,6 +97,6 @@
 // 该函数的原型为：
 //  WriterInitializer
 //
-// NOTE: 不能对 logs.Error() 等函数进行再次封闭，若非要这样做的话，
-// 建议使用 logs.ERROR().Output()，否则会造成输出的错误信息定位不准确的问题。
+// NOTE: 不能对 logs.Error() 等函数进行再次封闭，否则会造成输出的错误信息定位不准确。
+// 若非要这样做的话， 建议使用 logs.ERROR().Output()。
 package logs

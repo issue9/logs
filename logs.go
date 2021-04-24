@@ -345,14 +345,14 @@ func Allf(format string, v ...interface{}) { Default().all(fmt.Sprintf(format, v
 // Fatal 输出错误信息然后退出程序
 func Fatal(code int, v ...interface{}) {
 	Default().all(fmt.Sprint(v...))
-	Default().Close()
+	Close()
 	os.Exit(code)
 }
 
 // Fatalf 输出错误信息然后退出程序
 func Fatalf(code int, format string, v ...interface{}) {
 	Default().all(fmt.Sprintf(format, v...))
-	Default().Close()
+	Close()
 	os.Exit(code)
 }
 
@@ -360,7 +360,7 @@ func Fatalf(code int, format string, v ...interface{}) {
 func Panic(v ...interface{}) {
 	s := fmt.Sprint(v...)
 	Default().all(s)
-	Default().Close()
+	Close()
 	panic(s)
 }
 
@@ -368,6 +368,6 @@ func Panic(v ...interface{}) {
 func Panicf(format string, v ...interface{}) {
 	s := fmt.Sprintf(format, v...)
 	Default().all(s)
-	Default().Close()
+	Close()
 	panic(s)
 }

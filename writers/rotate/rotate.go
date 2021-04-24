@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Package rotate 提供一个可以按文件大小进行分割的 io.Writer 实例。
+// Package rotate 提供一个可以按文件大小进行分割的 io.Writer 实例
 package rotate
 
 import (
@@ -11,6 +11,7 @@ import (
 )
 
 // Rotate 可按大小进行分割的文件
+//
 //  import "log"
 //  // 每个文件以 100M 大小进行分割，以日期名作为文件名保存在 /var/log 下。
 //  f,_ := NewRotate("debug-%y%m%i", "/var/log", 100*1024*1024)

@@ -42,7 +42,7 @@ type Logs struct {
 // New 声明 Logs 变量
 func New() *Logs {
 	logs := &Logs{
-		loggers: make([]*logger, levelSize, levelSize),
+		loggers: make([]*logger, levelSize),
 	}
 
 	for index := range logs.loggers {
@@ -93,7 +93,7 @@ func (logs *Logs) Flush() {
 	}
 }
 
-// INFO 获取 INFO 级别的 log.Logger 实例，在未指定 info 级别的日志时，该实例返回一个 nil。
+// INFO 获取 INFO 级别的 log.Logger 实例
 func (logs *Logs) INFO() *log.Logger {
 	return logs.loggers[LevelInfo].log
 }
@@ -111,7 +111,7 @@ func (logs *Logs) Infof(format string, v ...interface{}) {
 	logs.INFO().Output(2, fmt.Sprintf(format, v...))
 }
 
-// DEBUG 获取 DEBUG 级别的 log.Logger 实例，在未指定 debug 级别的日志时，该实例返回一个 nil。
+// DEBUG 获取 DEBUG 级别的 log.Logger 实例
 func (logs *Logs) DEBUG() *log.Logger {
 	return logs.loggers[LevelDebug].log
 }
@@ -126,7 +126,7 @@ func (logs *Logs) Debugf(format string, v ...interface{}) {
 	logs.DEBUG().Output(2, fmt.Sprintf(format, v...))
 }
 
-// TRACE 获取 TRACE 级别的 log.Logger 实例，在未指定 trace 级别的日志时，该实例返回一个 nil。
+// TRACE 获取 TRACE 级别的 log.Logger 实例
 func (logs *Logs) TRACE() *log.Logger {
 	return logs.loggers[LevelTrace].log
 }
@@ -141,7 +141,7 @@ func (logs *Logs) Tracef(format string, v ...interface{}) {
 	logs.TRACE().Output(2, fmt.Sprintf(format, v...))
 }
 
-// WARN 获取 WARN 级别的 log.Logger 实例，在未指定 warn 级别的日志时，该实例返回一个 nil。
+// WARN 获取 WARN 级别的 log.Logger 实例
 func (logs *Logs) WARN() *log.Logger {
 	return logs.loggers[LevelWarn].log
 }
@@ -173,7 +173,7 @@ func (logs *Logs) Errorf(format string, v ...interface{}) {
 	logs.ERROR().Output(2, fmt.Sprintf(format, v...))
 }
 
-// CRITICAL 获取 CRITICAL 级别的 log.Logger 实例，在未指定 critical 级别的日志时，该实例返回一个 nil。
+// CRITICAL 获取 CRITICAL 级别的 log.Logger 实例
 func (logs *Logs) CRITICAL() *log.Logger {
 	return logs.loggers[LevelCritical].log
 }
@@ -255,8 +255,6 @@ func Flush() {
 }
 
 // INFO 获取 INFO 级别的 log.Logger 实例
-//
-// 在未指定 info 级别的日志时，该实例返回一个 nil。
 func INFO() *log.Logger {
 	return defaultLogs.INFO()
 }
@@ -274,7 +272,7 @@ func Infof(format string, v ...interface{}) {
 	defaultLogs.INFO().Output(2, fmt.Sprintf(format, v...))
 }
 
-// DEBUG 获取 DEBUG 级别的 log.Logger 实例，在未指定 debug 级别的日志时，该实例返回一个 nil。
+// DEBUG 获取 DEBUG 级别的 log.Logger 实例
 func DEBUG() *log.Logger {
 	return defaultLogs.loggers[LevelDebug].log
 }
@@ -289,7 +287,7 @@ func Debugf(format string, v ...interface{}) {
 	defaultLogs.DEBUG().Output(2, fmt.Sprintf(format, v...))
 }
 
-// TRACE 获取 TRACE 级别的 log.Logger 实例，在未指定 trace 级别的日志时，该实例返回一个 nil。
+// TRACE 获取 TRACE 级别的 log.Logger 实例
 func TRACE() *log.Logger {
 	return defaultLogs.loggers[LevelTrace].log
 }
@@ -304,7 +302,7 @@ func Tracef(format string, v ...interface{}) {
 	defaultLogs.TRACE().Output(2, fmt.Sprintf(format, v...))
 }
 
-// WARN 获取 WARN 级别的 log.Logger 实例，在未指定 warn 级别的日志时，该实例返回一个 nil。
+// WARN 获取 WARN 级别的 log.Logger 实例
 func WARN() *log.Logger {
 	return defaultLogs.loggers[LevelWarn].log
 }
@@ -319,7 +317,7 @@ func Warnf(format string, v ...interface{}) {
 	defaultLogs.WARN().Output(2, fmt.Sprintf(format, v...))
 }
 
-// ERROR 获取 ERROR 级别的 log.Logger 实例，在未指定 error 级别的日志时，该实例返回一个 nil。
+// ERROR 获取 ERROR 级别的 log.Logger 实例
 func ERROR() *log.Logger {
 	return defaultLogs.loggers[LevelError].log
 }
@@ -334,7 +332,7 @@ func Errorf(format string, v ...interface{}) {
 	defaultLogs.ERROR().Output(2, fmt.Sprintf(format, v...))
 }
 
-// CRITICAL 获取 CRITICAL 级别的 log.Logger 实例，在未指定 critical 级别的日志时，该实例返回一个 nil。
+// CRITICAL 获取 CRITICAL 级别的 log.Logger 实例
 func CRITICAL() *log.Logger {
 	return defaultLogs.loggers[LevelCritical].log
 }

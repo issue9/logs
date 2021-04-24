@@ -16,21 +16,6 @@ type Flusher interface {
 	Flush() (size int, err error)
 }
 
-type WriteFlusher interface {
-	Flusher
-	io.Writer
-}
-
-type WriteAdder interface {
-	Adder
-	io.Writer
-}
-
-type FlushAdder interface {
-	Flusher
-	Adder
-}
-
 type WriteFlushAdder interface {
 	io.Writer
 	Flusher

@@ -5,7 +5,9 @@ package config
 import (
 	"encoding/json"
 	"encoding/xml"
-	"io/ioutil"
+	"io/fs"
+	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v2"
 )
@@ -42,7 +44,13 @@ func ParseYAMLString(data string) (*Config, error) {
 
 // ParseFile 从文件中初始化 Config 对象，由 unmarshal 决定解析方式
 func ParseFile(path string, unmarshal func([]byte, interface{}) error) (*Config, error) {
-	bs, err := ioutil.ReadFile(path)
+	dir, base := filepath.Split(path)
+	return ParseFS(os.DirFS(dir), filepath.ToSlash(base), unmarshal)
+}
+
+// ParseFS 从文件中初始化 Config 对象，由 unmarshal 决定解析方式
+func ParseFS(f fs.FS, path string, unmarshal func([]byte, interface{}) error) (*Config, error) {
+	bs, err := fs.ReadFile(f, path)
 	if err != nil {
 		return nil, err
 	}

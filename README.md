@@ -21,10 +21,15 @@ logs
 ```
 
 ```go
-logs.InitFromXMLFile("./config.xml") // 用 XML 初始化 logs
-logs.Debug("debug start...")
-logs.Debugf("%v start...", "debug")
-logs.DEBUG().Println("debug start...")
+import "github.com/issue9/logs/v2/config"
+import "github.com/issue9/logs/v2"
+
+cfg, _ := config.ParseFile("./logs.xml")
+l := logs.New()
+l.Init(cfg)
+l.Debug("debug start...")
+l.Debugf("%v start...", "debug")
+l.DEBUG().Println("debug start...")
 ```
 
 安装

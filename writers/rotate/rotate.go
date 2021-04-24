@@ -78,7 +78,9 @@ func New(format, dir string, size int64) (*Rotate, error) {
 // 打开一个日志文件
 func (r *Rotate) open() error {
 	if r.w != nil {
-		r.w.Close()
+		if err := r.w.Close(); err != nil {
+			return err
+		}
 	}
 
 	now := time.Now()

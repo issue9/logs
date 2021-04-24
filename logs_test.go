@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"io"
+	"log"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -100,7 +101,7 @@ func TestInit(t *testing.T) {
 	a.NotError(xml.Unmarshal([]byte(data), cfg))
 	a.NotError(Init(cfg))
 
-	Debug("abc")
+	a.NotError(Debug("abc"))
 	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
 	Allf("def\n")
 	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
@@ -108,4 +109,59 @@ func TestInit(t *testing.T) {
 	// 测试 Flush
 	a.NotError(Flush())
 	a.True(debugW.Len() > 0)
+}
+
+func TestLogs_SetOutput(t *testing.T) {
+	a := assert.New(t)
+
+	a.Panic(func() {
+		Default().SetOutput(-1, nil)
+	})
+
+	a.NotError(Default().SetOutput(LevelError, &bytes.Buffer{}))
+	a.Equal(Default().loggers[LevelError].container.Len(), 1)
+	a.NotError(Default().SetOutput(LevelError, nil))
+	a.Equal(Default().loggers[LevelError].container.Len(), 0)
+}
+
+func TestLogs_SetFlags(t *testing.T) {
+	a := assert.New(t)
+
+	Default().SetFlags(log.Ldate)
+	for _, l := range Default().loggers {
+		a.Equal(l.log.Flags(), log.Ldate)
+	}
+
+	Default().SetFlags(log.Lmsgprefix)
+	for _, l := range Default().loggers {
+		a.Equal(l.log.Flags(), log.Lmsgprefix)
+	}
+}
+
+func TestLogs_SetPrefix(t *testing.T) {
+	a := assert.New(t)
+
+	Default().SetPrefix("p")
+	for _, l := range Default().loggers {
+		a.Equal(l.log.Prefix(), "p")
+	}
+
+	Default().SetPrefix("")
+	for _, l := range Default().loggers {
+		a.Equal(l.log.Prefix(), "")
+	}
+}
+
+func TestPanicf(t *testing.T) {
+	a := assert.New(t)
+	resetLog(defaultLogs, t)
+
+	a.NotError(Error("error"))
+	a.True(errorW.Len() > 0)
+	a.Equal(debugW.Len(), 0)
+
+	a.Panic(func() {
+		Panicf("panic")
+		checkLog(t)
+	})
 }

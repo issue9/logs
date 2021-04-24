@@ -38,7 +38,6 @@ type logger struct {
 
 func newLogger(prefix string, flag int) *logger {
 	cont := writers.NewContainer()
-
 	return &logger{
 		container: cont,
 		log:       log.New(cont, prefix, flag),

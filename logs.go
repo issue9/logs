@@ -280,9 +280,7 @@ func Infof(format string, v ...interface{}) error {
 func DEBUG() *log.Logger { return Default().DEBUG() }
 
 // Debug 相当于 DEBUG().Println(v...) 的简写方式
-func Debug(v ...interface{}) error {
-	return DEBUG().Output(2, fmt.Sprintln(v...))
-}
+func Debug(v ...interface{}) error { return DEBUG().Output(2, fmt.Sprintln(v...)) }
 
 // Debugf 相当于 DEBUG().Printf(format, v...) 的简写方式
 func Debugf(format string, v ...interface{}) error {
@@ -319,9 +317,7 @@ func Warnf(format string, v ...interface{}) error {
 func ERROR() *log.Logger { return Default().ERROR() }
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
-func Error(v ...interface{}) error {
-	return ERROR().Output(2, fmt.Sprintln(v...))
-}
+func Error(v ...interface{}) error { return ERROR().Output(2, fmt.Sprintln(v...)) }
 
 // Errorf 相当于 ERROR().Printf(format, v...) 的简写方式
 func Errorf(format string, v ...interface{}) error {

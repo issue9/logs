@@ -12,8 +12,6 @@ import (
 )
 
 // WriterInitializer io.Writer 实例的初始化函数
-//
-// args 参数为对应的 XML 节点的属性列表。
 type WriterInitializer func(cfg *config.Config) (io.Writer, error)
 
 var funs = map[string]WriterInitializer{}
@@ -52,7 +50,7 @@ func toWriter(name string, c *config.Config) (io.Writer, error) {
 	return w, nil
 }
 
-// Register 注册一个 WriterInitializer。
+// Register 注册一个 WriterInitializer
 //
 // writer 初始化函数原型可参考: WriterInitializer。
 // 返回值反映是否注册成功。若已经存在相同名称的，则返回 false
@@ -65,14 +63,14 @@ func Register(name string, init WriterInitializer) bool {
 	return true
 }
 
-// IsRegisted 查询指定名称的 Writer 是否已经被注册
-func IsRegisted(name string) bool {
+// IsRegistered 查询指定名称的 Writer 是否已经被注册
+func IsRegistered(name string) bool {
 	_, found := funs[name]
 	return found
 }
 
-// Registed 返回所有已注册的 writer 名称
-func Registed() []string {
+// Registered 返回所有已注册的 writer 名称
+func Registered() []string {
 	names := make([]string, 0, len(funs))
 	for name := range funs {
 		names = append(names, name)

@@ -82,19 +82,19 @@ func TestInits(t *testing.T) {
 	clearInitializer()
 
 	a.True(Register("init1", logsInit)).
-		True(IsRegisted("init1")).
-		Equal(Registed(), []string{"init1"})
+		True(IsRegistered("init1")).
+		Equal(Registered(), []string{"init1"})
 
 	a.True(Register("init2", debugInit)).
-		True(IsRegisted("init2")).
-		True(IsRegisted("init1")).
-		Equal(2, len(Registed()))
+		True(IsRegistered("init2")).
+		True(IsRegistered("init1")).
+		Equal(2, len(Registered()))
 
-	a.False(IsRegisted("init3"))
+	a.False(IsRegistered("init3"))
 
 	// 重复注册
 	a.False(Register("init1", debugInit))
-	a.True(IsRegisted("init1"))
+	a.True(IsRegistered("init1"))
 
 	clearInitializer()
 	a.Equal(0, len(funs))

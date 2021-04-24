@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Package config 表示 logs 包的配置文件处理。
+// Package config 处理配置文件
 package config
 
 import (
@@ -10,9 +10,7 @@ import (
 	"io"
 )
 
-// Config 用于表示配置文件中的数据。
-//
-// 提供了对 JSON、XML 和 YAML 的支持
+// Config 用于表示配置文件中的数据
 type Config struct {
 	parent *Config
 
@@ -64,7 +62,7 @@ func (cfg *Config) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 				node.Items = make(map[string]*Config)
 			}
 			if _, found := node.Items[token.Name.Local]; found {
-				return fmt.Errorf("重复的元素名[%v]", token.Name.Local)
+				return fmt.Errorf("重复的元素名:%v", token.Name)
 			}
 			node.Items[token.Name.Local] = c
 

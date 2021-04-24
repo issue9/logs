@@ -3,6 +3,7 @@
 package config
 
 import (
+	"os"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -36,6 +37,10 @@ func TestConfig_yaml(t *testing.T) {
 	console, found := erro.Items["console"]
 	a.True(found).NotNil(console)
 	a.Equal(console.Attrs["output"], "stderr")
+
+	cfg2, err := ParseYAMLFileFS(os.DirFS("./"), "config.yml")
+	a.NotError(err).NotNil(cfg)
+	a.Equal(cfg2, cfg)
 }
 
 func TestConfig_json(t *testing.T) {
@@ -52,6 +57,10 @@ func TestConfig_json(t *testing.T) {
 	console, found := erro.Items["console"]
 	a.True(found).NotNil(console)
 	a.Equal(console.Attrs["output"], "stderr")
+
+	cfg2, err := ParseJSONFileFS(os.DirFS("./"), "config.json")
+	a.NotError(err).NotNil(cfg)
+	a.Equal(cfg2, cfg)
 }
 
 func TestConfig_xml(t *testing.T) {
@@ -68,4 +77,8 @@ func TestConfig_xml(t *testing.T) {
 	console, found := erro.Items["console"]
 	a.True(found).NotNil(console)
 	a.Equal(console.Attrs["output"], "stderr")
+
+	cfg2, err := ParseXMLFileFS(os.DirFS("./"), "config.xml")
+	a.NotError(err).NotNil(cfg)
+	a.Equal(cfg2, cfg)
 }

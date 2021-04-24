@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"encoding/xml"
 	"io"
-	"log"
 	"testing"
 
 	"github.com/issue9/assert"
@@ -41,12 +40,12 @@ func resetLog(logs *Logs, t *testing.T) {
 	a.True(warnW.Len() == 0)
 	a.True(criticalW.Len() == 0)
 
-	logs.loggers[LevelInfo].setOutput(infoW, "[INFO]", log.LstdFlags)
-	logs.loggers[LevelDebug].setOutput(debugW, "[DEBUG]", log.LstdFlags)
-	logs.loggers[LevelError].setOutput(errorW, "[ERROR]", log.LstdFlags)
-	logs.loggers[LevelTrace].setOutput(traceW, "[TRACE]", log.LstdFlags)
-	logs.loggers[LevelWarn].setOutput(warnW, "[WARN]", log.LstdFlags)
-	logs.loggers[LevelCritical].setOutput(criticalW, "[CRITICAL]", log.LstdFlags)
+	a.NotError(logs.loggers[LevelInfo].setOutput(infoW))
+	a.NotError(logs.loggers[LevelDebug].setOutput(debugW))
+	a.NotError(logs.loggers[LevelError].setOutput(errorW))
+	a.NotError(logs.loggers[LevelTrace].setOutput(traceW))
+	a.NotError(logs.loggers[LevelWarn].setOutput(warnW))
+	a.NotError(logs.loggers[LevelCritical].setOutput(criticalW))
 }
 
 func checkLog(t *testing.T) {
@@ -70,16 +69,6 @@ func TestAllf(t *testing.T) {
 	resetLog(defaultLogs, t)
 	Allf("abc")
 	checkLog(t)
-}
-
-func TestSetWriter(t *testing.T) {
-	a := assert.New(t)
-
-	a.NotError(defaultLogs.SetOutput(LevelError, nil, "", 0))
-
-	a.Panic(func() {
-		defaultLogs.SetOutput(100, nil, "", 0)
-	})
 }
 
 func debugWInit(*config.Config) (io.Writer, error) {

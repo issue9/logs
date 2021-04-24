@@ -48,23 +48,19 @@ func newLogger(prefix string, flag int) *logger {
 // 重新设置输出通道
 //
 // 如果还有内容未输出，则会先输出内容。
-func (l *logger) setOutput(w io.Writer, prefix string, flag int) error {
+// 如果 w 为 nil，取消该通道的输出。
+func (l *logger) setOutput(w io.Writer) error {
 	if err := l.container.Flush(); err != nil {
 		return err
 	}
+
 	l.container.Clear()
 
 	if w == nil {
 		return nil
 	}
 
-	if err := l.container.Add(w); err != nil {
-		return err
-	}
-	l.log.SetFlags(flag)
-	l.log.SetPrefix(prefix)
-
-	return nil
+	return l.container.Add(w)
 }
 
 // 该接口仅为兼容 toWriter 所使用。不应该直接调用。

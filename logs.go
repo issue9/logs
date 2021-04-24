@@ -72,12 +72,24 @@ func (logs *Logs) Init(cfg *config.Config) error {
 
 // SetOutput 设置某一个类型的输出通道
 //
-// 若将 w 设置为 nil 等同于 io.Discard，即关闭此类型的输出。
-func (logs *Logs) SetOutput(level int, w io.Writer, prefix string, flag int) error {
+// 若将 w 设置为 nil 表示关闭此类型的输出。
+func (logs *Logs) SetOutput(level int, w io.Writer) error {
 	if level >= LevelInfo && level < levelSize {
-		return logs.loggers[level].setOutput(w, prefix, flag)
+		return logs.loggers[level].setOutput(w)
 	}
 	panic(fmt.Sprintf("无效的 level 值：%d", level))
+}
+
+func (logs *Logs) SetFlags(flag int) {
+	for _, l := range logs.loggers {
+		l.log.SetFlags(flag)
+	}
+}
+
+func (logs *Logs) SetPrefix(p string) {
+	for _, l := range logs.loggers {
+		l.log.SetPrefix(p)
+	}
 }
 
 // Flush 输出所有的缓存内容
@@ -242,16 +254,14 @@ func (logs *Logs) all(msg string) {
 	}
 }
 
+// Default 返回当前模块中全局函数使用的 *Logs 对象
+func Default() *Logs {
+	return defaultLogs
+}
+
 // Init 从 config.Config 中初始化整个 logs 系统
 func Init(cfg *config.Config) error {
 	return defaultLogs.Init(cfg)
-}
-
-// SetOutput 设置某一个类型的输出通道
-//
-// 若将 w 设置为 nil 等同于 ioutil.Discard，即关闭此类型的输出。
-func SetOutput(level int, w io.Writer, prefix string, flag int) error {
-	return defaultLogs.SetOutput(level, w, prefix, flag)
 }
 
 // Flush 输出所有的缓存内容

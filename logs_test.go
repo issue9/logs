@@ -80,7 +80,7 @@ func TestSetWriter(t *testing.T) {
 	a.Error(defaultLogs.SetOutput(100, nil, "", 0))
 }
 
-func debugWInit(cfg *config.Config) (io.Writer, error) {
+func debugWInit(*config.Config) (io.Writer, error) {
 	return debugW, nil
 }
 
@@ -115,6 +115,6 @@ func TestInit(t *testing.T) {
 	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
 
 	// 测试 Flush
-	Flush()
+	a.NotError(Flush())
 	a.True(debugW.Len() > 0)
 }

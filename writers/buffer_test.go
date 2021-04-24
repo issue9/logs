@@ -15,7 +15,7 @@ var _ WriteFlushAdder = &Buffer{}
 func TestBuffer(t *testing.T) {
 	a := assert.New(t)
 
-	// 正确的NewBuffer()
+	// 正确的 NewBuffer()
 	buf := NewBuffer(0)
 	a.NotNil(buf)
 

@@ -84,19 +84,30 @@ func (logs *Logs) SetOutput(level int, w io.Writer, prefix string, flag int) err
 }
 
 // Flush 输出所有的缓存内容
+func (logs *Logs) Flush() error {
+	for _, l := range logs.loggers {
+		if err := l.container.Flush(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Close 关闭所有的输出通道
 //
 // 若是通过 os.Exit() 退出程序的，在执行之前，
-// 一定记得调用 Flush() 输出可能缓存的日志内容。
-func (logs *Logs) Flush() {
+// 一定记得调用 Close() 输出可能缓存的日志内容。
+func (logs *Logs) Close() error {
 	for _, l := range logs.loggers {
-		l.container.Flush()
+		if err := l.container.Close(); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // INFO 获取 INFO 级别的 log.Logger 实例
-func (logs *Logs) INFO() *log.Logger {
-	return logs.loggers[LevelInfo].log
-}
+func (logs *Logs) INFO() *log.Logger { return logs.loggers[LevelInfo].log }
 
 // Info 相当于 INFO().Println(v...) 的简写方式
 //
@@ -201,14 +212,14 @@ func (logs *Logs) Allf(format string, v ...interface{}) {
 // Fatal 输出错误信息然后退出程序
 func (logs *Logs) Fatal(code int, v ...interface{}) {
 	logs.all(fmt.Sprintln(v...))
-	logs.Flush()
+	logs.Close()
 	os.Exit(code)
 }
 
 // Fatalf 输出错误信息然后退出程序
 func (logs *Logs) Fatalf(code int, format string, v ...interface{}) {
 	logs.all(fmt.Sprintf(format, v...))
-	logs.Flush()
+	logs.Close()
 	os.Exit(code)
 }
 
@@ -216,7 +227,7 @@ func (logs *Logs) Fatalf(code int, format string, v ...interface{}) {
 func (logs *Logs) Panic(v ...interface{}) {
 	s := fmt.Sprint(v...)
 	logs.all(s)
-	logs.Flush()
+	logs.Close()
 	panic(s)
 }
 
@@ -224,7 +235,7 @@ func (logs *Logs) Panic(v ...interface{}) {
 func (logs *Logs) Panicf(format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
 	logs.all(msg)
-	logs.Flush()
+	logs.Close()
 	panic(msg)
 }
 
@@ -247,17 +258,16 @@ func SetOutput(level int, w io.Writer, prefix string, flag int) error {
 }
 
 // Flush 输出所有的缓存内容
+func Flush() error { return defaultLogs.Flush() }
+
+// Close 关闭所有的输出通道
 //
 // 若是通过 os.Exit() 退出程序的，在执行之前，
-// 一定记得调用 Flush() 输出可能缓存的日志内容。
-func Flush() {
-	defaultLogs.Flush()
-}
+// 一定记得调用 Close() 输出可能缓存的日志内容。
+func Close() error { return defaultLogs.Close() }
 
 // INFO 获取 INFO 级别的 log.Logger 实例
-func INFO() *log.Logger {
-	return defaultLogs.INFO()
-}
+func INFO() *log.Logger { return defaultLogs.INFO() }
 
 // Info 相当于 INFO().Println(v...) 的简写方式
 //
@@ -348,26 +358,22 @@ func Criticalf(format string, v ...interface{}) {
 }
 
 // All 向所有的日志输出内容
-func All(v ...interface{}) {
-	defaultLogs.all(fmt.Sprintln(v...))
-}
+func All(v ...interface{}) { defaultLogs.all(fmt.Sprintln(v...)) }
 
 // Allf 向所有的日志输出内容
-func Allf(format string, v ...interface{}) {
-	defaultLogs.all(fmt.Sprintf(format, v...))
-}
+func Allf(format string, v ...interface{}) { defaultLogs.all(fmt.Sprintf(format, v...)) }
 
 // Fatal 输出错误信息然后退出程序
 func Fatal(code int, v ...interface{}) {
 	defaultLogs.all(fmt.Sprint(v...))
-	defaultLogs.Flush()
+	defaultLogs.Close()
 	os.Exit(code)
 }
 
 // Fatalf 输出错误信息然后退出程序
 func Fatalf(code int, format string, v ...interface{}) {
 	defaultLogs.all(fmt.Sprintf(format, v...))
-	defaultLogs.Flush()
+	defaultLogs.Close()
 	os.Exit(code)
 }
 
@@ -375,7 +381,7 @@ func Fatalf(code int, format string, v ...interface{}) {
 func Panic(v ...interface{}) {
 	s := fmt.Sprint(v...)
 	defaultLogs.all(s)
-	defaultLogs.Flush()
+	defaultLogs.Close()
 	panic(s)
 }
 
@@ -383,6 +389,6 @@ func Panic(v ...interface{}) {
 func Panicf(format string, v ...interface{}) {
 	s := fmt.Sprintf(format, v...)
 	defaultLogs.all(s)
-	defaultLogs.Flush()
+	defaultLogs.Close()
 	panic(s)
 }

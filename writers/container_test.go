@@ -4,12 +4,17 @@ package writers
 
 import (
 	"bytes"
+	"io"
 	"testing"
 
 	"github.com/issue9/assert"
 )
 
-var _ WriteFlushAdder = &Container{}
+var (
+	_ Adder          = &Container{}
+	_ Flusher        = &Container{}
+	_ io.WriteCloser = &Container{}
+)
 
 func TestContainer(t *testing.T) {
 	a := assert.New(t)
@@ -27,17 +32,17 @@ func TestContainer(t *testing.T) {
 	// 传递错误的nil值。
 	a.Error(c.Add(nil))
 
-	// 只向c添加了b1，此时b1有内容，b2没内容
+	// 只向 c 添加了 b1，此时 b1 有内容，b2 没内容
 	a.Equal("hello", b1.String())
 	a.NotEqual("hello", b2.String())
 
-	c.Add(b2)
+	a.NotError(c.Add(b2))
 	size, err = c.Write([]byte(" world"))
 	a.NotError(err).
 		True(size > 0).
 		Equal(2, c.Len())
 
-	// b2后添加，此时b1有全部的内容，而b2只有后半部分。
+	// b2 后添加，此时 b1 有全部的内容，而 b2 只有后半部分。
 	a.Equal("hello world", b1.String())
 	a.Equal(" world", b2.String())
 
@@ -54,4 +59,21 @@ func TestContainer(t *testing.T) {
 	a.Equal("hello world", b1.String())
 	a.Equal(" worldhello", b2.String())
 	a.Equal(1, c.Len())
+}
+
+func TestContainer_Close(t *testing.T) {
+	a := assert.New(t)
+	c := NewContainer()
+
+	c1 := &testContainer{}
+	c2 := &testContainer{}
+	a.NotError(c.Add(c1))
+	a.NotError(c.Add(c2))
+
+	a.False(c1.flushed).False(c1.closed)
+	a.False(c2.flushed).False(c2.closed)
+
+	a.NotError(c.Close())
+	a.True(c1.flushed).True(c1.closed)
+	a.True(c2.flushed).True(c2.closed)
 }

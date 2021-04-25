@@ -4,13 +4,18 @@ package writers
 
 import (
 	"bytes"
+	"io"
 	"strconv"
 	"testing"
 
 	"github.com/issue9/assert"
 )
 
-var _ WriteFlushAdder = &Buffer{}
+var (
+	_ Adder          = &Buffer{}
+	_ Flusher        = &Buffer{}
+	_ io.WriteCloser = &Buffer{}
+)
 
 func TestBuffer(t *testing.T) {
 	a := assert.New(t)
@@ -58,4 +63,25 @@ func TestBuffer(t *testing.T) {
 	}
 	a.Equal(b1.Len(), 20).Equal(b1.String(), "01234567899876543210")
 	a.Equal(b2.Len(), 10).Equal(b2.String(), "9876543210")
+}
+
+func TestBuffer_Close(t *testing.T) {
+	a := assert.New(t)
+	buffer := NewBuffer(10)
+
+	c1 := &testContainer{}
+	c2 := &testContainer{}
+	a.NotError(buffer.Add(c1))
+	a.NotError(buffer.Add(c2))
+
+	a.False(c1.flushed).False(c1.closed).Equal(0, c1.Len())
+	a.False(c2.flushed).False(c2.closed).Equal(0, c2.Len())
+
+	_, err := buffer.Write([]byte("123"))
+	a.NotError(err)
+	a.Equal(0, c1.Len())
+
+	a.NotError(buffer.Close())
+	a.True(c1.flushed).True(c1.closed).Equal(3, c1.Len())
+	a.True(c2.flushed).True(c2.closed).Equal(3, c2.Len())
 }

@@ -68,11 +68,7 @@ func (c *Container) Close() error {
 }
 
 // Len 包含的元素
-func (c *Container) Len() int {
-	return len(c.ws)
-}
+func (c *Container) Len() int { return len(c.ws) }
 
 // Clear 清除所有的 writer
-func (c *Container) Clear() {
-	c.ws = c.ws[:0]
-}
+func (c *Container) Clear() { c.ws = c.ws[:0] }

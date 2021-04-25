@@ -24,9 +24,7 @@ func NewBuffer(size int) *Buffer {
 }
 
 // Add 添加一个 io.Writer 实例
-func (b *Buffer) Add(w io.Writer) error {
-	return b.c.Add(w)
-}
+func (b *Buffer) Add(w io.Writer) error { return b.c.Add(w) }
 
 func (b *Buffer) Write(bs []byte) (int, error) {
 	if b.size < 2 {
@@ -73,6 +71,4 @@ func (b *Buffer) Close() error {
 // SetSize 设置缓存的大小
 //
 // 若值小于 2，则所有的输出都不会被缓存。
-func (b *Buffer) SetSize(size int) {
-	b.size = size
-}
+func (b *Buffer) SetSize(size int) { b.size = size }

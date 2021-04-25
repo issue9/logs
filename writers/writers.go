@@ -14,9 +14,3 @@ type Flusher interface {
 	// Flush 将缓存的内容输出
 	Flush() (err error)
 }
-
-type WriteFlushAdder interface {
-	io.WriteCloser
-	Flusher
-	Adder
-}

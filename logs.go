@@ -126,52 +126,44 @@ func (l *Logs) INFO() *log.Logger { return l.loggers[LevelInfo].Logger }
 //
 // Info 函数默认是带换行符的，若需要不带换行符的，请使用 DEBUG().Print() 函数代替。
 // 其它相似函数也有类型功能。
-func (l *Logs) Info(v ...interface{}) error {
-	return l.INFO().Output(2, fmt.Sprintln(v...))
-}
+func (l *Logs) Info(v ...interface{}) { l.INFO().Output(2, fmt.Sprintln(v...)) }
 
 // Infof 相当于 INFO().Printf(format, v...) 的简写方式
-func (l *Logs) Infof(format string, v ...interface{}) error {
-	return l.INFO().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Infof(format string, v ...interface{}) {
+	l.INFO().Output(2, fmt.Sprintf(format, v...))
 }
 
 // DEBUG 获取 DEBUG 级别的 log.Logger 实例
 func (l *Logs) DEBUG() *log.Logger { return l.loggers[LevelDebug].Logger }
 
 // Debug 相当于 DEBUG().Println(v...) 的简写方式
-func (l *Logs) Debug(v ...interface{}) error {
-	return l.DEBUG().Output(2, fmt.Sprintln(v...))
-}
+func (l *Logs) Debug(v ...interface{}) { l.DEBUG().Output(2, fmt.Sprintln(v...)) }
 
 // Debugf 相当于 DEBUG().Printf(format, v...) 的简写方式
-func (l *Logs) Debugf(format string, v ...interface{}) error {
-	return l.DEBUG().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Debugf(format string, v ...interface{}) {
+	l.DEBUG().Output(2, fmt.Sprintf(format, v...))
 }
 
 // TRACE 获取 TRACE 级别的 log.Logger 实例
 func (l *Logs) TRACE() *log.Logger { return l.loggers[LevelTrace].Logger }
 
 // Trace 相当于 TRACE().Println(v...) 的简写方式
-func (l *Logs) Trace(v ...interface{}) error {
-	return l.TRACE().Output(2, fmt.Sprintln(v...))
-}
+func (l *Logs) Trace(v ...interface{}) { l.TRACE().Output(2, fmt.Sprintln(v...)) }
 
 // Tracef 相当于 TRACE().Printf(format, v...) 的简写方式
-func (l *Logs) Tracef(format string, v ...interface{}) error {
-	return l.TRACE().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Tracef(format string, v ...interface{}) {
+	l.TRACE().Output(2, fmt.Sprintf(format, v...))
 }
 
 // WARN 获取 WARN 级别的 log.Logger 实例
 func (l *Logs) WARN() *log.Logger { return l.loggers[LevelWarn].Logger }
 
 // Warn 相当于 WARN().Println(v...) 的简写方式
-func (l *Logs) Warn(v ...interface{}) error {
-	return l.WARN().Output(2, fmt.Sprintln(v...))
-}
+func (l *Logs) Warn(v ...interface{}) { l.WARN().Output(2, fmt.Sprintln(v...)) }
 
 // Warnf 相当于 WARN().Printf(format, v...) 的简写方式
-func (l *Logs) Warnf(format string, v ...interface{}) error {
-	return l.WARN().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Warnf(format string, v ...interface{}) {
+	l.WARN().Output(2, fmt.Sprintf(format, v...))
 }
 
 // ERROR 获取 ERROR 级别的 log.Logger 实例
@@ -180,26 +172,22 @@ func (l *Logs) Warnf(format string, v ...interface{}) error {
 func (l *Logs) ERROR() *log.Logger { return l.loggers[LevelError].Logger }
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
-func (l *Logs) Error(v ...interface{}) error {
-	return l.ERROR().Output(2, fmt.Sprintln(v...))
-}
+func (l *Logs) Error(v ...interface{}) { l.ERROR().Output(2, fmt.Sprintln(v...)) }
 
 // Errorf 相当于 ERROR().Printf(format, v...) 的简写方式
-func (l *Logs) Errorf(format string, v ...interface{}) error {
-	return l.ERROR().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Errorf(format string, v ...interface{}) {
+	l.ERROR().Output(2, fmt.Sprintf(format, v...))
 }
 
 // CRITICAL 获取 CRITICAL 级别的 log.Logger 实例
 func (l *Logs) CRITICAL() *log.Logger { return l.loggers[LevelCritical].Logger }
 
 // Critical 相当于 CRITICAL().Println(v...)的简写方式
-func (l *Logs) Critical(v ...interface{}) error {
-	return l.CRITICAL().Output(2, fmt.Sprintln(v...))
-}
+func (l *Logs) Critical(v ...interface{}) { l.CRITICAL().Output(2, fmt.Sprintln(v...)) }
 
 // Criticalf 相当于 CRITICAL().Printf(format, v...) 的简写方式
-func (l *Logs) Criticalf(format string, v ...interface{}) error {
-	return l.CRITICAL().Output(2, fmt.Sprintf(format, v...))
+func (l *Logs) Criticalf(format string, v ...interface{}) {
+	l.CRITICAL().Output(2, fmt.Sprintf(format, v...))
 }
 
 // All 向所有的日志输出内容
@@ -268,72 +256,66 @@ func INFO() *log.Logger { return Default().INFO() }
 //
 // Info 函数默认是带换行符的，若需要不带换行符的，请使用 DEBUG().Print() 函数代替。
 // 其它相似函数也有类型功能。
-func Info(v ...interface{}) error { return INFO().Output(2, fmt.Sprintln(v...)) }
+func Info(v ...interface{}) { INFO().Output(2, fmt.Sprintln(v...)) }
 
 // Infof 相当于 INFO().Printf(format, v...) 的简写方式
-func Infof(format string, v ...interface{}) error {
-	return INFO().Output(2, fmt.Sprintf(format, v...))
+func Infof(format string, v ...interface{}) {
+	INFO().Output(2, fmt.Sprintf(format, v...))
 }
 
 // DEBUG 获取 DEBUG 级别的 log.Logger 实例
 func DEBUG() *log.Logger { return Default().DEBUG() }
 
 // Debug 相当于 DEBUG().Println(v...) 的简写方式
-func Debug(v ...interface{}) error { return DEBUG().Output(2, fmt.Sprintln(v...)) }
+func Debug(v ...interface{}) { DEBUG().Output(2, fmt.Sprintln(v...)) }
 
 // Debugf 相当于 DEBUG().Printf(format, v...) 的简写方式
-func Debugf(format string, v ...interface{}) error {
-	return DEBUG().Output(2, fmt.Sprintf(format, v...))
+func Debugf(format string, v ...interface{}) {
+	DEBUG().Output(2, fmt.Sprintf(format, v...))
 }
 
 // TRACE 获取 TRACE 级别的 log.Logger 实例
 func TRACE() *log.Logger { return Default().TRACE() }
 
 // Trace 相当于 TRACE().Println(v...) 的简写方式
-func Trace(v ...interface{}) error {
-	return TRACE().Output(2, fmt.Sprintln(v...))
-}
+func Trace(v ...interface{}) { TRACE().Output(2, fmt.Sprintln(v...)) }
 
 // Tracef 相当于 TRACE().Printf(format, v...) 的简写方式
-func Tracef(format string, v ...interface{}) error {
-	return TRACE().Output(2, fmt.Sprintf(format, v...))
+func Tracef(format string, v ...interface{}) {
+	TRACE().Output(2, fmt.Sprintf(format, v...))
 }
 
 // WARN 获取 WARN 级别的 log.Logger 实例
 func WARN() *log.Logger { return Default().WARN() }
 
 // Warn 相当于 WARN().Println(v...) 的简写方式
-func Warn(v ...interface{}) error {
-	return WARN().Output(2, fmt.Sprintln(v...))
-}
+func Warn(v ...interface{}) { WARN().Output(2, fmt.Sprintln(v...)) }
 
 // Warnf 相当于 WARN().Printf(format, v...) 的简写方式
-func Warnf(format string, v ...interface{}) error {
-	return WARN().Output(2, fmt.Sprintf(format, v...))
+func Warnf(format string, v ...interface{}) {
+	WARN().Output(2, fmt.Sprintf(format, v...))
 }
 
 // ERROR 获取 ERROR 级别的 log.Logger 实例
 func ERROR() *log.Logger { return Default().ERROR() }
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
-func Error(v ...interface{}) error { return ERROR().Output(2, fmt.Sprintln(v...)) }
+func Error(v ...interface{}) { ERROR().Output(2, fmt.Sprintln(v...)) }
 
 // Errorf 相当于 ERROR().Printf(format, v...) 的简写方式
-func Errorf(format string, v ...interface{}) error {
-	return ERROR().Output(2, fmt.Sprintf(format, v...))
+func Errorf(format string, v ...interface{}) {
+	ERROR().Output(2, fmt.Sprintf(format, v...))
 }
 
 // CRITICAL 获取 CRITICAL 级别的 log.Logger 实例
 func CRITICAL() *log.Logger { return Default().CRITICAL() }
 
 // Critical 相当于 CRITICAL().Println(v...)的简写方式
-func Critical(v ...interface{}) error {
-	return CRITICAL().Output(2, fmt.Sprintln(v...))
-}
+func Critical(v ...interface{}) { CRITICAL().Output(2, fmt.Sprintln(v...)) }
 
 // Criticalf 相当于 CRITICAL().Printf(format, v...) 的简写方式
-func Criticalf(format string, v ...interface{}) error {
-	return CRITICAL().Output(2, fmt.Sprintf(format, v...))
+func Criticalf(format string, v ...interface{}) {
+	CRITICAL().Output(2, fmt.Sprintf(format, v...))
 }
 
 // All 向所有的日志输出内容

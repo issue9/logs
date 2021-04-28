@@ -101,7 +101,7 @@ func TestInit(t *testing.T) {
 	a.NotError(xml.Unmarshal([]byte(data), cfg))
 	a.NotError(Init(cfg))
 
-	a.NotError(Debug("abc"))
+	Debug("abc")
 	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
 	Allf("def\n")
 	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
@@ -156,7 +156,7 @@ func TestPanicf(t *testing.T) {
 	a := assert.New(t)
 	resetLog(defaultLogs, t)
 
-	a.NotError(Error("error"))
+	Error("error")
 	a.True(errorW.Len() > 0)
 	a.Equal(debugW.Len(), 0)
 

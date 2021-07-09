@@ -161,7 +161,9 @@ func TestPanicf(t *testing.T) {
 	a.Equal(debugW.Len(), 0)
 
 	a.Panic(func() {
-		Panicf("panic")
-		checkLog(t)
+		Panicf(LevelError, "panic")
 	})
+
+	a.True(infoW.Len() == 0)
+	a.True(errorW.Len() > 0)
 }

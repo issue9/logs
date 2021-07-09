@@ -198,34 +198,62 @@ func (l *Logs) Allf(format string, v ...interface{}) {
 	l.all(fmt.Sprintf(format, v...))
 }
 
-// Fatal 输出错误信息然后退出程序
-func (l *Logs) Fatal(code int, v ...interface{}) {
-	l.all(fmt.Sprintln(v...))
+func (l *Logs) Print(level int, v ...interface{}) {
+	l.print(level, 3, fmt.Sprintln(v...))
+}
+
+func (l *Logs) Printf(level int, format string, v ...interface{}) {
+	l.printf(level, 3, fmt.Sprintf(format, v...))
+}
+
+func (l *Logs) print(level, deep int, v ...interface{}) {
+	l.loggers[level].Output(deep, fmt.Sprintln(v...))
+}
+
+func (l *Logs) printf(level, deep int, format string, v ...interface{}) {
+	l.loggers[level].Output(deep, fmt.Sprintf(format, v...))
+}
+
+func (l *Logs) fatal(level int, code int, v ...interface{}) {
+	l.print(level, 4, v...)
 	l.Close()
 	os.Exit(code)
 }
+
+func (l *Logs) fatalf(level int, code int, format string, v ...interface{}) {
+	l.printf(level, 4, format, v...)
+	l.Close()
+	os.Exit(code)
+}
+
+// Fatal 输出错误信息然后退出程序
+func (l *Logs) Fatal(level int, code int, v ...interface{}) { l.fatal(level, code, v...) }
 
 // Fatalf 输出错误信息然后退出程序
-func (l *Logs) Fatalf(code int, format string, v ...interface{}) {
-	l.all(fmt.Sprintf(format, v...))
-	l.Close()
-	os.Exit(code)
+func (l *Logs) Fatalf(level int, code int, format string, v ...interface{}) {
+	l.fatalf(level, code, format, v...)
 }
 
-// Panic 输出错误信息然后触发 panic
-func (l *Logs) Panic(v ...interface{}) {
+func (l *Logs) panic(level int, v ...interface{}) {
 	s := fmt.Sprint(v...)
-	l.all(s)
+	l.print(level, 4, s)
 	l.Close()
 	panic(s)
 }
 
-// Panicf 输出错误信息然后触发 panic
-func (l *Logs) Panicf(format string, v ...interface{}) {
+func (l *Logs) panicf(level int, format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
-	l.all(msg)
+	l.print(level, 4, msg)
 	l.Close()
 	panic(msg)
+}
+
+// Panic 输出错误信息然后触发 panic
+func (l *Logs) Panic(level int, v ...interface{}) { l.panic(level, v...) }
+
+// Panicf 输出错误信息然后触发 panic
+func (l *Logs) Panicf(level int, format string, v ...interface{}) {
+	l.panicf(level, format, v...)
 }
 
 func (l *Logs) all(msg string) {
@@ -324,32 +352,24 @@ func All(v ...interface{}) { Default().all(fmt.Sprintln(v...)) }
 // Allf 向所有的日志输出内容
 func Allf(format string, v ...interface{}) { Default().all(fmt.Sprintf(format, v...)) }
 
-// Fatal 输出错误信息然后退出程序
-func Fatal(code int, v ...interface{}) {
-	Default().all(fmt.Sprint(v...))
-	Close()
-	os.Exit(code)
+func Print(level int, v ...interface{}) { Default().print(level, 3, fmt.Sprintln(v...)) }
+
+func Printf(level int, format string, v ...interface{}) {
+	Default().printf(level, 3, fmt.Sprintf(format, v...))
 }
 
+// Fatal 输出错误信息然后退出程序
+func Fatal(level int, code int, v ...interface{}) { Default().fatal(level, code, v...) }
+
 // Fatalf 输出错误信息然后退出程序
-func Fatalf(code int, format string, v ...interface{}) {
-	Default().all(fmt.Sprintf(format, v...))
-	Close()
-	os.Exit(code)
+func Fatalf(level int, code int, format string, v ...interface{}) {
+	Default().fatalf(level, code, format, v...)
 }
 
 // Panic 输出错误信息然后触发 panic
-func Panic(v ...interface{}) {
-	s := fmt.Sprint(v...)
-	Default().all(s)
-	Close()
-	panic(s)
-}
+func Panic(level int, v ...interface{}) { Default().panic(level, v...) }
 
 // Panicf 输出错误信息然后触发 panic
-func Panicf(format string, v ...interface{}) {
-	s := fmt.Sprintf(format, v...)
-	Default().all(s)
-	Close()
-	panic(s)
+func Panicf(level int, format string, v ...interface{}) {
+	Default().panicf(level, format, v...)
 }

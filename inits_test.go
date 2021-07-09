@@ -14,13 +14,11 @@ import (
 // configTestWriter.Write 的输入内容，写到此变量中
 var configTestWriterContent []byte
 
-type configTestWriter struct {
-	ws []io.Writer
-}
+type configTestWriter struct{}
 
 // 清除已经注册的初始化函数。
 func clearInitializer() {
-	funs = make(map[string]WriterInitializer)
+	funcs = make(map[string]WriterInitializer)
 }
 
 func (t *configTestWriter) Write(bs []byte) (int, error) {
@@ -97,5 +95,5 @@ func TestInits(t *testing.T) {
 	a.True(IsRegistered("init1"))
 
 	clearInitializer()
-	a.Equal(0, len(funs))
+	a.Equal(0, len(funcs))
 }

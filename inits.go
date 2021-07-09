@@ -14,11 +14,11 @@ import (
 // WriterInitializer io.Writer 实例的初始化函数
 type WriterInitializer func(cfg *config.Config) (io.Writer, error)
 
-var funs = map[string]WriterInitializer{}
+var funcs = map[string]WriterInitializer{}
 
 // 将当前的 config.Config 转换成 io.Writer
 func toWriter(name string, c *config.Config) (io.Writer, error) {
-	fun, found := funs[name]
+	fun, found := funcs[name]
 	if !found {
 		return nil, fmt.Errorf("未注册的初始化函数:[%v]", name)
 	}
@@ -55,24 +55,24 @@ func toWriter(name string, c *config.Config) (io.Writer, error) {
 // writer 初始化函数原型可参考: WriterInitializer。
 // 返回值反映是否注册成功。若已经存在相同名称的，则返回 false
 func Register(name string, init WriterInitializer) bool {
-	if _, found := funs[name]; found {
+	if _, found := funcs[name]; found {
 		return false
 	}
 
-	funs[name] = init
+	funcs[name] = init
 	return true
 }
 
 // IsRegistered 查询指定名称的 Writer 是否已经被注册
 func IsRegistered(name string) bool {
-	_, found := funs[name]
+	_, found := funcs[name]
 	return found
 }
 
 // Registered 返回所有已注册的 writer 名称
 func Registered() []string {
-	names := make([]string, 0, len(funs))
-	for name := range funs {
+	names := make([]string, 0, len(funcs))
+	for name := range funcs {
 		names = append(names, name)
 	}
 

@@ -79,16 +79,23 @@ func TestNew(t *testing.T) {
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)
 	debugW := new(bytes.Buffer)
+	warnW := new(bytes.Buffer)
 
 	debugWInit := func(*config.Config) (io.Writer, error) {
 		return debugW, nil
 	}
 
+	warnWInit := func(*config.Config) (io.Writer, error) {
+		return warnW, nil
+	}
+
 	// 重新注册以下用到的 writer
 	clearInitializer()
-	a.True(Register("debug", loggerInitializer(LevelDebug)), "注册 debug 时失败")
+	a.True(Register("debug", loggerInitializer), "注册 debug 时失败")
+	a.True(Register("warn", loggerInitializer), "注册 warn 时失败")
 	a.True(Register("buffer", initfunc.Buffer), "注册 buffer 时失败")
 	a.True(Register("debugW", debugWInit), "注册 debugW 时失败")
+	a.True(Register("warnW", warnWInit), "注册 warnW 时失败")
 
 	data := `
 <?xml version="1.0" encoding="utf-8" ?>
@@ -98,6 +105,9 @@ func TestNew(t *testing.T) {
 			<debugW />
 		</buffer>
 	</debug>
+	<warn prefix="[WARN]">
+		<warnW />
+	</warn>
 </logs>
 `
 	debugW.Reset()
@@ -112,9 +122,24 @@ func TestNew(t *testing.T) {
 	l.Allf("def\n")
 	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
 
+	l.Warn("warn")
+	a.Contains(warnW.String(), "warn")
+
 	// 测试 Flush
 	a.NotError(l.Flush())
 	a.True(debugW.Len() > 0)
+	a.True(warnW.Len() > 0)
+}
+
+func TestLogs_Logger(t *testing.T) {
+	a := assert.New(t)
+
+	l, err := New(nil)
+	a.NotError(err).NotNil(l)
+
+	a.NotNil(l.Logger(LevelCritical))
+	a.NotNil(l.CRITICAL())
+	a.Nil(l.Logger(LevelAll))
 }
 
 func TestLogs_SetOutput(t *testing.T) {

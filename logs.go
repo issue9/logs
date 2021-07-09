@@ -13,7 +13,7 @@ import (
 
 // Logs 日志输出
 type Logs struct {
-	loggers []*logger
+	loggers map[int]*logger
 }
 
 // New 声明 Logs 变量
@@ -21,11 +21,11 @@ type Logs struct {
 // cfg 为配置项，可以为空，表示不输出任何信息，但是 Logs 实例是可用的状态。
 func New(cfg *config.Config) (*Logs, error) {
 	logs := &Logs{
-		loggers: make([]*logger, 0, 6),
+		loggers: make(map[int]*logger, 6),
 	}
 
 	for _, level := range levels {
-		logs.loggers = append(logs.loggers, newLogger(level, "", 0))
+		logs.loggers[level] = newLogger("", 0)
 	}
 
 	if cfg == nil {
@@ -40,7 +40,7 @@ func New(cfg *config.Config) (*Logs, error) {
 
 		ll, err := toWriter(name, c)
 		if err != nil {
-			return logs, err
+			return nil, err
 		}
 		logs.loggers[index] = ll.(*logger)
 	}
@@ -49,8 +49,8 @@ func New(cfg *config.Config) (*Logs, error) {
 
 // Logger 返回指定级别的日志操作实例
 func (l *Logs) Logger(level int) *log.Logger {
-	for _, item := range l.loggers {
-		if item.level == level {
+	for key, item := range l.loggers {
+		if key == level {
 			return item.Logger
 		}
 	}

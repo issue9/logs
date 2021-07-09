@@ -25,8 +25,8 @@ var levels = map[string]int{
 func (l *Logs) logs(level int) []*logger {
 	logs := make([]*logger, 0, len(l.loggers))
 
-	for _, item := range l.loggers {
-		if item.level&level == item.level {
+	for key, item := range l.loggers {
+		if key&level == key {
 			logs = append(logs, item)
 		}
 	}

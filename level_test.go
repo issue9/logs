@@ -19,8 +19,8 @@ func TestLogs_logs(t *testing.T) {
 
 	logs = l.logs(LevelDebug | LevelWarn)
 	a.Equal(2, len(logs)).
-		Equal(logs[0].level, LevelDebug).
-		Equal(logs[1].level, LevelWarn)
+		True(logs[0].level == LevelDebug || logs[1].level == LevelDebug).
+		True(logs[0].level == LevelWarn || logs[1].level == LevelWarn)
 
 	logs = l.logs(LevelAll)
 	a.Equal(len(levels), len(logs))

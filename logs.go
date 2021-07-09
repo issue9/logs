@@ -17,7 +17,9 @@ type Logs struct {
 }
 
 // New 声明 Logs 变量
-func New() *Logs {
+//
+// cfg 为配置项，可以为空，表示不输出任何信息，但是 Logs 实例是可用的状态。
+func New(cfg *config.Config) (*Logs, error) {
 	logs := &Logs{
 		loggers: make([]*logger, 0, 6),
 	}
@@ -26,11 +28,10 @@ func New() *Logs {
 		logs.loggers = append(logs.loggers, newLogger(level, "", 0))
 	}
 
-	return logs
-}
+	if cfg == nil {
+		return logs, nil
+	}
 
-// Init 从 config.Config 中初始化整个 logs 系统
-func (l *Logs) Init(cfg *config.Config) error {
 	for name, c := range cfg.Items {
 		index, found := levels[name]
 		if !found {
@@ -39,12 +40,11 @@ func (l *Logs) Init(cfg *config.Config) error {
 
 		ll, err := toWriter(name, c)
 		if err != nil {
-			return err
+			return logs, err
 		}
-		l.loggers[index] = ll.(*logger)
+		logs.loggers[index] = ll.(*logger)
 	}
-
-	return nil
+	return logs, nil
 }
 
 // Logger 返回指定级别的日志操作实例
@@ -54,7 +54,6 @@ func (l *Logs) Logger(level int) *log.Logger {
 			return item.Logger
 		}
 	}
-
 	return nil
 }
 

@@ -24,9 +24,7 @@ var (
 	criticalW = new(bytes.Buffer)
 )
 
-func initLogs(logs *Logs, t *testing.T) {
-	a := assert.New(t)
-
+func initLogs(logs *Logs, a *assert.Assertion) {
 	infoW.Reset()
 	debugW.Reset()
 	errorW.Reset()
@@ -49,9 +47,7 @@ func initLogs(logs *Logs, t *testing.T) {
 	a.NotError(logs.SetOutput(LevelCritical, criticalW))
 }
 
-func checkLog(t *testing.T) {
-	a := assert.New(t)
-
+func checkLog(a *assert.Assertion) {
 	a.True(infoW.Len() > 0)
 	a.True(debugW.Len() > 0)
 	a.True(errorW.Len() > 0)
@@ -61,27 +57,35 @@ func checkLog(t *testing.T) {
 }
 
 func TestLogs_All(t *testing.T) {
-	l := New()
-	initLogs(l, t)
+	a := assert.New(t)
+
+	l, err := New(nil)
+	a.NotError(err).NotNil(l)
+
+	initLogs(l, a)
 	l.All("abc")
-	checkLog(t)
+	checkLog(a)
 }
 
 func TestLogs_Allf(t *testing.T) {
-	l := New()
-	initLogs(l, t)
+	a := assert.New(t)
+
+	l, err := New(nil)
+	a.NotError(err).NotNil(l)
+
+	initLogs(l, a)
 	l.Allf("abc")
-	checkLog(t)
+	checkLog(a)
 }
 
 func debugWInit(*config.Config) (io.Writer, error) {
 	return debugW, nil
 }
 
-func TestLogs_Init(t *testing.T) {
+func TestNew(t *testing.T) {
 	a := assert.New(t)
-	l := New()
-	a.NotNil(l)
+	l, err := New(nil)
+	a.NotError(err).NotNil(l)
 
 	// 重新注册以下用到的 writer
 	clearInitializer()
@@ -103,7 +107,8 @@ func TestLogs_Init(t *testing.T) {
 
 	cfg := &config.Config{}
 	a.NotError(xml.Unmarshal([]byte(data), cfg))
-	a.NotError(l.Init(cfg))
+	l, err = New(cfg)
+	a.NotError(err).NotNil(l)
 
 	l.Debug("abc")
 	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
@@ -117,8 +122,8 @@ func TestLogs_Init(t *testing.T) {
 
 func TestLogs_SetOutput(t *testing.T) {
 	a := assert.New(t)
-	l := New()
-	a.NotNil(l)
+	l, err := New(nil)
+	a.NotError(err).NotNil(l)
 
 	l.SetOutput(0, nil) // 无任何操作发生
 
@@ -130,8 +135,8 @@ func TestLogs_SetOutput(t *testing.T) {
 
 func TestLogs_SetFlags(t *testing.T) {
 	a := assert.New(t)
-	l := New()
-	a.NotNil(l)
+	l, err := New(nil)
+	a.NotError(err).NotNil(l)
 
 	l.SetFlags(LevelAll, log.Ldate)
 	for _, item := range l.loggers {
@@ -146,8 +151,8 @@ func TestLogs_SetFlags(t *testing.T) {
 
 func TestLogs_SetPrefix(t *testing.T) {
 	a := assert.New(t)
-	l := New()
-	a.NotNil(l)
+	l, err := New(nil)
+	a.NotError(err).NotNil(l)
 
 	l.SetPrefix(LevelAll, "p")
 	for _, item := range l.loggers {
@@ -162,10 +167,10 @@ func TestLogs_SetPrefix(t *testing.T) {
 
 func TestLogs_Panicf(t *testing.T) {
 	a := assert.New(t)
-	l := New()
-	a.NotNil(l)
+	l, err := New(nil)
+	a.NotError(err).NotNil(l)
 
-	initLogs(l, t)
+	initLogs(l, a)
 
 	l.Error("error")
 	a.True(errorW.Len() > 0)

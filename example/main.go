@@ -23,8 +23,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	l := logs.New()
-	if err = l.Init(cfg); err != nil {
+	l, err := logs.New(cfg)
+	if err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}

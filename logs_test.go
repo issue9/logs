@@ -24,7 +24,7 @@ var (
 	criticalW = new(bytes.Buffer)
 )
 
-func resetLog(logs *Logs, t *testing.T) {
+func initLogs(logs *Logs, t *testing.T) {
 	a := assert.New(t)
 
 	infoW.Reset()
@@ -60,15 +60,17 @@ func checkLog(t *testing.T) {
 	a.True(criticalW.Len() > 0)
 }
 
-func TestAll(t *testing.T) {
-	resetLog(defaultLogs, t)
-	All("abc")
+func TestLogs_All(t *testing.T) {
+	l := New()
+	initLogs(l, t)
+	l.All("abc")
 	checkLog(t)
 }
 
-func TestAllf(t *testing.T) {
-	resetLog(defaultLogs, t)
-	Allf("abc")
+func TestLogs_Allf(t *testing.T) {
+	l := New()
+	initLogs(l, t)
+	l.Allf("abc")
 	checkLog(t)
 }
 
@@ -76,8 +78,10 @@ func debugWInit(*config.Config) (io.Writer, error) {
 	return debugW, nil
 }
 
-func TestInit(t *testing.T) {
+func TestLogs_Init(t *testing.T) {
 	a := assert.New(t)
+	l := New()
+	a.NotNil(l)
 
 	// 重新注册以下用到的 writer
 	clearInitializer()
@@ -99,69 +103,78 @@ func TestInit(t *testing.T) {
 
 	cfg := &config.Config{}
 	a.NotError(xml.Unmarshal([]byte(data), cfg))
-	a.NotError(Init(cfg))
+	a.NotError(l.Init(cfg))
 
-	Debug("abc")
+	l.Debug("abc")
 	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
-	Allf("def\n")
+	l.Allf("def\n")
 	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
 
 	// 测试 Flush
-	a.NotError(Flush())
+	a.NotError(l.Flush())
 	a.True(debugW.Len() > 0)
 }
 
 func TestLogs_SetOutput(t *testing.T) {
 	a := assert.New(t)
+	l := New()
+	a.NotNil(l)
 
 	a.Panic(func() {
-		Default().SetOutput(-1, nil)
+		l.SetOutput(-1, nil)
 	})
 
-	a.NotError(Default().SetOutput(LevelError, &bytes.Buffer{}))
-	a.Equal(Default().loggers[LevelError].container.Len(), 1)
-	a.NotError(Default().SetOutput(LevelError, nil))
-	a.Equal(Default().loggers[LevelError].container.Len(), 0)
+	a.NotError(l.SetOutput(LevelError, &bytes.Buffer{}))
+	a.Equal(l.loggers[LevelError].container.Len(), 1)
+	a.NotError(l.SetOutput(LevelError, nil))
+	a.Equal(l.loggers[LevelError].container.Len(), 0)
 }
 
 func TestLogs_SetFlags(t *testing.T) {
 	a := assert.New(t)
+	l := New()
+	a.NotNil(l)
 
-	Default().SetFlags(log.Ldate)
-	for _, l := range Default().loggers {
-		a.Equal(l.Flags(), log.Ldate)
+	l.SetFlags(log.Ldate)
+	for _, item := range l.loggers {
+		a.Equal(item.Flags(), log.Ldate)
 	}
 
-	Default().SetFlags(log.Lmsgprefix)
-	for _, l := range Default().loggers {
-		a.Equal(l.Flags(), log.Lmsgprefix)
+	l.SetFlags(log.Lmsgprefix)
+	for _, item := range l.loggers {
+		a.Equal(item.Flags(), log.Lmsgprefix)
 	}
 }
 
 func TestLogs_SetPrefix(t *testing.T) {
 	a := assert.New(t)
+	l := New()
+	a.NotNil(l)
 
-	Default().SetPrefix("p")
-	for _, l := range Default().loggers {
-		a.Equal(l.Prefix(), "p")
+	l.SetPrefix("p")
+	for _, item := range l.loggers {
+		a.Equal(item.Prefix(), "p")
 	}
 
-	Default().SetPrefix("")
-	for _, l := range Default().loggers {
-		a.Equal(l.Prefix(), "")
+	l.SetPrefix("")
+	for _, item := range l.loggers {
+		a.Equal(item.Prefix(), "")
 	}
 }
 
-func TestPanicf(t *testing.T) {
+func TestLogs_Panicf(t *testing.T) {
 	a := assert.New(t)
-	resetLog(defaultLogs, t)
+	l := New()
+	a.NotNil(l)
 
-	Error("error")
+	initLogs(l, t)
+
+	l.Error("error")
 	a.True(errorW.Len() > 0)
 	a.Equal(debugW.Len(), 0)
 
 	a.Panic(func() {
-		Panicf(LevelError, "panic")
+		l.Panicf(LevelError, "panic")
 	})
 
 	a.True(infoW.Len() == 0)

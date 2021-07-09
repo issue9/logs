@@ -25,8 +25,7 @@ import "github.com/issue9/logs/v3/config"
 import "github.com/issue9/logs/v3"
 
 cfg, _ := config.ParseFile("./logs.xml")
-l := logs.New()
-l.Init(cfg)
+l,err := logs.New(cfg)
 l.Debug("debug start...")
 l.Debugf("%v start...", "debug")
 l.DEBUG().Println("debug start...")

@@ -15,77 +15,74 @@ import (
 	"github.com/issue9/logs/v3/internal/initfunc"
 )
 
-var (
-	debugW    = new(bytes.Buffer)
-	infoW     = new(bytes.Buffer)
-	errorW    = new(bytes.Buffer)
-	traceW    = new(bytes.Buffer)
-	warnW     = new(bytes.Buffer)
-	criticalW = new(bytes.Buffer)
-)
-
-func initLogs(logs *Logs, a *assert.Assertion) {
-	infoW.Reset()
-	debugW.Reset()
-	errorW.Reset()
-	traceW.Reset()
-	warnW.Reset()
-	criticalW.Reset()
-
-	a.True(infoW.Len() == 0)
-	a.True(debugW.Len() == 0)
-	a.True(errorW.Len() == 0)
-	a.True(traceW.Len() == 0)
-	a.True(warnW.Len() == 0)
-	a.True(criticalW.Len() == 0)
-
-	a.NotError(logs.SetOutput(LevelInfo, infoW))
-	a.NotError(logs.SetOutput(LevelDebug, debugW))
-	a.NotError(logs.SetOutput(LevelError, errorW))
-	a.NotError(logs.SetOutput(LevelTrace, traceW))
-	a.NotError(logs.SetOutput(LevelWarn, warnW))
-	a.NotError(logs.SetOutput(LevelCritical, criticalW))
+type testLogs struct {
+	logs                                     *Logs
+	info, debug, erro, trace, warn, critical *bytes.Buffer
 }
 
-func checkLog(a *assert.Assertion) {
-	a.True(infoW.Len() > 0)
-	a.True(debugW.Len() > 0)
-	a.True(errorW.Len() > 0)
-	a.True(traceW.Len() > 0)
-	a.True(warnW.Len() > 0)
-	a.True(criticalW.Len() > 0)
+func newLogs(a *assert.Assertion) *testLogs {
+	l, err := New(nil)
+	a.NotError(err).NotNil(l)
+
+	debug := new(bytes.Buffer)
+	info := new(bytes.Buffer)
+	erro := new(bytes.Buffer)
+	trace := new(bytes.Buffer)
+	warn := new(bytes.Buffer)
+	critical := new(bytes.Buffer)
+
+	a.NotError(l.SetOutput(LevelInfo, info))
+	a.NotError(l.SetOutput(LevelDebug, debug))
+	a.NotError(l.SetOutput(LevelError, erro))
+	a.NotError(l.SetOutput(LevelTrace, trace))
+	a.NotError(l.SetOutput(LevelWarn, warn))
+	a.NotError(l.SetOutput(LevelCritical, critical))
+
+	return &testLogs{
+		logs:     l,
+		info:     info,
+		debug:    debug,
+		erro:     erro,
+		trace:    trace,
+		warn:     warn,
+		critical: critical,
+	}
+}
+
+func (l *testLogs) checkLog(a *assert.Assertion) {
+	a.True(l.info.Len() > 0)
+	a.True(l.debug.Len() > 0)
+	a.True(l.erro.Len() > 0)
+	a.True(l.trace.Len() > 0)
+	a.True(l.warn.Len() > 0)
+	a.True(l.critical.Len() > 0)
 }
 
 func TestLogs_All(t *testing.T) {
 	a := assert.New(t)
 
-	l, err := New(nil)
-	a.NotError(err).NotNil(l)
-
-	initLogs(l, a)
-	l.All("abc")
-	checkLog(a)
+	l := newLogs(a)
+	l.logs.All("abc")
+	l.checkLog(a)
 }
 
 func TestLogs_Allf(t *testing.T) {
 	a := assert.New(t)
 
-	l, err := New(nil)
-	a.NotError(err).NotNil(l)
-
-	initLogs(l, a)
-	l.Allf("abc")
-	checkLog(a)
-}
-
-func debugWInit(*config.Config) (io.Writer, error) {
-	return debugW, nil
+	l := newLogs(a)
+	l.logs.Allf("abc")
+	l.checkLog(a)
 }
 
 func TestNew(t *testing.T) {
 	a := assert.New(t)
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)
+	debugW := new(bytes.Buffer)
+
+	debugWInit := func(*config.Config) (io.Writer, error) {
+		return debugW, nil
+	}
 
 	// 重新注册以下用到的 writer
 	clearInitializer()
@@ -167,19 +164,28 @@ func TestLogs_SetPrefix(t *testing.T) {
 
 func TestLogs_Panicf(t *testing.T) {
 	a := assert.New(t)
-	l, err := New(nil)
-	a.NotError(err).NotNil(l)
 
-	initLogs(l, a)
+	l := newLogs(a)
 
-	l.Error("error")
-	a.True(errorW.Len() > 0)
-	a.Equal(debugW.Len(), 0)
+	l.logs.Error("error")
+	a.True(l.erro.Len() > 0)
+	a.Equal(l.debug.Len(), 0)
 
 	a.Panic(func() {
-		l.Panicf(LevelError, "panic")
+		l.logs.Panicf(LevelError, "panic")
 	})
 
-	a.True(infoW.Len() == 0)
-	a.True(errorW.Len() > 0)
+	a.True(l.info.Len() == 0)
+	a.True(l.erro.Len() > 0)
+
+	// panic
+
+	l = newLogs(a)
+
+	a.Panic(func() {
+		l.logs.Panic(LevelError, "panic")
+	})
+
+	a.True(l.info.Len() == 0)
+	a.Contains(l.erro.String(), "panic")
 }

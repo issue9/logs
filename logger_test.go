@@ -20,7 +20,7 @@ var (
 func TestLogger_SetOutput(t *testing.T) {
 	a := assert.New(t)
 
-	l := newLogger("", 0)
+	l := newLogger(LevelDebug, "", 0)
 	a.Equal(l.container.Len(), 0)
 
 	cont := writers.NewContainer()

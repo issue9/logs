@@ -41,12 +41,12 @@ func initLogs(logs *Logs, t *testing.T) {
 	a.True(warnW.Len() == 0)
 	a.True(criticalW.Len() == 0)
 
-	a.NotError(logs.loggers[LevelInfo].SetOutput(infoW))
-	a.NotError(logs.loggers[LevelDebug].SetOutput(debugW))
-	a.NotError(logs.loggers[LevelError].SetOutput(errorW))
-	a.NotError(logs.loggers[LevelTrace].SetOutput(traceW))
-	a.NotError(logs.loggers[LevelWarn].SetOutput(warnW))
-	a.NotError(logs.loggers[LevelCritical].SetOutput(criticalW))
+	a.NotError(logs.SetOutput(LevelInfo, infoW))
+	a.NotError(logs.SetOutput(LevelDebug, debugW))
+	a.NotError(logs.SetOutput(LevelError, errorW))
+	a.NotError(logs.SetOutput(LevelTrace, traceW))
+	a.NotError(logs.SetOutput(LevelWarn, warnW))
+	a.NotError(logs.SetOutput(LevelCritical, criticalW))
 }
 
 func checkLog(t *testing.T) {
@@ -85,7 +85,7 @@ func TestLogs_Init(t *testing.T) {
 
 	// 重新注册以下用到的 writer
 	clearInitializer()
-	a.True(Register("debug", loggerInitializer), "注册 debug 时失败")
+	a.True(Register("debug", loggerInitializer(LevelDebug)), "注册 debug 时失败")
 	a.True(Register("buffer", initfunc.Buffer), "注册 buffer 时失败")
 	a.True(Register("debugW", debugWInit), "注册 debugW 时失败")
 
@@ -120,14 +120,12 @@ func TestLogs_SetOutput(t *testing.T) {
 	l := New()
 	a.NotNil(l)
 
-	a.Panic(func() {
-		l.SetOutput(-1, nil)
-	})
+	l.SetOutput(0, nil) // 无任何操作发生
 
 	a.NotError(l.SetOutput(LevelError, &bytes.Buffer{}))
-	a.Equal(l.loggers[LevelError].container.Len(), 1)
+	a.Equal(l.logs(LevelError)[0].container.Len(), 1)
 	a.NotError(l.SetOutput(LevelError, nil))
-	a.Equal(l.loggers[LevelError].container.Len(), 0)
+	a.Equal(l.logs(LevelError)[0].container.Len(), 0)
 }
 
 func TestLogs_SetFlags(t *testing.T) {
@@ -135,12 +133,12 @@ func TestLogs_SetFlags(t *testing.T) {
 	l := New()
 	a.NotNil(l)
 
-	l.SetFlags(log.Ldate)
+	l.SetFlags(LevelAll, log.Ldate)
 	for _, item := range l.loggers {
 		a.Equal(item.Flags(), log.Ldate)
 	}
 
-	l.SetFlags(log.Lmsgprefix)
+	l.SetFlags(LevelAll, log.Lmsgprefix)
 	for _, item := range l.loggers {
 		a.Equal(item.Flags(), log.Lmsgprefix)
 	}
@@ -151,12 +149,12 @@ func TestLogs_SetPrefix(t *testing.T) {
 	l := New()
 	a.NotNil(l)
 
-	l.SetPrefix("p")
+	l.SetPrefix(LevelAll, "p")
 	for _, item := range l.loggers {
 		a.Equal(item.Prefix(), "p")
 	}
 
-	l.SetPrefix("")
+	l.SetPrefix(LevelAll, "")
 	for _, item := range l.loggers {
 		a.Equal(item.Prefix(), "")
 	}

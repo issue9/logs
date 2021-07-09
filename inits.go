@@ -98,8 +98,8 @@ func init() {
 	}
 
 	// logContInitializer
-	for key := range levels {
-		if !Register(key, loggerInitializer) {
+	for key, level := range levels {
+		if !Register(key, loggerInitializer(level)) {
 			panic(fmt.Sprintf("注册 %v 时失败，已存在相同名称", key))
 		}
 	}

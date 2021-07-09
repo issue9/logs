@@ -27,13 +27,15 @@ var flagMap = map[string]int{
 type logger struct {
 	*log.Logger
 	container *writers.Container
+	level     int
 }
 
-func newLogger(prefix string, flag int) *logger {
+func newLogger(level int, prefix string, flag int) *logger {
 	c := writers.NewContainer()
 	return &logger{
 		Logger:    log.New(c, prefix, flag),
 		container: c,
+		level:     level,
 	}
 }
 
@@ -66,13 +68,15 @@ func (l *logger) Add(w io.Writer) error {
 	return l.container.Add(w)
 }
 
-func loggerInitializer(cfg *config.Config) (io.Writer, error) {
-	flag, err := parseFlag(cfg.Attrs["flag"])
-	if err != nil {
-		return nil, err
-	}
+func loggerInitializer(level int) WriterInitializer {
+	return func(cfg *config.Config) (io.Writer, error) {
+		flag, err := parseFlag(cfg.Attrs["flag"])
+		if err != nil {
+			return nil, err
+		}
 
-	return newLogger(cfg.Attrs["prefix"], flag), nil
+		return newLogger(level, cfg.Attrs["prefix"], flag), nil
+	}
 }
 
 // 将 log.Ldate|log.Ltime 的字符串转换成正确的值

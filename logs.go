@@ -11,26 +11,6 @@ import (
 	"github.com/issue9/logs/v3/config"
 )
 
-// 目前支持的日志类型
-const (
-	LevelInfo = iota
-	LevelTrace
-	LevelDebug
-	LevelWarn
-	LevelError
-	LevelCritical
-	levelSize
-)
-
-var levels = map[string]int{
-	"info":     LevelInfo,
-	"trace":    LevelTrace,
-	"debug":    LevelDebug,
-	"warn":     LevelWarn,
-	"error":    LevelError,
-	"critical": LevelCritical,
-}
-
 // Logs 日志输出
 type Logs struct {
 	loggers []*logger
@@ -39,11 +19,11 @@ type Logs struct {
 // New 声明 Logs 变量
 func New() *Logs {
 	logs := &Logs{
-		loggers: make([]*logger, levelSize),
+		loggers: make([]*logger, 0, 6),
 	}
 
-	for index := range logs.loggers {
-		logs.loggers[index] = newLogger("", 0)
+	for _, level := range levels {
+		logs.loggers = append(logs.loggers, newLogger(level, "", 0))
 	}
 
 	return logs
@@ -67,29 +47,46 @@ func (l *Logs) Init(cfg *config.Config) error {
 	return nil
 }
 
+// Logger 返回指定级别的日志操作实例
+func (l *Logs) Logger(level int) *log.Logger {
+	for _, item := range l.loggers {
+		if item.level == level {
+			return item.Logger
+		}
+	}
+
+	return nil
+}
+
 // SetOutput 设置某一个类型的输出通道
 //
+// level 表示需要设置的通道，可以是多个值组合，比如 LevelInfo | LevelDebug 。
 // 若将 w 设置为 nil 表示关闭此类型的输出。
 //
 // NOTE: 如果直接调用诸如 ERROR().SetOutput() 设置输出通道，
 // 那么 Logs 将失去对该对象的管控，之后再调用 Logs.SetOutput 不会再启作用。
 func (l *Logs) SetOutput(level int, w io.Writer) error {
-	if level >= LevelInfo && level < levelSize {
-		return l.loggers[level].SetOutput(w)
+	logs := l.logs(level)
+	for _, item := range logs {
+		if err := item.SetOutput(w); err != nil {
+			return err
+		}
 	}
-	panic(fmt.Sprintf("无效的 level 值：%d", level))
+	return nil
 }
 
 // SetFlags 为所有的日志对象调用 SetFlags
-func (l *Logs) SetFlags(flag int) {
-	for _, l := range l.loggers {
+func (l *Logs) SetFlags(level int, flag int) {
+	logs := l.logs(level)
+	for _, l := range logs {
 		l.SetFlags(flag)
 	}
 }
 
 // SetPrefix 为所有的日志对象调用 SetPrefix
-func (l *Logs) SetPrefix(p string) {
-	for _, l := range l.loggers {
+func (l *Logs) SetPrefix(level int, p string) {
+	logs := l.logs(level)
+	for _, l := range logs {
 		l.SetPrefix(p)
 	}
 }
@@ -118,7 +115,7 @@ func (l *Logs) Close() error {
 }
 
 // INFO 获取 INFO 级别的 log.Logger 实例
-func (l *Logs) INFO() *log.Logger { return l.loggers[LevelInfo].Logger }
+func (l *Logs) INFO() *log.Logger { return l.Logger(LevelInfo) }
 
 // Info 相当于 INFO().Println(v...) 的简写方式
 //
@@ -132,7 +129,7 @@ func (l *Logs) Infof(format string, v ...interface{}) {
 }
 
 // DEBUG 获取 DEBUG 级别的 log.Logger 实例
-func (l *Logs) DEBUG() *log.Logger { return l.loggers[LevelDebug].Logger }
+func (l *Logs) DEBUG() *log.Logger { return l.Logger(LevelDebug) }
 
 // Debug 相当于 DEBUG().Println(v...) 的简写方式
 func (l *Logs) Debug(v ...interface{}) { l.DEBUG().Output(2, fmt.Sprintln(v...)) }
@@ -143,7 +140,7 @@ func (l *Logs) Debugf(format string, v ...interface{}) {
 }
 
 // TRACE 获取 TRACE 级别的 log.Logger 实例
-func (l *Logs) TRACE() *log.Logger { return l.loggers[LevelTrace].Logger }
+func (l *Logs) TRACE() *log.Logger { return l.Logger(LevelTrace) }
 
 // Trace 相当于 TRACE().Println(v...) 的简写方式
 func (l *Logs) Trace(v ...interface{}) { l.TRACE().Output(2, fmt.Sprintln(v...)) }
@@ -154,7 +151,7 @@ func (l *Logs) Tracef(format string, v ...interface{}) {
 }
 
 // WARN 获取 WARN 级别的 log.Logger 实例
-func (l *Logs) WARN() *log.Logger { return l.loggers[LevelWarn].Logger }
+func (l *Logs) WARN() *log.Logger { return l.Logger(LevelWarn) }
 
 // Warn 相当于 WARN().Println(v...) 的简写方式
 func (l *Logs) Warn(v ...interface{}) { l.WARN().Output(2, fmt.Sprintln(v...)) }
@@ -165,9 +162,7 @@ func (l *Logs) Warnf(format string, v ...interface{}) {
 }
 
 // ERROR 获取 ERROR 级别的 log.Logger 实例
-//
-// 在未指定 error 级别的日志时，该实例返回一个 nil。
-func (l *Logs) ERROR() *log.Logger { return l.loggers[LevelError].Logger }
+func (l *Logs) ERROR() *log.Logger { return l.Logger(LevelError) }
 
 // Error 相当于 ERROR().Println(v...) 的简写方式
 func (l *Logs) Error(v ...interface{}) { l.ERROR().Output(2, fmt.Sprintln(v...)) }
@@ -178,7 +173,7 @@ func (l *Logs) Errorf(format string, v ...interface{}) {
 }
 
 // CRITICAL 获取 CRITICAL 级别的 log.Logger 实例
-func (l *Logs) CRITICAL() *log.Logger { return l.loggers[LevelCritical].Logger }
+func (l *Logs) CRITICAL() *log.Logger { return l.Logger(LevelCritical) }
 
 // Critical 相当于 CRITICAL().Println(v...)的简写方式
 func (l *Logs) Critical(v ...interface{}) { l.CRITICAL().Output(2, fmt.Sprintln(v...)) }
@@ -196,32 +191,10 @@ func (l *Logs) Allf(format string, v ...interface{}) {
 	l.all(fmt.Sprintf(format, v...))
 }
 
-func (l *Logs) Print(level int, v ...interface{}) {
-	l.print(level, 3, fmt.Sprintln(v...))
-}
+func (l *Logs) Print(level int, v ...interface{}) { l.print(level, 3, v...) }
 
 func (l *Logs) Printf(level int, format string, v ...interface{}) {
 	l.printf(level, 3, fmt.Sprintf(format, v...))
-}
-
-func (l *Logs) print(level, deep int, v ...interface{}) {
-	l.loggers[level].Output(deep, fmt.Sprintln(v...))
-}
-
-func (l *Logs) printf(level, deep int, format string, v ...interface{}) {
-	l.loggers[level].Output(deep, fmt.Sprintf(format, v...))
-}
-
-func (l *Logs) fatal(level int, code int, v ...interface{}) {
-	l.print(level, 4, v...)
-	l.Close()
-	os.Exit(code)
-}
-
-func (l *Logs) fatalf(level int, code int, format string, v ...interface{}) {
-	l.printf(level, 4, format, v...)
-	l.Close()
-	os.Exit(code)
 }
 
 // Fatal 输出错误信息然后退出程序
@@ -258,4 +231,30 @@ func (l *Logs) all(msg string) {
 	for _, l := range l.loggers {
 		l.Output(3, msg)
 	}
+}
+
+func (l *Logs) print(level, deep int, v ...interface{}) {
+	logs := l.logs(level)
+	for _, l := range logs {
+		l.Output(deep, fmt.Sprintln(v...))
+	}
+}
+
+func (l *Logs) printf(level, deep int, format string, v ...interface{}) {
+	logs := l.logs(level)
+	for _, l := range logs {
+		l.Output(deep, fmt.Sprintf(format, v...))
+	}
+}
+
+func (l *Logs) fatal(level int, code int, v ...interface{}) {
+	l.print(level, 4, v...)
+	l.Close()
+	os.Exit(code)
+}
+
+func (l *Logs) fatalf(level int, code int, format string, v ...interface{}) {
+	l.printf(level, 4, format, v...)
+	l.Close()
+	os.Exit(code)
 }

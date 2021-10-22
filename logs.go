@@ -65,29 +65,25 @@ func (l *Logs) Logger(level int) *log.Logger {
 // NOTE: 如果直接调用诸如 ERROR().SetOutput() 设置输出通道，
 // 那么 Logs 将失去对该对象的管控，之后再调用 Logs.SetOutput 不会再启作用。
 func (l *Logs) SetOutput(level int, w io.Writer) error {
-	logs := l.logs(level)
-	for _, item := range logs {
-		if err := item.SetOutput(w); err != nil {
-			return err
-		}
-	}
-	return nil
+	return l.walk(level, func(ll *logger) error {
+		return ll.SetOutput(w)
+	})
 }
 
 // SetFlags 为所有的日志对象调用 SetFlags
 func (l *Logs) SetFlags(level int, flag int) {
-	logs := l.logs(level)
-	for _, l := range logs {
-		l.SetFlags(flag)
-	}
+	l.walk(level, func(ll *logger) error {
+		ll.SetFlags(flag)
+		return nil
+	})
 }
 
 // SetPrefix 为所有的日志对象调用 SetPrefix
 func (l *Logs) SetPrefix(level int, p string) {
-	logs := l.logs(level)
-	for _, l := range logs {
-		l.SetPrefix(p)
-	}
+	l.walk(level, func(ll *logger) error {
+		ll.SetPrefix(p)
+		return nil
+	})
 }
 
 // Flush 输出所有的缓存内容
@@ -193,7 +189,7 @@ func (l *Logs) Allf(format string, v ...interface{}) {
 func (l *Logs) Print(level int, v ...interface{}) { l.print(level, 3, v...) }
 
 func (l *Logs) Printf(level int, format string, v ...interface{}) {
-	l.printf(level, 3, fmt.Sprintf(format, v...))
+	l.printf(level, 4, fmt.Sprintf(format, v...))
 }
 
 // Fatal 输出错误信息然后退出程序
@@ -206,14 +202,14 @@ func (l *Logs) Fatalf(level int, code int, format string, v ...interface{}) {
 
 func (l *Logs) panic(level int, v ...interface{}) {
 	s := fmt.Sprint(v...)
-	l.print(level, 4, s)
+	l.print(level, 5, s)
 	l.Close()
 	panic(s)
 }
 
 func (l *Logs) panicf(level int, format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
-	l.print(level, 4, msg)
+	l.print(level, 5, msg)
 	l.Close()
 	panic(msg)
 }
@@ -233,27 +229,25 @@ func (l *Logs) all(msg string) {
 }
 
 func (l *Logs) print(level, deep int, v ...interface{}) {
-	logs := l.logs(level)
-	for _, l := range logs {
-		l.Output(deep, fmt.Sprintln(v...))
-	}
+	l.walk(level, func(ll *logger) error {
+		return ll.Output(deep, fmt.Sprintln(v...))
+	})
 }
 
 func (l *Logs) printf(level, deep int, format string, v ...interface{}) {
-	logs := l.logs(level)
-	for _, l := range logs {
-		l.Output(deep, fmt.Sprintf(format, v...))
-	}
+	l.walk(level, func(ll *logger) error {
+		return ll.Output(deep, fmt.Sprintf(format, v...))
+	})
 }
 
 func (l *Logs) fatal(level int, code int, v ...interface{}) {
-	l.print(level, 4, v...)
+	l.print(level, 5, v...)
 	l.Close()
 	os.Exit(code)
 }
 
 func (l *Logs) fatalf(level int, code int, format string, v ...interface{}) {
-	l.printf(level, 4, format, v...)
+	l.printf(level, 5, format, v...)
 	l.Close()
 	os.Exit(code)
 }

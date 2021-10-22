@@ -26,13 +26,13 @@
 
     <error>
         <console output="stderr" foreground="red" background="blue" />
-        <stmp username=".." password="pwd" host="stmp.example.com" subject="error" sendTo="abc@example.com;abc1@example.com" />
+        <smtp username=".." password="pwd" host="smtp.example.com" subject="error" sendTo="abc@example.com;abc1@example.com" />
         <rotate prefix="error-" dir="./testdata/" size="5M" />
     </error>
 
     <critical>
         <console output="stderr" foreground="red" background="blue" />
-        <stmp username=".." password="pwd" host="stmp.example.com" subject="error" sendTo="abc@example.com;abc1@example.com" />
+        <smtp username=".." password="pwd" host="smtp.example.com" subject="error" sendTo="abc@example.com;abc1@example.com" />
         <rotate prefix="critical-" dir="./testdata/" size="5M" />
     </critical>
 </logs>

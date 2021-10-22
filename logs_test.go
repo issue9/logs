@@ -147,12 +147,12 @@ func TestLogs_SetOutput(t *testing.T) {
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)
 
-	l.SetOutput(0, nil) // 无任何操作发生
+	a.NotError(l.SetOutput(0, nil)) // 无任何操作发生
 
 	a.NotError(l.SetOutput(LevelError, &bytes.Buffer{}))
-	a.Equal(l.logs(LevelError)[0].container.Len(), 1)
+	a.Equal(l.loggers[LevelError].container.Len(), 1)
 	a.NotError(l.SetOutput(LevelError, nil))
-	a.Equal(l.logs(LevelError)[0].container.Len(), 0)
+	a.Equal(l.loggers[LevelError].container.Len(), 0)
 }
 
 func TestLogs_SetFlags(t *testing.T) {

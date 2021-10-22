@@ -41,11 +41,11 @@ items:
           output: stderr
           foreground: red
           background: blue
-      stmp:
+      smtp:
         attrs:
           username: ".."
           password: pwd
-          host: stmp.example.com
+          host: smtp.example.com
           subject: error
           sendTo: abc@example.com;abc1@example.com
       rotate:
@@ -61,11 +61,11 @@ items:
           output: stderr
           foreground: red
           background: blue
-      stmp:
+      smtp:
         attrs:
           username: ".."
           password: pwd
-          host: stmp.example.com
+          host: smtp.example.com
           subject: error
           sendTo: abc@example.com;abc1@example.com
       rotate:

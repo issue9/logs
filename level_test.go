@@ -8,18 +8,30 @@ import (
 	"github.com/issue9/assert"
 )
 
-func TestLogs_logs(t *testing.T) {
+func TestLogs_walk(t *testing.T) {
 	a := assert.New(t)
 
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)
 
-	logs := l.logs(LevelDebug)
-	a.Equal(1, len(logs))
+	num := 0
+	a.NotError(l.walk(LevelDebug, func(ll *logger) error {
+		num++
+		return nil
+	}))
+	a.Equal(1, num)
 
-	logs = l.logs(LevelDebug | LevelWarn)
-	a.Equal(2, len(logs))
+	num = 0
+	a.NotError(l.walk(LevelDebug|LevelWarn, func(ll *logger) error {
+		num++
+		return nil
+	}))
+	a.Equal(2, num)
 
-	logs = l.logs(LevelAll)
-	a.Equal(len(levels), len(logs))
+	num = 0
+	a.NotError(l.walk(LevelAll, func(ll *logger) error {
+		num++
+		return nil
+	}))
+	a.Equal(len(levels), num)
 }

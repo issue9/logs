@@ -22,14 +22,13 @@ var levels = map[string]int{
 	"critical": LevelCritical,
 }
 
-func (l *Logs) logs(level int) []*logger {
-	logs := make([]*logger, 0, len(l.loggers))
-
+func (l *Logs) walk(level int, walk func(l *logger) error) error {
 	for key, item := range l.loggers {
 		if key&level == key {
-			logs = append(logs, item)
+			if err := walk(item); err != nil {
+				return err
+			}
 		}
 	}
-
-	return logs
+	return nil
 }

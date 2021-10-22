@@ -16,46 +16,46 @@ import (
 )
 
 type testLogs struct {
-	logs                                     *Logs
-	info, debug, erro, trace, warn, critical *bytes.Buffer
+	logs    *Logs
+	buffers map[int]*bytes.Buffer
+	a       *assert.Assertion
 }
 
 func newLogs(a *assert.Assertion) *testLogs {
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)
 
-	debug := new(bytes.Buffer)
-	info := new(bytes.Buffer)
-	erro := new(bytes.Buffer)
-	trace := new(bytes.Buffer)
-	warn := new(bytes.Buffer)
-	critical := new(bytes.Buffer)
+	bufs := make(map[int]*bytes.Buffer)
+	for _, l := range levels {
+		bufs[l] = new(bytes.Buffer)
+	}
 
-	a.NotError(l.SetOutput(LevelInfo, info))
-	a.NotError(l.SetOutput(LevelDebug, debug))
-	a.NotError(l.SetOutput(LevelError, erro))
-	a.NotError(l.SetOutput(LevelTrace, trace))
-	a.NotError(l.SetOutput(LevelWarn, warn))
-	a.NotError(l.SetOutput(LevelCritical, critical))
+	a.NotError(l.SetOutput(LevelInfo, bufs[LevelInfo]))
+	a.NotError(l.SetOutput(LevelDebug, bufs[LevelDebug]))
+	a.NotError(l.SetOutput(LevelError, bufs[LevelError]))
+	a.NotError(l.SetOutput(LevelTrace, bufs[LevelTrace]))
+	a.NotError(l.SetOutput(LevelWarn, bufs[LevelWarn]))
+	a.NotError(l.SetOutput(LevelCritical, bufs[LevelCritical]))
 
 	return &testLogs{
-		logs:     l,
-		info:     info,
-		debug:    debug,
-		erro:     erro,
-		trace:    trace,
-		warn:     warn,
-		critical: critical,
+		logs:    l,
+		buffers: bufs,
+		a:       a,
 	}
 }
 
-func (l *testLogs) checkLog(a *assert.Assertion) {
-	a.True(l.info.Len() > 0)
-	a.True(l.debug.Len() > 0)
-	a.True(l.erro.Len() > 0)
-	a.True(l.trace.Len() > 0)
-	a.True(l.warn.Len() > 0)
-	a.True(l.critical.Len() > 0)
+func (l *testLogs) chk(level int, content string) {
+	for lv, buf := range l.buffers {
+		if lv&level == lv {
+			l.a.Contains(buf.String(), content)
+		}
+	}
+}
+
+func (l *testLogs) reset() {
+	for _, b := range l.buffers {
+		b.Reset()
+	}
 }
 
 func TestLogs_All(t *testing.T) {
@@ -63,7 +63,7 @@ func TestLogs_All(t *testing.T) {
 
 	l := newLogs(a)
 	l.logs.All("abc")
-	l.checkLog(a)
+	l.chk(LevelAll, "abc")
 }
 
 func TestLogs_Allf(t *testing.T) {
@@ -71,7 +71,7 @@ func TestLogs_Allf(t *testing.T) {
 
 	l := newLogs(a)
 	l.logs.Allf("abc")
-	l.checkLog(a)
+	l.chk(LevelAll, "abc")
 }
 
 func TestNew(t *testing.T) {
@@ -187,30 +187,52 @@ func TestLogs_SetPrefix(t *testing.T) {
 	}
 }
 
-func TestLogs_Panicf(t *testing.T) {
+// NOTE:以下内容依赖所在的文件以及行号，有变动需要及时更改。
+func TestLogs_LN(t *testing.T) {
 	a := assert.New(t)
-
 	l := newLogs(a)
+	l.logs.SetFlags(LevelAll, log.Llongfile)
 
-	l.logs.Error("error")
-	a.True(l.erro.Len() > 0)
-	a.Equal(l.debug.Len(), 0)
+	l.logs.Trace("abc")
+	l.chk(LevelTrace, "logs_test.go:196")
+	l.reset()
+
+	l.logs.Printf(LevelDebug, "abc")
+	l.chk(LevelDebug, "logs_test.go:200")
+	l.reset()
+
+	l.logs.Print(LevelDebug, "abc")
+	l.chk(LevelDebug, "logs_test.go:204")
+	l.reset()
 
 	a.Panic(func() {
 		l.logs.Panicf(LevelError, "panic")
 	})
+	l.chk(LevelError, "logs_test.go:209")
+	l.reset()
 
-	a.True(l.info.Len() == 0)
-	a.True(l.erro.Len() > 0)
+	l.logs.All("abc")
+	l.chk(LevelDebug, "logs_test.go:214")
+	l.reset()
+}
+
+func TestLogs_Panicf(t *testing.T) {
+	a := assert.New(t)
+	l := newLogs(a)
+
+	a.Panic(func() {
+		l.logs.Panicf(LevelError, "panic")
+	})
+	l.chk(LevelError, "panic")
+	a.True(l.buffers[LevelWarn].Len() == 0)
 
 	// panic
 
 	l = newLogs(a)
 
 	a.Panic(func() {
-		l.logs.Panic(LevelError, "panic")
+		l.logs.Panic(LevelCritical, "panic")
 	})
-
-	a.True(l.info.Len() == 0)
-	a.Contains(l.erro.String(), "panic")
+	l.chk(LevelCritical, "panic")
+	a.True(l.buffers[LevelError].Len() == 0)
 }

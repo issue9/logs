@@ -186,40 +186,40 @@ func (l *Logs) Allf(format string, v ...interface{}) {
 	l.all(fmt.Sprintf(format, v...))
 }
 
-func (l *Logs) Print(level int, v ...interface{}) { l.print(level, 3, v...) }
+func (l *Logs) Print(level int, v ...interface{}) { l.print(level, 5, v...) }
 
 func (l *Logs) Printf(level int, format string, v ...interface{}) {
-	l.printf(level, 4, fmt.Sprintf(format, v...))
+	l.printf(level, 5, fmt.Sprintf(format, v...))
 }
 
 // Fatal 输出错误信息然后退出程序
-func (l *Logs) Fatal(level int, code int, v ...interface{}) { l.fatal(level, code, v...) }
+func (l *Logs) Fatal(level int, code int, v ...interface{}) {
+	l.print(level, 5, v...)
+	l.Close()
+	os.Exit(code)
+}
 
 // Fatalf 输出错误信息然后退出程序
 func (l *Logs) Fatalf(level int, code int, format string, v ...interface{}) {
-	l.fatalf(level, code, format, v...)
+	l.printf(level, 5, format, v...)
+	l.Close()
+	os.Exit(code)
 }
 
-func (l *Logs) panic(level int, v ...interface{}) {
+// Panic 输出错误信息然后触发 panic
+func (l *Logs) Panic(level int, v ...interface{}) {
 	s := fmt.Sprint(v...)
 	l.print(level, 5, s)
 	l.Close()
 	panic(s)
 }
 
-func (l *Logs) panicf(level int, format string, v ...interface{}) {
+// Panicf 输出错误信息然后触发 panic
+func (l *Logs) Panicf(level int, format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
 	l.print(level, 5, msg)
 	l.Close()
 	panic(msg)
-}
-
-// Panic 输出错误信息然后触发 panic
-func (l *Logs) Panic(level int, v ...interface{}) { l.panic(level, v...) }
-
-// Panicf 输出错误信息然后触发 panic
-func (l *Logs) Panicf(level int, format string, v ...interface{}) {
-	l.panicf(level, format, v...)
 }
 
 func (l *Logs) all(msg string) {
@@ -238,16 +238,4 @@ func (l *Logs) printf(level, deep int, format string, v ...interface{}) {
 	l.walk(level, func(ll *logger) error {
 		return ll.Output(deep, fmt.Sprintf(format, v...))
 	})
-}
-
-func (l *Logs) fatal(level int, code int, v ...interface{}) {
-	l.print(level, 5, v...)
-	l.Close()
-	os.Exit(code)
-}
-
-func (l *Logs) fatalf(level int, code int, format string, v ...interface{}) {
-	l.printf(level, 5, format, v...)
-	l.Close()
-	os.Exit(code)
 }

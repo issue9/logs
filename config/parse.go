@@ -72,7 +72,7 @@ func ParseFS(f fs.FS, path string, u func([]byte, interface{}) error) (*Config, 
 	return Parse(bs, u)
 }
 
-// ParseFS 从字符串初始化 Config 对象
+// ParseString 从字符串初始化 Config 对象
 func ParseString(data string, u func([]byte, interface{}) error) (*Config, error) {
 	return Parse([]byte(data), u)
 }

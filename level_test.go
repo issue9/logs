@@ -5,11 +5,11 @@ package logs
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func TestLogs_walk(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)

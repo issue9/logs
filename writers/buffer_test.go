@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 var (
@@ -18,7 +18,7 @@ var (
 )
 
 func TestBuffer(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	// 正确的 NewBuffer()
 	buf := NewBuffer(0)
@@ -66,7 +66,7 @@ func TestBuffer(t *testing.T) {
 }
 
 func TestBuffer_Close(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	buffer := NewBuffer(10)
 
 	c1 := &testContainer{}

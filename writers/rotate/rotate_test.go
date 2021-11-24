@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/logs/v3/writers"
 )
@@ -19,7 +19,7 @@ var (
 )
 
 func TestRotate(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	a.NotError(os.RemoveAll("./testdata"))
 	w, err := New("%m-%d-%i", "./testdata", 100)

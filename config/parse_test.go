@@ -6,11 +6,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func TestParseXMLString(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	xmlCfg := `
 <?xml version="1.0" encoding="utf-8" ?>
 <logs>
@@ -24,7 +24,7 @@ func TestParseXMLString(t *testing.T) {
 }
 
 func TestConfig_yaml(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	cfg, err := ParseYAMLFile("./config.yml")
 	a.NotError(err).NotNil(cfg)
@@ -44,7 +44,7 @@ func TestConfig_yaml(t *testing.T) {
 }
 
 func TestConfig_json(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	cfg, err := ParseJSONFile("./config.json")
 	a.NotError(err).NotNil(cfg)
@@ -64,7 +64,7 @@ func TestConfig_json(t *testing.T) {
 }
 
 func TestConfig_xml(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	cfg, err := ParseXMLFile("./config.xml")
 	a.NotError(err).NotNil(cfg)

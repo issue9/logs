@@ -7,7 +7,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/logs/v3/writers"
 )
@@ -18,7 +18,7 @@ var (
 )
 
 func TestLogger_SetOutput(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	l := newLogger("", 0)
 	a.Equal(l.container.Len(), 0)
@@ -36,7 +36,7 @@ func TestLogger_SetOutput(t *testing.T) {
 }
 
 func TestParseFlag(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	eq := func(str string, v int) {
 		ret, err := parseFlag(str)

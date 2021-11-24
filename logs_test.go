@@ -9,7 +9,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/logs/v3/config"
 	"github.com/issue9/logs/v3/internal/initfunc"
@@ -59,7 +59,7 @@ func (l *testLogs) reset() {
 }
 
 func TestLogs_All(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	l := newLogs(a)
 	l.logs.All("abc")
@@ -67,7 +67,7 @@ func TestLogs_All(t *testing.T) {
 }
 
 func TestLogs_Allf(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	l := newLogs(a)
 	l.logs.Allf("abc")
@@ -75,7 +75,7 @@ func TestLogs_Allf(t *testing.T) {
 }
 
 func TestNew(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)
 	debugW := new(bytes.Buffer)
@@ -132,7 +132,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestLogs_Logger(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)
@@ -143,7 +143,7 @@ func TestLogs_Logger(t *testing.T) {
 }
 
 func TestLogs_SetOutput(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)
 
@@ -156,7 +156,7 @@ func TestLogs_SetOutput(t *testing.T) {
 }
 
 func TestLogs_SetFlags(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)
 
@@ -172,7 +172,7 @@ func TestLogs_SetFlags(t *testing.T) {
 }
 
 func TestLogs_SetPrefix(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	l, err := New(nil)
 	a.NotError(err).NotNil(l)
 
@@ -189,7 +189,7 @@ func TestLogs_SetPrefix(t *testing.T) {
 
 // NOTE:以下内容依赖所在的文件以及行号，有变动需要及时更改。
 func TestLogs_LN(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	l := newLogs(a)
 	l.logs.SetFlags(LevelAll, log.Llongfile)
 
@@ -217,7 +217,7 @@ func TestLogs_LN(t *testing.T) {
 }
 
 func TestLogs_Panicf(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	l := newLogs(a)
 
 	a.Panic(func() {

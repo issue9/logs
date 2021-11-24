@@ -6,7 +6,7 @@ import (
 	"encoding/xml"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 )
 
 func TestConfig_MarshalXML(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	cfg := &Config{
 		Items: map[string]*Config{
 			"debug": {
@@ -48,7 +48,7 @@ func TestConfig_MarshalXML(t *testing.T) {
 }
 
 func TestConfig_sanitize(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	// 错误的 xml 内容
 	xml := `

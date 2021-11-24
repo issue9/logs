@@ -6,7 +6,8 @@ import (
 	"io"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
+
 	"github.com/issue9/logs/v3/config"
 	"github.com/issue9/logs/v3/writers"
 )
@@ -36,7 +37,7 @@ func debugInit(cfg *config.Config) (io.Writer, error) {
 }
 
 func TestToWriter(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	clearInitializer()
 
 	a.True(Register("logs", logsInit))
@@ -74,7 +75,7 @@ func TestToWriter(t *testing.T) {
 }
 
 func TestInits(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	// 清空，包的 init 函数有可能会初始化一些数据。
 	clearInitializer()

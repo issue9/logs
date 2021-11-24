@@ -7,21 +7,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 var _ io.Writer = &SMTP{}
 
 func testSMTP(t *testing.T) {
+	a := assert.New(t, false)
 	smtp := NewSMTP("test@qq.com", "pwd", "test", "smtp.qq.com:25", []string{"test@gmail.com"})
 
 	size, err := smtp.Write([]byte("test"))
-	assert.NotError(t, err)
-	assert.True(t, size > 0)
+	a.NotError(err)
+	a.True(size > 0)
 
 	time.Sleep(30 * time.Second)
 
 	size, err = smtp.Write([]byte("test2"))
-	assert.NotError(t, err)
-	assert.True(t, size > 0)
+	a.NotError(err)
+	a.True(size > 0)
 }

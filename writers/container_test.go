@@ -7,7 +7,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 )
 
 func TestContainer(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	b1 := bytes.NewBufferString("")
 	b2 := bytes.NewBufferString("")
 	a.NotNil(b2).NotNil(b1)
@@ -54,7 +54,7 @@ func TestContainer(t *testing.T) {
 	a.Equal(0, c.Len())
 
 	// 只添加b2，b1应该保持不变
-	c.Add(b2)
+	a.NotError(c.Add(b2))
 	c.Write([]byte("hello"))
 	a.Equal("hello world", b1.String())
 	a.Equal(" worldhello", b2.String())
@@ -62,7 +62,7 @@ func TestContainer(t *testing.T) {
 }
 
 func TestContainer_Close(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	c := NewContainer()
 
 	c1 := &testContainer{}

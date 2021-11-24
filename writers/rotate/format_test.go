@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 )
 
 func TestParseFormat(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	p, s, err := parseFormat("")
 	a.Empty(p).Empty(s).Equal(err, ErrIndexNotExists)
@@ -34,7 +34,7 @@ func TestParseFormat(t *testing.T) {
 }
 
 func TestGetIndex(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	now := time.Now()
 	prefixValue := now.Format("2006.")
 	suffixValue := now.Format(".01")

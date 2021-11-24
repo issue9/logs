@@ -5,14 +5,14 @@ package initfunc
 import (
 	"testing"
 
-	"github.com/issue9/assert"
+	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/logs/v3/config"
 	"github.com/issue9/logs/v3/writers/rotate"
 )
 
 func TestToByte(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 
 	eq := func(str string, val int64) {
 		size, err := toByte(str)
@@ -38,7 +38,7 @@ func TestToByte(t *testing.T) {
 }
 
 func TestRotate(t *testing.T) {
-	a := assert.New(t)
+	a := assert.New(t, false)
 	cfg := &config.Config{Attrs: map[string]string{}}
 
 	w, err := Rotate(cfg)

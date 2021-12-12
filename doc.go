@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Package logs 是基于 XML 配置的日志系统。
+// Package logs 可配置的日志系统
 //
 // logs 定义了 6 个级别的日志：ERROR、INFO、TRACE、DEBUG、CRITICAL 和 WARN。
 // 用户可以根据自己的需求，通过 XML 配置文件自定义每个日志输出行为。

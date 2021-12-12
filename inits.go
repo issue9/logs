@@ -29,7 +29,7 @@ func toWriter(name string, c *config.Config) (io.Writer, error) {
 	}
 
 	if len(c.Items) == 0 { // 没有子项
-		return w, err
+		return w, nil
 	}
 
 	cont, ok := w.(writers.Adder)

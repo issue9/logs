@@ -48,6 +48,8 @@ func New(cfg *config.Config) (*Logs, error) {
 }
 
 // Logger 返回指定级别的日志操作实例
+//
+// level 不能以组合的形式出现；
 func (l *Logs) Logger(level int) *log.Logger {
 	for key, item := range l.loggers {
 		if key == level {
@@ -186,22 +188,16 @@ func (l *Logs) Allf(format string, v ...interface{}) {
 	l.all(fmt.Sprintf(format, v...))
 }
 
-func (l *Logs) Print(level int, v ...interface{}) { l.print(level, 5, v...) }
-
-func (l *Logs) Printf(level int, format string, v ...interface{}) {
-	l.printf(level, 5, fmt.Sprintf(format, v...))
-}
-
 // Fatal 输出错误信息然后退出程序
 func (l *Logs) Fatal(level int, code int, v ...interface{}) {
-	l.print(level, 5, v...)
+	l.Print(level, 1, v...)
 	l.Close()
 	os.Exit(code)
 }
 
 // Fatalf 输出错误信息然后退出程序
 func (l *Logs) Fatalf(level int, code int, format string, v ...interface{}) {
-	l.printf(level, 5, format, v...)
+	l.Printf(level, 1, format, v...)
 	l.Close()
 	os.Exit(code)
 }
@@ -209,7 +205,7 @@ func (l *Logs) Fatalf(level int, code int, format string, v ...interface{}) {
 // Panic 输出错误信息然后触发 panic
 func (l *Logs) Panic(level int, v ...interface{}) {
 	s := fmt.Sprint(v...)
-	l.print(level, 5, s)
+	l.Print(level, 1, s)
 	l.Close()
 	panic(s)
 }
@@ -217,7 +213,7 @@ func (l *Logs) Panic(level int, v ...interface{}) {
 // Panicf 输出错误信息然后触发 panic
 func (l *Logs) Panicf(level int, format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
-	l.print(level, 5, msg)
+	l.Print(level, 1, msg)
 	l.Close()
 	panic(msg)
 }
@@ -228,13 +224,23 @@ func (l *Logs) all(msg string) {
 	}
 }
 
-func (l *Logs) print(level, deep int, v ...interface{}) {
+// Print 向指定的通道输出信息
+//
+// level 表示需要设置的通道，可以是多个值组合，比如 LevelInfo | LevelDebug；
+// deep 为 0 时，表示调用者；
+func (l *Logs) Print(level, deep int, v ...interface{}) {
+	deep += 4 // 保证 walk 为 1
 	l.walk(level, func(ll *logger) error {
 		return ll.Output(deep, fmt.Sprintln(v...))
 	})
 }
 
-func (l *Logs) printf(level, deep int, format string, v ...interface{}) {
+// Print 向指定的通道输出信息
+//
+// level 表示需要设置的通道，可以是多个值组合，比如 LevelInfo | LevelDebug；
+// deep 为 0 时，表示调用者；
+func (l *Logs) Printf(level, deep int, format string, v ...interface{}) {
+	deep += 4 // 保证 walk 为 1
 	l.walk(level, func(ll *logger) error {
 		return ll.Output(deep, fmt.Sprintf(format, v...))
 	})

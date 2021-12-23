@@ -45,6 +45,7 @@ func newLogs(a *assert.Assertion) *testLogs {
 }
 
 func (l *testLogs) chk(level int, content string) {
+	l.a.TB().Helper()
 	for lv, buf := range l.buffers {
 		if lv&level == lv {
 			l.a.Contains(buf.String(), content)
@@ -194,25 +195,25 @@ func TestLogs_LN(t *testing.T) {
 	l.logs.SetFlags(LevelAll, log.Llongfile)
 
 	l.logs.Trace("abc")
-	l.chk(LevelTrace, "logs_test.go:196")
+	l.chk(LevelTrace, "logs_test.go:197")
 	l.reset()
 
-	l.logs.Printf(LevelDebug, "abc")
-	l.chk(LevelDebug, "logs_test.go:200")
+	l.logs.Printf(LevelDebug, 0, "abc")
+	l.chk(LevelDebug, "logs_test.go:201")
 	l.reset()
 
-	l.logs.Print(LevelDebug, "abc")
-	l.chk(LevelDebug, "logs_test.go:204")
+	l.logs.Print(LevelDebug, 0, "abc")
+	l.chk(LevelDebug, "logs_test.go:205")
 	l.reset()
 
 	a.Panic(func() {
 		l.logs.Panicf(LevelError, "panic")
 	})
-	l.chk(LevelError, "logs_test.go:209")
+	l.chk(LevelError, "logs_test.go:210")
 	l.reset()
 
 	l.logs.All("abc")
-	l.chk(LevelDebug, "logs_test.go:214")
+	l.chk(LevelDebug, "logs_test.go:215")
 	l.reset()
 }
 

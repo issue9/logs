@@ -35,7 +35,7 @@ l.DEBUG().Println("debug start...")
 ---
 
 ```shell
-go get github.com/issue9/logs/v2
+go get github.com/issue9/logs/v3
 ```
 
 版权

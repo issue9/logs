@@ -98,19 +98,6 @@ func (l *Logs) Flush() error {
 	return nil
 }
 
-// Close 关闭所有的输出通道
-//
-// 若是通过 os.Exit() 退出程序的，在执行之前，
-// 一定记得调用 Close() 输出可能缓存的日志内容。
-func (l *Logs) Close() error {
-	for _, l := range l.loggers {
-		if err := l.container.Close(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // INFO 获取 INFO 级别的 log.Logger 实例
 func (l *Logs) INFO() *log.Logger { return l.Logger(LevelInfo) }
 
@@ -191,14 +178,14 @@ func (l *Logs) Allf(format string, v ...interface{}) {
 // Fatal 输出错误信息然后退出程序
 func (l *Logs) Fatal(level int, code int, v ...interface{}) {
 	l.Print(level, 1, v...)
-	l.Close()
+	l.Flush()
 	os.Exit(code)
 }
 
 // Fatalf 输出错误信息然后退出程序
 func (l *Logs) Fatalf(level int, code int, format string, v ...interface{}) {
 	l.Printf(level, 1, format, v...)
-	l.Close()
+	l.Flush()
 	os.Exit(code)
 }
 
@@ -206,7 +193,7 @@ func (l *Logs) Fatalf(level int, code int, format string, v ...interface{}) {
 func (l *Logs) Panic(level int, v ...interface{}) {
 	s := fmt.Sprint(v...)
 	l.Print(level, 1, s)
-	l.Close()
+	l.Flush()
 	panic(s)
 }
 
@@ -214,7 +201,7 @@ func (l *Logs) Panic(level int, v ...interface{}) {
 func (l *Logs) Panicf(level int, format string, v ...interface{}) {
 	msg := fmt.Sprintf(format, v...)
 	l.Print(level, 1, msg)
-	l.Close()
+	l.Flush()
 	panic(msg)
 }
 
@@ -235,7 +222,7 @@ func (l *Logs) Print(level, deep int, v ...interface{}) {
 	})
 }
 
-// Print 向指定的通道输出信息
+// Printf 向指定的通道输出信息
 //
 // level 表示需要设置的通道，可以是多个值组合，比如 LevelInfo | LevelDebug；
 // deep 为 0 时，表示调用者；

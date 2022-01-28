@@ -51,22 +51,6 @@ func (c *Container) Flush() error {
 	return nil
 }
 
-func (c *Container) Close() error {
-	if err := c.Flush(); err != nil {
-		return err
-	}
-
-	for _, w := range c.ws {
-		if b, ok := w.(io.Closer); ok {
-			if err := b.Close(); err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
 // Len 包含的元素
 func (c *Container) Len() int { return len(c.ws) }
 

@@ -31,7 +31,6 @@ func (c *Console) SetColor(foreground, background colors.Color) {
 	c.c.Background = background
 }
 
-// io.Writer
 func (c *Console) Write(b []byte) (size int, err error) {
 	return c.c.Fprint(c.out, string(b))
 }

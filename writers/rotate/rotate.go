@@ -140,16 +140,11 @@ func (r *Rotate) Write(buf []byte) (int, error) {
 	return size, nil
 }
 
-// Close 关闭文件
 func (r *Rotate) Close() error {
 	if r.w == nil {
 		return nil
 	}
-
 	return r.w.Close()
 }
 
-// Flush 实现接口 Flusher.Flush()
-func (r *Rotate) Flush() error {
-	return r.Close()
-}
+func (r *Rotate) Flush() error { return r.Close() }

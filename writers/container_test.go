@@ -4,16 +4,14 @@ package writers
 
 import (
 	"bytes"
-	"io"
 	"testing"
 
 	"github.com/issue9/assert/v2"
 )
 
 var (
-	_ Adder          = &Container{}
-	_ Flusher        = &Container{}
-	_ io.WriteCloser = &Container{}
+	_ Adder   = &Container{}
+	_ Flusher = &Container{}
 )
 
 func TestContainer(t *testing.T) {
@@ -59,21 +57,4 @@ func TestContainer(t *testing.T) {
 	a.Equal("hello world", b1.String())
 	a.Equal(" worldhello", b2.String())
 	a.Equal(1, c.Len())
-}
-
-func TestContainer_Close(t *testing.T) {
-	a := assert.New(t, false)
-	c := NewContainer()
-
-	c1 := &testContainer{}
-	c2 := &testContainer{}
-	a.NotError(c.Add(c1))
-	a.NotError(c.Add(c2))
-
-	a.False(c1.flushed).False(c1.closed)
-	a.False(c2.flushed).False(c2.closed)
-
-	a.NotError(c.Close())
-	a.True(c1.flushed).True(c1.closed)
-	a.True(c2.flushed).True(c2.closed)
 }

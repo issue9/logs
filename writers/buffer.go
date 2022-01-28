@@ -57,17 +57,6 @@ func (b *Buffer) Flush() error {
 	return b.c.Flush()
 }
 
-func (b *Buffer) Close() error {
-	for _, buf := range b.buffer {
-		if _, err := b.c.Write(buf); err != nil {
-			return err
-		}
-	}
-	b.buffer = b.buffer[:0]
-
-	return b.c.Close()
-}
-
 // SetSize 设置缓存的大小
 //
 // 若值小于 2，则所有的输出都不会被缓存。

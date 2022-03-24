@@ -4,15 +4,10 @@ package logs
 
 import (
 	"bytes"
-	"encoding/xml"
-	"io"
 	"log"
 	"testing"
 
 	"github.com/issue9/assert/v2"
-
-	"github.com/issue9/logs/v3/config"
-	"github.com/issue9/logs/v3/internal/initfunc"
 )
 
 type testLogs struct {
@@ -22,12 +17,16 @@ type testLogs struct {
 }
 
 func newLogs(a *assert.Assertion) *testLogs {
-	l, err := New(nil)
+	l, err := New()
 	a.NotError(err).NotNil(l)
 
-	bufs := make(map[int]*bytes.Buffer)
-	for _, l := range levels {
-		bufs[l] = new(bytes.Buffer)
+	bufs := map[int]*bytes.Buffer{
+		LevelInfo:     new(bytes.Buffer),
+		LevelTrace:    new(bytes.Buffer),
+		LevelDebug:    new(bytes.Buffer),
+		LevelWarn:     new(bytes.Buffer),
+		LevelError:    new(bytes.Buffer),
+		LevelCritical: new(bytes.Buffer),
 	}
 
 	a.NotError(l.SetOutput(LevelInfo, bufs[LevelInfo]))
@@ -75,67 +74,10 @@ func TestLogs_Allf(t *testing.T) {
 	l.chk(LevelAll, "abc")
 }
 
-func TestNew(t *testing.T) {
-	a := assert.New(t, false)
-	l, err := New(nil)
-	a.NotError(err).NotNil(l)
-	debugW := new(bytes.Buffer)
-	warnW := new(bytes.Buffer)
-
-	debugWInit := func(*config.Config) (io.Writer, error) {
-		return debugW, nil
-	}
-
-	warnWInit := func(*config.Config) (io.Writer, error) {
-		return warnW, nil
-	}
-
-	// 重新注册以下用到的 writer
-	clearInitializer()
-	a.True(Register("debug", loggerInitializer), "注册 debug 时失败")
-	a.True(Register("warn", loggerInitializer), "注册 warn 时失败")
-	a.True(Register("buffer", initfunc.Buffer), "注册 buffer 时失败")
-	a.True(Register("debugW", debugWInit), "注册 debugW 时失败")
-	a.True(Register("warnW", warnWInit), "注册 warnW 时失败")
-
-	data := `
-<?xml version="1.0" encoding="utf-8" ?>
-<logs>
-	<debug prefix="[DEBUG]">
-		<buffer size="10">
-			<debugW />
-		</buffer>
-	</debug>
-	<warn prefix="[WARN]">
-		<warnW />
-	</warn>
-</logs>
-`
-	debugW.Reset()
-
-	cfg := &config.Config{}
-	a.NotError(xml.Unmarshal([]byte(data), cfg))
-	l, err = New(cfg)
-	a.NotError(err).NotNil(l)
-
-	l.Debug("abc")
-	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
-	l.Allf("def\n")
-	a.True(debugW.Len() == 0, "assert.True 失败，实际值为%d", debugW.Len()) // 缓存未达 10，依然为空
-
-	l.Warn("warn")
-	a.Contains(warnW.String(), "warn")
-
-	// 测试 Flush
-	a.NotError(l.Flush())
-	a.True(debugW.Len() > 0)
-	a.True(warnW.Len() > 0)
-}
-
 func TestLogs_Logger(t *testing.T) {
 	a := assert.New(t, false)
 
-	l, err := New(nil)
+	l, err := New()
 	a.NotError(err).NotNil(l)
 
 	a.NotNil(l.Logger(LevelCritical))
@@ -145,7 +87,7 @@ func TestLogs_Logger(t *testing.T) {
 
 func TestLogs_SetOutput(t *testing.T) {
 	a := assert.New(t, false)
-	l, err := New(nil)
+	l, err := New()
 	a.NotError(err).NotNil(l)
 
 	a.NotError(l.SetOutput(0, nil)) // 无任何操作发生
@@ -158,7 +100,7 @@ func TestLogs_SetOutput(t *testing.T) {
 
 func TestLogs_SetFlags(t *testing.T) {
 	a := assert.New(t, false)
-	l, err := New(nil)
+	l, err := New()
 	a.NotError(err).NotNil(l)
 
 	l.SetFlags(LevelAll, log.Ldate)
@@ -174,7 +116,7 @@ func TestLogs_SetFlags(t *testing.T) {
 
 func TestLogs_SetPrefix(t *testing.T) {
 	a := assert.New(t, false)
-	l, err := New(nil)
+	l, err := New()
 	a.NotError(err).NotNil(l)
 
 	l.SetPrefix(LevelAll, "p")
@@ -195,25 +137,25 @@ func TestLogs_LN(t *testing.T) {
 	l.logs.SetFlags(LevelAll, log.Llongfile)
 
 	l.logs.Trace("abc")
-	l.chk(LevelTrace, "logs_test.go:197")
+	l.chk(LevelTrace, "logs_test.go:139")
 	l.reset()
 
 	l.logs.Printf(LevelDebug, 0, "abc")
-	l.chk(LevelDebug, "logs_test.go:201")
+	l.chk(LevelDebug, "logs_test.go:143")
 	l.reset()
 
 	l.logs.Print(LevelDebug, 0, "abc")
-	l.chk(LevelDebug, "logs_test.go:205")
+	l.chk(LevelDebug, "logs_test.go:147")
 	l.reset()
 
 	a.Panic(func() {
 		l.logs.Panicf(LevelError, "panic")
 	})
-	l.chk(LevelError, "logs_test.go:210")
+	l.chk(LevelError, "logs_test.go:152")
 	l.reset()
 
 	l.logs.All("abc")
-	l.chk(LevelDebug, "logs_test.go:215")
+	l.chk(LevelDebug, "logs_test.go:157")
 	l.reset()
 }
 

@@ -13,15 +13,6 @@ const (
 	LevelAll = LevelInfo + LevelTrace + LevelDebug + LevelWarn + LevelError + LevelCritical
 )
 
-var levels = map[string]int{
-	"info":     LevelInfo,
-	"trace":    LevelTrace,
-	"debug":    LevelDebug,
-	"warn":     LevelWarn,
-	"error":    LevelError,
-	"critical": LevelCritical,
-}
-
 func (l *Logs) walk(level int, walk func(l *logger) error) error {
 	for key, item := range l.loggers {
 		if key&level == key {

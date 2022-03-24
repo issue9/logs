@@ -11,7 +11,7 @@ import (
 func TestLogs_walk(t *testing.T) {
 	a := assert.New(t, false)
 
-	l, err := New(nil)
+	l, err := New()
 	a.NotError(err).NotNil(l)
 
 	num := 0
@@ -33,5 +33,5 @@ func TestLogs_walk(t *testing.T) {
 		num++
 		return nil
 	}))
-	a.Equal(len(levels), num)
+	a.Equal(6, num)
 }

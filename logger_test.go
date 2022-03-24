@@ -4,7 +4,6 @@ package logs
 
 import (
 	"io"
-	"log"
 	"testing"
 
 	"github.com/issue9/assert/v2"
@@ -33,18 +32,4 @@ func TestLogger_SetOutput(t *testing.T) {
 
 	a.NotError(l.SetOutput(nil))
 	a.Equal(l.container.Len(), 0)
-}
-
-func TestParseFlag(t *testing.T) {
-	a := assert.New(t, false)
-
-	eq := func(str string, v int) {
-		ret, err := parseFlag(str)
-		a.NotError(err).Equal(ret, v)
-	}
-
-	eq("log.Ldate|log.ltime", log.Ldate|log.Ltime)
-	eq("log.Ldate| log.Ltime", log.Ldate|log.Ltime)
-	eq(" ", 0)
-	eq("", 0)
 }

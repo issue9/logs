@@ -7,8 +7,6 @@ import (
 	"io"
 	"log"
 	"os"
-
-	"github.com/issue9/logs/v3/config"
 )
 
 // Logs 日志输出
@@ -16,35 +14,17 @@ type Logs struct {
 	loggers map[int]*logger
 }
 
-// New 声明 Logs 变量
-//
-// cfg 为配置项，可以为空，表示不输出任何信息，但是 Logs 实例是可用的状态。
-func New(cfg *config.Config) (*Logs, error) {
-	logs := &Logs{
-		loggers: make(map[int]*logger, 6),
-	}
-
-	for _, level := range levels {
-		logs.loggers[level] = newLogger("", 0)
-	}
-
-	if cfg == nil {
-		return logs, nil
-	}
-
-	for name, c := range cfg.Items {
-		index, found := levels[name]
-		if !found {
-			panic("未知的二级元素名称:" + name)
-		}
-
-		ll, err := toWriter(name, c)
-		if err != nil {
-			return nil, err
-		}
-		logs.loggers[index] = ll.(*logger)
-	}
-	return logs, nil
+func New() (*Logs, error) {
+	return &Logs{
+		loggers: map[int]*logger{
+			LevelInfo:     newLogger("", 0),
+			LevelTrace:    newLogger("", 0),
+			LevelDebug:    newLogger("", 0),
+			LevelWarn:     newLogger("", 0),
+			LevelError:    newLogger("", 0),
+			LevelCritical: newLogger("", 0),
+		},
+	}, nil
 }
 
 // Logger 返回指定级别的日志操作实例
@@ -72,7 +52,7 @@ func (l *Logs) SetOutput(level int, w io.Writer) error {
 	})
 }
 
-// SetFlags 为所有的日志对象调用 SetFlags
+// SetFlags 为所选的日志对象调用 SetFlags
 func (l *Logs) SetFlags(level int, flag int) {
 	l.walk(level, func(ll *logger) error {
 		ll.SetFlags(flag)
@@ -80,7 +60,7 @@ func (l *Logs) SetFlags(level int, flag int) {
 	})
 }
 
-// SetPrefix 为所有的日志对象调用 SetPrefix
+// SetPrefix 为所选的日志对象调用 SetPrefix
 func (l *Logs) SetPrefix(level int, p string) {
 	l.walk(level, func(ll *logger) error {
 		ll.SetPrefix(p)

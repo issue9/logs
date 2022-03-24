@@ -3,17 +3,11 @@
 package logs
 
 import (
-	"io"
 	"testing"
 
 	"github.com/issue9/assert/v2"
 
 	"github.com/issue9/logs/v3/writers"
-)
-
-var (
-	_ io.Writer     = &logger{}
-	_ writers.Adder = &logger{}
 )
 
 func TestLogger_SetOutput(t *testing.T) {

@@ -5,7 +5,7 @@ package writers
 import (
 	"os"
 
-	"github.com/issue9/term/v2/colors"
+	"github.com/issue9/term/v3/colors"
 )
 
 // Console 带色彩输出的控制台

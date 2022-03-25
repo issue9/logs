@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/issue9/term/v2/colors"
+	"github.com/issue9/term/v3/colors"
 )
 
 var _ io.Writer = &Console{}

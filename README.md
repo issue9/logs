@@ -1,6 +1,7 @@
 logs
 [![Go](https://github.com/issue9/logs/workflows/Go/badge.svg)](https://github.com/issue9/logs/actions?query=workflow%3AGo)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/logs/v3)](https://pkg.go.dev/github.com/issue9/logs/v3)
+![Go version](https://img.shields.io/github/go-mod/go-version/issue9/logs)
 ======
 
 一个可配置的日志服务包。可以通过 XML 自定义日志输出：

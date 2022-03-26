@@ -67,7 +67,12 @@ func NewEntry() *Entry {
 
 func newEntry(l *Logs) *entry { return &entry{logs: l, e: NewEntry()} }
 
-func (e *Entry) location(depth int) {
+// Location 记录位置信息到 Entry
+//
+// 会同时写入 e.Path 和 e.Line 两个值。
+//
+// depth 表示调用，1 表示调用 Location 的位置；
+func (e *Entry) Location(depth int) {
 	_, e.Path, e.Line, _ = runtime.Caller(depth)
 }
 
@@ -75,12 +80,12 @@ func (e *Entry) print(depth int, v ...interface{}) {
 	if len(v) > 0 {
 		e.Message = fmt.Sprint(v...)
 	}
-	e.location(depth)
+	e.Location(depth)
 }
 
 func (e *Entry) printf(depth int, format string, v ...interface{}) {
 	e.Message = fmt.Sprintf(format, v...)
-	e.location(depth)
+	e.Location(depth)
 }
 
 func (e *entry) setLevel(l Level) *entry {

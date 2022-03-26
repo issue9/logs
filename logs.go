@@ -13,13 +13,12 @@ type Level int8
 
 // 目前支持的日志类型
 const (
-	LevelInfo Level = iota
+	LevelInfo Level = iota + 1
 	LevelTrace
 	LevelDebug
 	LevelWarn
 	LevelError
 	LevelFatal
-	levelSize
 )
 
 var levels = map[Level]string{
@@ -33,24 +32,36 @@ var levels = map[Level]string{
 
 func (l Level) String() string { return levels[l] }
 
+func (l Level) MarshalText() ([]byte, error) { return []byte(l.String()), nil }
+
 type Logs struct {
 	mux    sync.Mutex // 防止多个 logger 对象引用同一个 writer 造成混合输入的情况
 	levels map[Level]*logger
 }
 
 func New() *Logs {
-	l := make(map[Level]*logger, levelSize)
-	for lv := range levels {
-		l[lv] = &logger{}
-	}
+	logs := &Logs{}
 
-	return &Logs{levels: l}
+	l := make(map[Level]*logger, len(levels))
+	for lv := range levels {
+		l[lv] = &logger{
+			enable: true,
+			level:  lv,
+			logs:   logs,
+		}
+	}
+	logs.levels = l
+
+	return logs
 }
 
-// EnableLevels 允许的 Level
-func (logs *Logs) EnableLevels(level ...Level) {
+// Enable 允许的日志通道
+//
+// 默认情况下所有的通道都是允许的。
+// 调用此函数之后，所有不在 level 参数的通道都将被关闭。
+func (logs *Logs) Enable(level ...Level) {
 	for lv, logger := range logs.levels {
-		logger.enable = sliceutil.Exists(level, func(e Level) bool { return e == lv })
+		logger.enable = sliceutil.Exists(level, func(l Level) bool { return l == lv })
 	}
 }
 
@@ -134,9 +145,11 @@ func (logs *Logs) Fatal(v ...any) { logs.FATAL().Print(v...) }
 
 func (logs *Logs) Fatalf(format string, v ...any) { logs.FATAL().Printf(format, v...) }
 
-func (logs *Logs) output(e *Entry) {
+// Output 输出 Entry 对象
+//
+// 相对于其它方法，该方法比较自由，可以由 e 决定最终输出到哪儿，内容也由用户定义。
+func (logs *Logs) Output(e *Entry) {
 	logs.mux.Lock()
 	defer logs.mux.Unlock()
-
 	logs.levels[e.Level].w.WriteEntry(e)
 }

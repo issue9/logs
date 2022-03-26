@@ -146,5 +146,3 @@ func (r *Rotate) Close() error {
 	}
 	return r.w.Close()
 }
-
-func (r *Rotate) Flush() error { return r.Close() }

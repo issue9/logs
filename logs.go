@@ -4,6 +4,7 @@
 package logs
 
 import (
+	"io"
 	"sync"
 
 	"github.com/issue9/sliceutil"
@@ -48,6 +49,7 @@ func New() *Logs {
 			enable: true,
 			level:  lv,
 			logs:   logs,
+			w:      NewWriter(func(*Entry) []byte { return nil }, io.Discard),
 		}
 	}
 	logs.levels = l
@@ -151,5 +153,7 @@ func (logs *Logs) Fatalf(format string, v ...any) { logs.FATAL().Printf(format, 
 func (logs *Logs) Output(e *Entry) {
 	logs.mux.Lock()
 	defer logs.mux.Unlock()
+
 	logs.levels[e.Level].w.WriteEntry(e)
+	entryPool.Put(e)
 }

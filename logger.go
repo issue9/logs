@@ -5,10 +5,13 @@ package logs
 import (
 	"fmt"
 	"runtime"
+	"sync"
 	"time"
 )
 
 var emptyLoggerInst = &emptyLogger{}
+
+var entryPool = &sync.Pool{New: func() interface{} { return &Entry{} }}
 
 type (
 	Logger interface {
@@ -48,12 +51,24 @@ type (
 	emptyLogger struct{}
 )
 
-func newEntry(l *Logs) *entry { return &entry{logs: l, e: &Entry{}} }
+func NewEntry() *Entry {
+	ee := entryPool.Get().(*Entry)
+	if ee.Pairs != nil {
+		ee.Pairs = ee.Pairs[:0]
+	}
+	ee.Path = ""
+	ee.Line = 0
+	ee.Message = ""
+	ee.Created = time.Now()
+	ee.Level = 0
+
+	return ee
+}
+
+func newEntry(l *Logs) *entry { return &entry{logs: l, e: NewEntry()} }
 
 func (e *Entry) location(depth int) {
-	if e.Path == "" {
-		_, e.Path, e.Line, _ = runtime.Caller(depth)
-	}
+	_, e.Path, e.Line, _ = runtime.Caller(depth)
 }
 
 func (e *Entry) print(depth int, v ...interface{}) {
@@ -61,12 +76,10 @@ func (e *Entry) print(depth int, v ...interface{}) {
 		e.Message = fmt.Sprint(v...)
 	}
 	e.location(depth)
-	e.Created = time.Now()
 }
 
 func (e *Entry) printf(depth int, format string, v ...interface{}) {
 	e.Message = fmt.Sprintf(format, v...)
-	e.Created = time.Now()
 	e.location(depth)
 }
 

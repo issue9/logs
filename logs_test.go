@@ -57,3 +57,24 @@ func TestLogsLoggers(t *testing.T) {
 	testLogger(a, l.Error, l.Errorf, buf)
 	testLogger(a, l.Fatal, l.Fatalf, buf)
 }
+
+func TestLogs_StdLogger(t *testing.T) {
+	a := assert.New(t, false)
+	l := New()
+	a.NotNil(l)
+	buf := new(bytes.Buffer)
+	w := NewWriter(TextFormat("2006-01-02"), buf)
+	l.SetOutput(w, LevelInfo, LevelError)
+
+	info := l.StdLogger(LevelInfo)
+	info.Print("abc")
+	val := buf.String()
+	a.Contains(val, "logs_test.go:70")
+
+	// SetOutput 未设置 LevelWarn
+	buf.Reset()
+	warn := l.StdLogger(LevelWarn)
+	warn.Print("abc")
+	val = buf.String()
+	a.Empty(val)
+}

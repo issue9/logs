@@ -5,7 +5,7 @@ logs
 ======
 
 ```go
-import "github.com/issue9/logs/v3"
+import "github.com/issue9/logs/v4"
 
 l := logs.New()
 l.Debug("debug start...")

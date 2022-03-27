@@ -5,6 +5,7 @@ package logs
 
 import (
 	"io"
+	"log"
 	"sync"
 
 	"github.com/issue9/sliceutil"
@@ -156,4 +157,9 @@ func (logs *Logs) Output(e *Entry) {
 
 	logs.levels[e.Level].w.WriteEntry(e)
 	entryPool.Put(e)
+}
+
+// StdLogger 转换成标准库的 Logger
+func (logs *Logs) StdLogger(l Level) *log.Logger {
+	return log.New(newEntry(logs).setLevel(l), "", 0)
 }

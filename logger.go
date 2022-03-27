@@ -93,6 +93,13 @@ func (e *entry) setLevel(l Level) *entry {
 	return e
 }
 
+func (e *entry) Write(data []byte) (int, error) {
+	e.e.Message = string(data)
+	e.e.Location(4)
+	e.logs.Output(e.e)
+	return len(data), nil
+}
+
 func (e *entry) Value(name string, val interface{}) Logger {
 	e.e.Pairs = append(e.e.Pairs, Pair{K: name, V: val})
 	return e

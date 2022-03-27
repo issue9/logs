@@ -76,77 +76,48 @@ func (logs *Logs) SetOutput(w Writer, level ...Level) {
 	}
 }
 
-func (logs *Logs) INFO() Logger {
-	l := logs.levels[LevelInfo]
-	if l.enable {
-		return l
-	}
-	return emptyLoggerInst
-}
+func (logs *Logs) INFO() Logger { return logs.level(LevelInfo) }
 
 func (logs *Logs) Info(v ...any) { logs.INFO().Print(v...) }
 
 func (logs *Logs) Infof(format string, v ...any) { logs.INFO().Printf(format, v...) }
 
-func (logs *Logs) DEBUG() Logger {
-	l := logs.levels[LevelDebug]
-	if l.enable {
-		return l
-	}
-	return emptyLoggerInst
-}
+func (logs *Logs) DEBUG() Logger { return logs.level(LevelDebug) }
 
 func (logs *Logs) Debug(v ...any) { logs.DEBUG().Print(v...) }
 
 func (logs *Logs) Debugf(format string, v ...any) { logs.DEBUG().Printf(format, v...) }
 
-func (logs *Logs) TRACE() Logger {
-	l := logs.levels[LevelTrace]
-	if l.enable {
-		return l
-	}
-	return emptyLoggerInst
-}
+func (logs *Logs) TRACE() Logger { return logs.level(LevelTrace) }
 
 func (logs *Logs) Trace(v ...any) { logs.TRACE().Print(v...) }
 
 func (logs *Logs) Tracef(format string, v ...any) { logs.TRACE().Printf(format, v...) }
 
-func (logs *Logs) WARN() Logger {
-	l := logs.levels[LevelWarn]
-	if l.enable {
-		return l
-	}
-	return emptyLoggerInst
-}
+func (logs *Logs) WARN() Logger { return logs.level(LevelWarn) }
 
 func (logs *Logs) Warn(v ...any) { logs.WARN().Print(v...) }
 
 func (logs *Logs) Warnf(format string, v ...any) { logs.WARN().Printf(format, v...) }
 
-func (logs *Logs) ERROR() Logger {
-	l := logs.levels[LevelError]
-	if l.enable {
-		return l
-	}
-	return emptyLoggerInst
-}
+func (logs *Logs) ERROR() Logger { return logs.level(LevelError) }
 
 func (logs *Logs) Error(v ...any) { logs.ERROR().Print(v...) }
 
 func (logs *Logs) Errorf(format string, v ...any) { logs.ERROR().Printf(format, v...) }
 
-func (logs *Logs) FATAL() Logger {
-	l := logs.levels[LevelFatal]
-	if l.enable {
-		return l
-	}
-	return emptyLoggerInst
-}
+func (logs *Logs) FATAL() Logger { return logs.level(LevelFatal) }
 
 func (logs *Logs) Fatal(v ...any) { logs.FATAL().Print(v...) }
 
 func (logs *Logs) Fatalf(format string, v ...any) { logs.FATAL().Printf(format, v...) }
+
+func (logs *Logs) level(lv Level) Logger {
+	if l := logs.levels[lv]; l.enable {
+		return l
+	}
+	return emptyLoggerInst
+}
 
 // Output 输出 Entry 对象
 //

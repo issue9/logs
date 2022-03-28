@@ -37,62 +37,50 @@ type (
 	}
 
 	entry struct {
+		lv   Level
 		logs *Logs
 		e    *Entry
-	}
-
-	logger struct {
-		logs   *Logs
-		level  Level
-		enable bool
-		w      Writer
 	}
 
 	emptyLogger struct{}
 )
 
 func NewEntry() *Entry {
-	ee := entryPool.Get().(*Entry)
-	if ee.Pairs != nil {
-		ee.Pairs = ee.Pairs[:0]
-	}
-	ee.Path = ""
-	ee.Line = 0
-	ee.Message = ""
-	ee.Created = time.Now()
-	ee.Level = 0
-
-	return ee
+	e := entryPool.Get().(*Entry)
+	e.Reset()
+	return e
 }
 
-func newEntry(l *Logs) *entry { return &entry{logs: l, e: NewEntry()} }
+func (e *Entry) Reset() {
+	if e.Pairs != nil {
+		e.Pairs = e.Pairs[:0]
+	}
+	e.Path = ""
+	e.Line = 0
+	e.Message = ""
+	e.Created = time.Now()
+	e.Level = 0
+}
+
+// Destroy 回收 Entry
+//
+// 非必须的操作，如果是经由 NewEntry 手动申请的 Entry，可以由此方法释放，在一定程序可能会增加性能。
+func (e *Entry) Destroy() { entryPool.Put(e) }
 
 // Location 记录位置信息到 Entry
 //
 // 会同时写入 e.Path 和 e.Line 两个值。
 //
 // depth 表示调用，1 表示调用 Location 的位置；
-func (e *Entry) Location(depth int) {
-	_, e.Path, e.Line, _ = runtime.Caller(depth)
+func (e *Entry) Location(depth int) { _, e.Path, e.Line, _ = runtime.Caller(depth) }
+
+func newEntry(l *Logs, lv Level) *entry {
+	e := NewEntry()
+	e.Level = lv
+	return &entry{logs: l, e: e, lv: lv}
 }
 
-func (e *Entry) print(depth int, v ...interface{}) {
-	if len(v) > 0 {
-		e.Message = fmt.Sprint(v...)
-	}
-	e.Location(depth)
-}
-
-func (e *Entry) printf(depth int, format string, v ...interface{}) {
-	e.Message = fmt.Sprintf(format, v...)
-	e.Location(depth)
-}
-
-func (e *entry) setLevel(l Level) *entry {
-	e.e.Level = l
-	return e
-}
-
+// Write 实现 io.Writer 供 logs.StdLogger 使用
 func (e *entry) Write(data []byte) (int, error) {
 	e.e.Message = string(data)
 	e.e.Location(4)
@@ -106,25 +94,23 @@ func (e *entry) Value(name string, val interface{}) Logger {
 }
 
 func (e *entry) Print(v ...any) {
-	e.e.print(3, v...)
+	if len(v) > 0 {
+		e.e.Message = fmt.Sprint(v...)
+	}
+	e.e.Location(2)
 	e.logs.Output(e.e)
+
+	e.e.Reset() // 重置 e，可以复用该对象
+	e.e.Level = e.lv
 }
 
 func (e *entry) Printf(format string, v ...interface{}) {
-	e.e.printf(3, format, v...)
+	e.e.Message = fmt.Sprintf(format, v...)
+	e.e.Location(2)
 	e.logs.Output(e.e)
-}
 
-func (l *logger) Value(name string, val interface{}) Logger {
-	return newEntry(l.logs).setLevel(l.level).Value(name, val)
-}
-
-func (l *logger) Print(v ...interface{}) {
-	newEntry(l.logs).setLevel(l.level).Print(v...)
-}
-
-func (l *logger) Printf(format string, v ...interface{}) {
-	newEntry(l.logs).setLevel(l.level).Printf(format, v...)
+	e.e.Reset()
+	e.e.Level = e.lv
 }
 
 func (l *emptyLogger) Value(_ string, _ interface{}) Logger { return l }
@@ -132,3 +118,5 @@ func (l *emptyLogger) Value(_ string, _ interface{}) Logger { return l }
 func (l *emptyLogger) Print(_ ...interface{}) {}
 
 func (l *emptyLogger) Printf(_ string, _ ...interface{}) {}
+
+func (l *emptyLogger) Write(bs []byte) (int, error) { return len(bs), nil }

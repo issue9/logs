@@ -13,7 +13,7 @@ import (
 	"github.com/issue9/term/v3/colors"
 )
 
-func TestTextFormat(t *testing.T) {
+func TestTextWriter(t *testing.T) {
 	a := assert.New(t, false)
 	layout := "15:04:05"
 	now := time.Now()
@@ -29,8 +29,10 @@ func TestTextFormat(t *testing.T) {
 			{K: "k2", V: "v2"},
 		},
 	}
-	data := TextFormat(layout)(e)
-	a.Equal(string(data), "[WARN] "+now.Format(layout)+" msg\tpath.go:20 k1=v1 k2=v2")
+	buf := new(bytes.Buffer)
+	NewTextWriter(layout, buf).WriteEntry(e)
+
+	a.Equal(buf.String(), "[WARN] "+now.Format(layout)+" msg\tpath.go:20 k1=v1 k2=v2\n")
 }
 
 func TestJSONFormat(t *testing.T) {
@@ -48,39 +50,12 @@ func TestJSONFormat(t *testing.T) {
 			{K: "k2", V: "v2"},
 		},
 	}
-	data := JSONFormat(e)
-	a.True(json.Valid(data)).
-		Contains(string(data), LevelWarn.String()).
-		Contains(string(data), "k1")
-}
+	buf := new(bytes.Buffer)
+	NewJSONWriter(buf).WriteEntry(e)
 
-func TestNewWriter(t *testing.T) {
-	a := assert.New(t, false)
-	layout := "15:04:05"
-	e := &Entry{
-		Level:   LevelWarn,
-		Created: time.Now(),
-		Message: "msg",
-		Path:    "path.go",
-		Line:    20,
-		Pairs: []Pair{
-			{K: "k1", V: "v1"},
-			{K: "k2", V: "v2"},
-		},
-	}
-
-	b1 := new(bytes.Buffer)
-	w1 := NewWriter(TextFormat(layout), b1)
-	w1.WriteEntry(e)
-	a.True(b1.Len() > 0).Contains(b1.String(), "path.go")
-
-	b1.Reset()
-	b2 := new(bytes.Buffer)
-	w2 := NewWriter(TextFormat(layout), b1, b2)
-	w2.WriteEntry(e)
-	a.True(b1.Len() > 0).
-		Equal(b1.String(), b2.String()).
-		Contains(b1.String(), "path.go")
+	a.True(json.Valid(buf.Bytes())).
+		Contains(buf.String(), LevelWarn.String()).
+		Contains(buf.String(), "k1")
 }
 
 func TestTermWriter(t *testing.T) {

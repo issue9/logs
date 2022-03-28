@@ -6,19 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
-	"time"
 
 	"github.com/issue9/errwrap"
 	"github.com/issue9/term/v3/colors"
 )
 
 type (
-	// FormatFunc 格式化输出数据
-	//
-	// 如果格式化出错，应该返回一个基本的信息。
-	FormatFunc func(*Entry) []byte
-
 	// Writer 将 Entry 转换成文本并输出的功能
 	Writer interface {
 		// WriteEntry 将 Entry 写入日志通道
@@ -27,18 +22,13 @@ type (
 		WriteEntry(*Entry)
 	}
 
-	singleWriter struct {
-		format FormatFunc
-		w      io.Writer
+	textWriter struct {
+		timeLayout string
+		b          io.Writer
 	}
 
-	multiWriter struct {
-		format FormatFunc
-		ws     []io.Writer
-	}
-
-	writers struct {
-		ws []Writer
+	jsonWriter struct {
+		enc *json.Encoder
 	}
 
 	termWriter struct {
@@ -46,33 +36,64 @@ type (
 		fore       colors.Color
 		w          *colors.Colorize
 	}
+
+	nopWriter struct{}
+
+	writers struct {
+		ws []Writer
+	}
+
+	ws []io.Writer
 )
 
-func TextFormat(timeLayout string) FormatFunc {
-	return func(e *Entry) []byte {
-		b := errwrap.StringBuilder{}
-		b.WByte('[').WString(e.Level.String()).WString("] ")
-
-		if timeLayout != "" {
-			b.WString(e.Created.Format(timeLayout)).WByte(' ')
-		}
-
-		b.WString(e.Message).WByte('\t')
-
-		b.WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
-
-		for _, p := range e.Pairs {
-			b.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
-		}
-
-		return []byte(b.String())
+func NewTextWriter(timeLayout string, w ...io.Writer) Writer {
+	var ww io.Writer
+	switch len(w) {
+	case 0:
+		panic("参数 w 不能为空")
+	case 1:
+		ww = w[0]
+	default:
+		ww = ws(w)
 	}
+	return &textWriter{timeLayout: timeLayout, b: ww}
 }
 
-// JSONFormat 格式化 JSON 输出
-//
-// 如果无法转换成 JSON，那么将退化成 TextFormat 输出。
-func JSONFormat(e *Entry) []byte {
+func (w *textWriter) WriteEntry(e *Entry) {
+	b := errwrap.StringBuilder{}
+	b.WByte('[').WString(e.Level.String()).WString("] ")
+
+	if w.timeLayout != "" {
+		b.WString(e.Created.Format(w.timeLayout)).WByte(' ')
+	}
+
+	b.WString(e.Message).WByte('\t')
+
+	b.WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+
+	for _, p := range e.Pairs {
+		b.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
+	}
+
+	b.WByte('\n')
+
+	w.b.Write([]byte(b.String()))
+}
+
+func NewJSONWriter(w ...io.Writer) Writer {
+	var ww io.Writer
+	switch len(w) {
+	case 0:
+		panic("参数 w 不能为空")
+	case 1:
+		ww = w[0]
+	default:
+		ww = ws(w)
+	}
+	return &jsonWriter{enc: json.NewEncoder(ww)}
+}
+
+func (w *jsonWriter) WriteEntry(e *Entry) {
 	m := make(map[string]any, len(e.Pairs)+3)
 
 	m["message"] = e.Message
@@ -83,42 +104,8 @@ func JSONFormat(e *Entry) []byte {
 		m[p.K] = p.V
 	}
 
-	data, err := json.Marshal(m)
-	if err != nil {
-		return TextFormat(time.RFC3339)(e)
-	}
-	return data
-}
-
-func NewWriter(f FormatFunc, w ...io.Writer) Writer {
-	switch len(w) {
-	case 0:
-		panic("参数 w 不能为空")
-	case 1:
-		return &singleWriter{format: f, w: w[0]}
-	default:
-		return &multiWriter{format: f, ws: w}
-	}
-}
-
-func (w *singleWriter) WriteEntry(e *Entry) {
-	data := append(w.format(e), '\n')
-	w.w.Write(data)
-}
-
-func (w *multiWriter) WriteEntry(e *Entry) {
-	data := append(w.format(e), '\n')
-	for _, ww := range w.ws {
-		ww.Write(data)
-	}
-}
-
-// MergeWriter 将多个 Writer 合并成一个 Writer 接口对象
-func MergeWriter(w ...Writer) Writer { return &writers{ws: w} }
-
-func (w *writers) WriteEntry(e *Entry) {
-	for _, ww := range w.ws {
-		ww.WriteEntry(e)
+	if err := w.enc.Encode(m); err != nil {
+		fmt.Fprint(os.Stderr, err) // 编码错误
 	}
 }
 
@@ -134,6 +121,10 @@ func NewTermWriter(timeLayout string, fore colors.Color, w io.Writer) Writer {
 		w:          colors.New(w),
 	}
 }
+
+func NewNopWriter() Writer { return &nopWriter{} }
+
+func (w *nopWriter) WriteEntry(_ *Entry) {}
 
 func (w *termWriter) WriteEntry(e *Entry) {
 	w.w.WByte('[').Color(colors.Normal, w.fore, colors.Default).WString(e.Level.String()).Reset().WString("] ") // [WARN]
@@ -151,4 +142,22 @@ func (w *termWriter) WriteEntry(e *Entry) {
 	}
 
 	w.w.WByte('\n')
+}
+
+// MergeWriter 将多个 Writer 合并成一个 Writer 接口对象
+func MergeWriter(w ...Writer) Writer { return &writers{ws: w} }
+
+func (w *writers) WriteEntry(e *Entry) {
+	for _, ww := range w.ws {
+		ww.WriteEntry(e)
+	}
+}
+
+func (w ws) Write(data []byte) (n int, err error) {
+	for _, writer := range w {
+		if n, err = writer.Write(data); err != nil {
+			return n, err
+		}
+	}
+	return n, err
 }

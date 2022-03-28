@@ -12,8 +12,9 @@ import (
 func TestLogs_IsEnable(t *testing.T) {
 	a := assert.New(t, false)
 
-	l := New()
+	l := New(nil)
 	a.NotNil(l)
+	l.Enable(LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
 	a.True(l.IsEnable(LevelInfo)).
 		True(l.IsEnable(LevelFatal)).
 		True(l.IsEnable(LevelWarn))
@@ -25,7 +26,7 @@ func TestLogs_IsEnable(t *testing.T) {
 		True(l.IsEnable(LevelError))
 
 	ll := l.WARN()
-	_, ok := ll.(*logger)
+	_, ok := ll.(*entry)
 	a.True(ok)
 
 	ll = l.FATAL()
@@ -34,11 +35,11 @@ func TestLogs_IsEnable(t *testing.T) {
 
 func TestLogsLoggers(t *testing.T) {
 	a := assert.New(t, false)
-	l := New()
-	a.NotNil(l)
 	buf := new(bytes.Buffer)
-	w := NewWriter(TextFormat("2006-01-02"), buf)
-	l.SetOutput(w, LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
+	w := NewTextWriter("2006-01-02", buf)
+	l := New(w)
+	a.NotNil(l)
+	l.Enable(LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
 
 	testLogger := func(a *assert.Assertion, p func(...interface{}), pf func(string, ...interface{}), w *bytes.Buffer) {
 		p("p1")
@@ -60,21 +61,20 @@ func TestLogsLoggers(t *testing.T) {
 
 func TestLogs_StdLogger(t *testing.T) {
 	a := assert.New(t, false)
-	l := New()
-	a.NotNil(l)
 	buf := new(bytes.Buffer)
-	w := NewWriter(TextFormat("2006-01-02"), buf)
-	l.SetOutput(w, LevelInfo, LevelError)
+	w := NewTextWriter("2006-01-02", buf)
+	l := New(w)
+	a.NotNil(l)
+	l.Enable(LevelInfo, LevelError)
 
 	info := l.StdLogger(LevelInfo)
 	info.Print("abc")
 	val := buf.String()
-	a.Contains(val, "logs_test.go:70")
+	a.Contains(val, "logs_test.go:71")
 
-	// SetOutput 未设置 LevelWarn
+	// Enable 未设置 LevelWarn
 	buf.Reset()
 	warn := l.StdLogger(LevelWarn)
 	warn.Print("abc")
-	val = buf.String()
-	a.Empty(val)
+	a.Equal(buf.Len(), 0)
 }

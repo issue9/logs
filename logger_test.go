@@ -4,6 +4,7 @@ package logs
 
 import (
 	"bytes"
+	"io"
 	"strings"
 	"testing"
 
@@ -11,9 +12,10 @@ import (
 )
 
 var (
-	_ Logger = &entry{}
-	_ Logger = &logger{}
-	_ Logger = &emptyLogger{}
+	_ Logger    = &entry{}
+	_ io.Writer = &entry{}
+	_ Logger    = &emptyLogger{}
+	_ io.Writer = &emptyLogger{}
 )
 
 func TestEntry_Location(t *testing.T) {
@@ -24,19 +26,19 @@ func TestEntry_Location(t *testing.T) {
 	a.Empty(e.Path).Zero(e.Line)
 
 	e.Location(1)
-	a.True(strings.HasSuffix(e.Path, "logger_test.go")).Equal(e.Line, 26)
+	a.True(strings.HasSuffix(e.Path, "logger_test.go")).Equal(e.Line, 28)
 }
 
 func TestLogger_location(t *testing.T) {
 	a := assert.New(t, false)
-	l := New()
-	a.NotNil(l)
 
 	buf := new(bytes.Buffer)
-	w := NewWriter(TextFormat("2006-01-02"), buf)
-	l.SetOutput(w, LevelInfo, LevelError)
+	l := New(NewTextWriter("2006-01-02", buf))
+	a.NotNil(l)
+	l.Enable(LevelError)
 	l.ERROR().Value("k1", "v1").
 		Printf("pf") // 位置记录此行
 	val := buf.String()
-	a.Contains(val, "logger_test.go:39").Contains(val, "k1=v1")
+	a.Contains(val, "logger_test.go:40", val).
+		Contains(val, "k1=v1")
 }

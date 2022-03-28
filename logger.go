@@ -22,13 +22,16 @@ type (
 		Printf(format string, v ...interface{})
 	}
 
+	// Entry 每一条日志产生的数据
 	Entry struct {
-		Pairs   []Pair
+		Pairs   []Pair // 额外的数据保存在此，比如由 Logger.Value 添加的数据。
 		Level   Level
-		Created time.Time
+		Created time.Time // 日志的生成时间，如果 IsZero 为 true，表示禁用该功能；
 		Message string
-		Path    string
-		Line    int
+
+		// 以下表示日志的定位信息，如果为空表示未启用定位信息。
+		Path string
+		Line int
 	}
 
 	Pair struct {

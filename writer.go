@@ -13,6 +13,8 @@ import (
 	"github.com/issue9/term/v3/colors"
 )
 
+var nop = &nopWriter{}
+
 type (
 	// Writer 将 Entry 转换成文本并输出的功能
 	Writer interface {
@@ -153,7 +155,7 @@ func NewDispatchWriter(d map[Level]Writer) Writer { return dispatchWriter(d) }
 func (w dispatchWriter) WriteEntry(e *Entry) { w[e.Level].WriteEntry(e) }
 
 // NewNopWriter 空的 Writer 接口实现
-func NewNopWriter() Writer { return &nopWriter{} }
+func NewNopWriter() Writer { return nop }
 
 func (w *nopWriter) WriteEntry(_ *Entry) {}
 

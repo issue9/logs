@@ -17,6 +17,9 @@ type Logs struct {
 	enabled map[Level]bool
 }
 
+// New 声明 Logs 对象
+//
+// w 如果为 nil，则表示采用 NewNopWriter。
 func New(w Writer) *Logs {
 	if w == nil {
 		w = NewNopWriter()
@@ -84,7 +87,7 @@ func (logs *Logs) level(lv Level) interface {
 	Logger
 	io.Writer
 } {
-	if logs.IsEnable(lv) {
+	if logs.IsEnable(lv) && logs.w != nop {
 		return newLogger(logs, lv)
 	}
 	return emptyLoggerInst

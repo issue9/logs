@@ -37,6 +37,8 @@ type (
 		w          *colors.Colorize
 	}
 
+	dispatchWriter map[Level]Writer
+
 	nopWriter struct{}
 
 	writers struct {
@@ -80,7 +82,7 @@ func (w *textWriter) WriteEntry(e *Entry) {
 	w.b.Write([]byte(b.String()))
 }
 
-func NewJSONWriter(w ...io.Writer) Writer {
+func NewJSONWriter(format bool, w ...io.Writer) Writer {
 	var ww io.Writer
 	switch len(w) {
 	case 0:
@@ -90,7 +92,12 @@ func NewJSONWriter(w ...io.Writer) Writer {
 	default:
 		ww = ws(w)
 	}
-	return &jsonWriter{enc: json.NewEncoder(ww)}
+
+	enc := json.NewEncoder(ww)
+	if format {
+		enc.SetIndent("", "\t")
+	}
+	return &jsonWriter{enc: enc}
 }
 
 func (w *jsonWriter) WriteEntry(e *Entry) {
@@ -122,10 +129,6 @@ func NewTermWriter(timeLayout string, fore colors.Color, w io.Writer) Writer {
 	}
 }
 
-func NewNopWriter() Writer { return &nopWriter{} }
-
-func (w *nopWriter) WriteEntry(_ *Entry) {}
-
 func (w *termWriter) WriteEntry(e *Entry) {
 	w.w.WByte('[').Color(colors.Normal, w.fore, colors.Default).WString(e.Level.String()).Reset().WString("] ") // [WARN]
 
@@ -143,6 +146,16 @@ func (w *termWriter) WriteEntry(e *Entry) {
 
 	w.w.WByte('\n')
 }
+
+// NewDispatchWriter 根据 Level 派发到不同的 Writer 对象
+func NewDispatchWriter(d map[Level]Writer) Writer { return dispatchWriter(d) }
+
+func (w dispatchWriter) WriteEntry(e *Entry) { w[e.Level].WriteEntry(e) }
+
+// NewNopWriter 空的 Writer 接口实现
+func NewNopWriter() Writer { return &nopWriter{} }
+
+func (w *nopWriter) WriteEntry(_ *Entry) {}
 
 // MergeWriter 将多个 Writer 合并成一个 Writer 接口对象
 func MergeWriter(w ...Writer) Writer { return &writers{ws: w} }

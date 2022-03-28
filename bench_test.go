@@ -34,7 +34,7 @@ func BenchmarkTextWriter(b *testing.B) {
 
 func BenchmarkJSONWriter(b *testing.B) {
 	buf := new(bytes.Buffer)
-	w := NewJSONWriter(buf)
+	w := NewJSONWriter(true, buf)
 
 	for i := 0; i < b.N; i++ {
 		w.WriteEntry(benchEntry)
@@ -86,5 +86,18 @@ func BenchmarkLogs_nop(b *testing.B) {
 	err := l.ERROR()
 	for i := 0; i < b.N; i++ {
 		err.Value("k1", "v1").Printf("p1")
+	}
+}
+
+func BenchmarkLogs_StdLogger(b *testing.B) {
+	a := assert.New(b, false)
+	buf := new(bytes.Buffer)
+	l := New(NewTextWriter("2006-01-02", buf))
+	a.NotNil(l)
+	l.Enable(LevelError)
+
+	err := l.StdLogger(LevelError)
+	for i := 0; i < b.N; i++ {
+		err.Printf("std log")
 	}
 }

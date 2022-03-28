@@ -29,10 +29,22 @@ func TestTextWriter(t *testing.T) {
 			{K: "k2", V: "v2"},
 		},
 	}
+
+	a.PanicString(func() {
+		NewTextWriter(layout)
+	}, "参数 w 不能为空")
+
 	buf := new(bytes.Buffer)
 	NewTextWriter(layout, buf).WriteEntry(e)
-
 	a.Equal(buf.String(), "[WARN] "+now.Format(layout)+" msg\tpath.go:20 k1=v1 k2=v2\n")
+
+	b1 := new(bytes.Buffer)
+	b2 := new(bytes.Buffer)
+	b3 := new(bytes.Buffer)
+	NewTextWriter(layout, b1, b2, b3).WriteEntry(e)
+	a.Equal(b1.String(), "[WARN] "+now.Format(layout)+" msg\tpath.go:20 k1=v1 k2=v2\n")
+	a.Equal(b2.String(), "[WARN] "+now.Format(layout)+" msg\tpath.go:20 k1=v1 k2=v2\n")
+	a.Equal(b3.String(), "[WARN] "+now.Format(layout)+" msg\tpath.go:20 k1=v1 k2=v2\n")
 }
 
 func TestJSONFormat(t *testing.T) {
@@ -50,12 +62,24 @@ func TestJSONFormat(t *testing.T) {
 			{K: "k2", V: "v2"},
 		},
 	}
-	buf := new(bytes.Buffer)
-	NewJSONWriter(buf).WriteEntry(e)
 
+	a.PanicString(func() {
+		NewJSONWriter(false)
+	}, "参数 w 不能为空")
+
+	buf := new(bytes.Buffer)
+	NewJSONWriter(true, buf).WriteEntry(e)
 	a.True(json.Valid(buf.Bytes())).
 		Contains(buf.String(), LevelWarn.String()).
 		Contains(buf.String(), "k1")
+
+	b1 := new(bytes.Buffer)
+	b2 := new(bytes.Buffer)
+	NewJSONWriter(true, b1, b2).WriteEntry(e)
+	a.True(json.Valid(b1.Bytes())).
+		Contains(b1.String(), LevelWarn.String()).
+		Contains(b1.String(), "k1")
+	a.Equal(b1.String(), b2.String())
 }
 
 func TestTermWriter(t *testing.T) {
@@ -81,4 +105,37 @@ func TestTermWriter(t *testing.T) {
 	e.Message = "error message"
 	w = NewTermWriter(layout, colors.Red, os.Stdout)
 	w.WriteEntry(e)
+}
+
+func TestDispatchWriter(t *testing.T) {
+	a := assert.New(t, false)
+	layout := "15:04:05"
+
+	txtBuf := new(bytes.Buffer)
+	jsonBuf := new(bytes.Buffer)
+
+	w := NewDispatchWriter(map[Level]Writer{
+		LevelInfo: NewTextWriter(layout, txtBuf),
+		LevelWarn: NewJSONWriter(true, jsonBuf),
+	})
+	l := New(w)
+
+	e := &Entry{
+		Level:   LevelWarn,
+		Created: time.Now(),
+		Message: "msg",
+		Path:    "path.go",
+		Line:    20,
+		Pairs: []Pair{
+			{K: "k1", V: "v1"},
+			{K: "k2", V: "v2"},
+		},
+	}
+	l.Warnf("warnf test")
+	a.Zero(txtBuf.Len()).Contains(jsonBuf.String(), "warnf test")
+
+	e.Level = LevelInfo
+	jsonBuf.Reset()
+	l.Info("info test")
+	a.Zero(jsonBuf.Len()).Contains(txtBuf.String(), "info test")
 }

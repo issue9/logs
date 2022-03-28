@@ -36,7 +36,7 @@ type (
 		V any
 	}
 
-	entry struct {
+	logger struct {
 		lv   Level
 		logs *Logs
 		e    *Entry
@@ -74,26 +74,26 @@ func (e *Entry) Destroy() { entryPool.Put(e) }
 // depth 表示调用，1 表示调用 Location 的位置；
 func (e *Entry) Location(depth int) { _, e.Path, e.Line, _ = runtime.Caller(depth) }
 
-func newEntry(l *Logs, lv Level) *entry {
+func newLogger(l *Logs, lv Level) *logger {
 	e := NewEntry()
 	e.Level = lv
-	return &entry{logs: l, e: e, lv: lv}
+	return &logger{logs: l, e: e, lv: lv}
 }
 
 // Write 实现 io.Writer 供 logs.StdLogger 使用
-func (e *entry) Write(data []byte) (int, error) {
+func (e *logger) Write(data []byte) (int, error) {
 	e.e.Message = string(data)
 	e.e.Location(4)
 	e.logs.Output(e.e)
 	return len(data), nil
 }
 
-func (e *entry) Value(name string, val interface{}) Logger {
+func (e *logger) Value(name string, val interface{}) Logger {
 	e.e.Pairs = append(e.e.Pairs, Pair{K: name, V: val})
 	return e
 }
 
-func (e *entry) Print(v ...any) {
+func (e *logger) Print(v ...any) {
 	if len(v) > 0 {
 		e.e.Message = fmt.Sprint(v...)
 	}
@@ -104,7 +104,7 @@ func (e *entry) Print(v ...any) {
 	e.e.Level = e.lv
 }
 
-func (e *entry) Printf(format string, v ...interface{}) {
+func (e *logger) Printf(format string, v ...interface{}) {
 	e.e.Message = fmt.Sprintf(format, v...)
 	e.e.Location(2)
 	e.logs.Output(e.e)

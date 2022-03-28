@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	_ Logger    = &entry{}
-	_ io.Writer = &entry{}
+	_ Logger    = &logger{}
+	_ io.Writer = &logger{}
 	_ Logger    = &emptyLogger{}
 	_ io.Writer = &emptyLogger{}
 )

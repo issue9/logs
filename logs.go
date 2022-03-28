@@ -4,6 +4,7 @@
 package logs
 
 import (
+	"io"
 	"log"
 	"sync"
 
@@ -11,9 +12,9 @@ import (
 )
 
 type Logs struct {
-	mu     sync.Mutex
-	w      Writer
-	levels map[Level]bool
+	mu      sync.Mutex
+	w       Writer
+	enabled map[Level]bool
 }
 
 func New(w Writer) *Logs {
@@ -21,14 +22,14 @@ func New(w Writer) *Logs {
 		w = NewNopWriter()
 	}
 
-	levels := make(map[Level]bool, 6)
+	enabled := make(map[Level]bool, 6)
 	for lv := range levelStrings {
-		levels[lv] = true
+		enabled[lv] = true
 	}
 
 	return &Logs{
-		w:      w,
-		levels: levels,
+		w:       w,
+		enabled: enabled,
 	}
 }
 
@@ -36,14 +37,12 @@ func New(w Writer) *Logs {
 //
 // 调用此函数之后，所有不在 level 参数的通道都将被关闭。
 func (logs *Logs) Enable(level ...Level) {
-	for lv := range logs.levels {
-		logs.levels[lv] = sliceutil.Exists(level, func(l Level) bool { return l == lv })
+	for lv := range logs.enabled {
+		logs.enabled[lv] = sliceutil.Exists(level, func(l Level) bool { return l == lv })
 	}
 }
 
-func (logs *Logs) IsEnable(l Level) bool { return logs.levels[l] }
-
-func (logs *Logs) SetOutput(w Writer) { logs.w = w }
+func (logs *Logs) IsEnable(l Level) bool { return logs.enabled[l] }
 
 func (logs *Logs) INFO() Logger { return logs.level(LevelInfo) }
 
@@ -81,9 +80,12 @@ func (logs *Logs) Fatal(v ...any) { logs.FATAL().Print(v...) }
 
 func (logs *Logs) Fatalf(format string, v ...any) { logs.FATAL().Printf(format, v...) }
 
-func (logs *Logs) level(lv Level) Logger {
+func (logs *Logs) level(lv Level) interface {
+	Logger
+	io.Writer
+} {
 	if logs.IsEnable(lv) {
-		return newEntry(logs, lv)
+		return newLogger(logs, lv)
 	}
 	return emptyLoggerInst
 }
@@ -98,9 +100,4 @@ func (logs *Logs) Output(e *Entry) {
 }
 
 // StdLogger 转换成标准库的 Logger
-func (logs *Logs) StdLogger(l Level) *log.Logger {
-	if logs.IsEnable(l) {
-		return log.New(newEntry(logs, l), "", 0)
-	}
-	return log.New(emptyLoggerInst, "", 0)
-}
+func (logs *Logs) StdLogger(l Level) *log.Logger { return log.New(logs.level(l), "", 0) }

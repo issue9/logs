@@ -26,7 +26,7 @@ func TestLogs_IsEnable(t *testing.T) {
 		True(l.IsEnable(LevelError))
 
 	ll := l.WARN()
-	_, ok := ll.(*entry)
+	_, ok := ll.(*logger)
 	a.True(ok)
 
 	ll = l.FATAL()

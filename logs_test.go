@@ -26,16 +26,18 @@ func TestLogs_IsEnable(t *testing.T) {
 		True(l.IsEnable(LevelError))
 
 	// WARN 属于 enable，但是没有 logs.w 为 Nop
-	a.Equal(l.WARN(), emptyLoggerInst)
+	ll, ok := l.WARN().(*logger)
+	a.True(ok).False(ll.enable)
 
 	l = New(NewTextWriter("2006", new(bytes.Buffer)))
 	a.NotNil(l)
 	l.Enable(LevelWarn, LevelError)
 
-	a.Equal(l.FATAL(), emptyLoggerInst)
+	ll, ok = l.FATAL().(*logger)
+	a.True(ok).False(ll.enable)
 
-	_, ok := l.WARN().(*logger)
-	a.True(ok)
+	ll, ok = l.WARN().(*logger)
+	a.True(ok).True(ll.enable)
 }
 
 func TestLogsLoggers(t *testing.T) {
@@ -74,7 +76,7 @@ func TestLogs_StdLogger(t *testing.T) {
 
 	info := l.StdLogger(LevelInfo)
 	info.Print("abc")
-	a.Contains(buf.String(), "logs_test.go:76")
+	a.Contains(buf.String(), "logs_test.go:78")
 
 	// Enable 未设置 LevelWarn
 	buf.Reset()

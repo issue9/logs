@@ -65,20 +65,22 @@ func NewTextWriter(timeLayout string, w ...io.Writer) Writer {
 
 func (w *textWriter) WriteEntry(e *Entry) {
 	b := errwrap.StringBuilder{}
-	b.WByte('[').WString(e.Level.String()).WString("] ")
+	b.WByte('[').WString(e.Level.String()).WByte(']')
 
 	if e.Logs().HasCreated() {
-		b.WString(e.Created.Format(w.timeLayout)).WByte(' ')
+		b.WByte(' ').WString(e.Created.Format(w.timeLayout))
 	}
 
-	b.WString(e.Message).WByte('\t')
+	b.WByte(' ').WString(e.Message)
+	var indent byte = '\t'
 
 	if e.Logs().HasCaller() {
-		b.WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+		b.WByte(indent).WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+		indent = ' '
 	}
 
 	for _, p := range e.Params {
-		b.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
+		b.WByte(indent).WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
 	}
 
 	b.WByte('\n')
@@ -127,18 +129,22 @@ func NewTermWriter(timeLayout string, fore colors.Color, w io.Writer) Writer {
 }
 
 func (w *termWriter) WriteEntry(e *Entry) {
-	w.w.WByte('[').Color(colors.Normal, w.fore, colors.Default).WString(e.Level.String()).Reset().WString("] ") // [WARN]
+	w.w.WByte('[').Color(colors.Normal, w.fore, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
 
-	if w.timeLayout != "" {
-		w.w.WString(e.Created.Format(w.timeLayout)).WByte(' ')
+	if e.Logs().HasCreated() {
+		w.w.WByte(' ').WString(e.Created.Format(w.timeLayout))
 	}
 
-	w.w.WString(e.Message).WByte('\t')
+	w.w.WByte(' ').WString(e.Message)
+	var indent byte = '\t'
 
-	w.w.WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+	if e.Logs().HasCaller() {
+		w.w.WByte(indent).WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+		indent = ' '
+	}
 
 	for _, p := range e.Params {
-		w.w.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
+		w.w.WByte(indent).WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
 	}
 
 	w.w.WByte('\n')

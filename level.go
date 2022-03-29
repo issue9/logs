@@ -6,7 +6,8 @@ type Level int8
 
 // 目前支持的日志类型
 const (
-	LevelInfo Level = iota + 1
+	levelDisable Level = iota
+	LevelInfo
 	LevelTrace
 	LevelDebug
 	LevelWarn
@@ -15,12 +16,13 @@ const (
 )
 
 var levelStrings = map[Level]string{
-	LevelInfo:  "INFO",
-	LevelTrace: "TRAC",
-	LevelDebug: "DBUG",
-	LevelWarn:  "WARN",
-	LevelError: "ERRO",
-	LevelFatal: "FATL",
+	levelDisable: "<disable>",
+	LevelInfo:    "INFO",
+	LevelTrace:   "TRAC",
+	LevelDebug:   "DBUG",
+	LevelWarn:    "WARN",
+	LevelError:   "ERRO",
+	LevelFatal:   "FATL",
 }
 
 func (l Level) String() string { return levelStrings[l] }

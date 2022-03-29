@@ -46,9 +46,9 @@ type (
 	}
 
 	logger struct {
-		lv   Level
-		logs *Logs
-		e    *Entry
+		lv     Level
+		logs   *Logs
+		enable bool
 	}
 
 	emptyLogger struct{}
@@ -77,15 +77,6 @@ func (e *Entry) Reset(l *Logs, lv Level) {
 	e.Level = lv
 }
 
-// Destroy 回收 Entry
-//
-// 如果是经由 NewEntry 手动申请的 Entry，可以由此方法释放，在一定程度上可能会增加性能。
-func (e *Entry) Destroy() {
-	if len(e.Params) < poolMaxParams {
-		entryPool.Put(e)
-	}
-}
-
 func (e *Entry) Logs() *Logs { return e.logs }
 
 // Location 记录位置信息到 Entry
@@ -93,47 +84,65 @@ func (e *Entry) Logs() *Logs { return e.logs }
 // 会同时写入 e.Path 和 e.Line 两个值。
 //
 // depth 表示调用，1 表示调用 Location 的位置；
+//
+// 如果 Logs.HasCaller 为 false，那么此调用将不产生任何内容。
 func (e *Entry) Location(depth int) {
 	if e.Logs().HasCaller() {
 		_, e.Path, e.Line, _ = runtime.Caller(depth)
 	}
 }
 
-func newLogger(l *Logs, lv Level) *logger {
-	e := l.NewEntry(lv)
-	return &logger{logs: l, e: e, lv: lv}
-}
-
-// Write 实现 io.Writer 供 logs.StdLogger 使用
-func (e *logger) Write(data []byte) (int, error) {
-	e.e.Message = string(data)
-	e.e.Location(4)
-	e.logs.Output(e.e)
-	e.e.Destroy()
-	return len(data), nil
-}
-
-func (e *logger) Value(name string, val interface{}) Logger {
-	e.e.Params = append(e.e.Params, Pair{K: name, V: val})
+func (e *Entry) Value(name string, val interface{}) Logger {
+	e.Params = append(e.Params, Pair{K: name, V: val})
 	return e
 }
 
-func (e *logger) Print(v ...interface{}) {
-	if len(v) > 0 {
-		e.e.Message = fmt.Sprint(v...)
-	}
-	e.e.Location(2)
-	e.logs.Output(e.e)
+func (e *Entry) Print(v ...interface{}) { e.print(3, v...) }
 
-	e.e.Reset(e.logs, e.lv) // 重置 e，可以复用该对象
+func (e *Entry) print(depth int, v ...interface{}) {
+	if len(v) > 0 {
+		e.Message = fmt.Sprint(v...)
+	}
+	e.Location(depth)
+	e.logs.Output(e)
 }
 
-func (e *logger) Printf(format string, v ...interface{}) {
-	e.e.Message = fmt.Sprintf(format, v...)
-	e.e.Location(2)
-	e.logs.Output(e.e)
+func (e *Entry) Printf(format string, v ...interface{}) { e.printf(3, format, v...) }
 
-	e.e.Reset(e.logs, e.lv)
+func (e *Entry) printf(depth int, format string, v ...interface{}) {
+	e.Message = fmt.Sprintf(format, v...)
+	e.Location(depth)
+	e.logs.Output(e)
+}
+
+// Write 实现 io.Writer 供 logs.StdLogger 使用
+func (l *logger) Write(data []byte) (int, error) {
+	if l.enable {
+		ee := l.logs.NewEntry(l.lv)
+		ee.Message = string(data)
+		ee.Location(4)
+		l.logs.Output(ee)
+	}
+	return len(data), nil
+}
+
+func (l *logger) Value(name string, val interface{}) Logger {
+	if l.enable {
+		return l.logs.NewEntry(l.lv).Value(name, val)
+	}
+	return emptyLoggerInst
+}
+
+func (l *logger) Print(v ...interface{}) {
+	if l.enable {
+		l.logs.NewEntry(l.lv).print(3, v...)
+	}
+}
+
+func (l *logger) Printf(format string, v ...interface{}) {
+	if l.enable {
+		l.logs.NewEntry(l.lv).printf(3, format, v...)
+	}
 }
 
 func (l *emptyLogger) Value(_ string, _ interface{}) Logger { return l }
@@ -141,5 +150,3 @@ func (l *emptyLogger) Value(_ string, _ interface{}) Logger { return l }
 func (l *emptyLogger) Print(_ ...interface{}) {}
 
 func (l *emptyLogger) Printf(_ string, _ ...interface{}) {}
-
-func (l *emptyLogger) Write(bs []byte) (int, error) { return len(bs), nil }

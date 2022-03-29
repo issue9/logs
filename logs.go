@@ -4,7 +4,6 @@
 package logs
 
 import (
-	"io"
 	"log"
 	"sync"
 )
@@ -12,7 +11,7 @@ import (
 type Logs struct {
 	mu      sync.Mutex
 	w       Writer
-	enabled map[Level]bool
+	loggers map[Level]*logger
 
 	// 是否需要生成调用位置信息和日志生成时间
 	caller, created bool
@@ -31,16 +30,17 @@ func New(w Writer, o ...Option) *Logs {
 	if w == nil {
 		w = NewNopWriter()
 	}
+	l := &Logs{w: w}
 
-	enabled := make(map[Level]bool, 6)
+	l.loggers = make(map[Level]*logger, len(levelStrings))
 	for lv := range levelStrings {
-		enabled[lv] = true
+		l.loggers[lv] = &logger{
+			logs:   l,
+			lv:     lv,
+			enable: lv != levelDisable,
+		}
 	}
 
-	l := &Logs{
-		w:       w,
-		enabled: enabled,
-	}
 	for _, opt := range o {
 		opt(l)
 	}
@@ -52,6 +52,10 @@ func New(w Writer, o ...Option) *Logs {
 // 调用此函数之后，所有不在 level 参数的通道都将被关闭。
 func (logs *Logs) Enable(level ...Level) {
 	exists := func(lv Level) bool {
+		if lv == levelDisable {
+			return false
+		}
+
 		for _, l := range level {
 			if l == lv {
 				return true
@@ -60,12 +64,12 @@ func (logs *Logs) Enable(level ...Level) {
 		return false
 	}
 
-	for lv := range logs.enabled {
-		logs.enabled[lv] = exists(lv)
+	for _, l := range logs.loggers {
+		l.enable = exists(l.lv)
 	}
 }
 
-func (logs *Logs) IsEnable(l Level) bool { return logs.enabled[l] }
+func (logs *Logs) IsEnable(l Level) bool { return logs.loggers[l].enable }
 
 func (logs *Logs) INFO() Logger { return logs.level(LevelInfo) }
 
@@ -103,14 +107,11 @@ func (logs *Logs) Fatal(v ...interface{}) { logs.FATAL().Print(v...) }
 
 func (logs *Logs) Fatalf(format string, v ...interface{}) { logs.FATAL().Printf(format, v...) }
 
-func (logs *Logs) level(lv Level) interface {
-	Logger
-	io.Writer
-} {
-	if logs.IsEnable(lv) && logs.w != nop {
-		return newLogger(logs, lv)
+func (logs *Logs) level(lv Level) *logger {
+	if logs.w == nop {
+		return logs.loggers[levelDisable]
 	}
-	return emptyLoggerInst
+	return logs.loggers[lv]
 }
 
 // Output 输出 Entry 对象
@@ -119,7 +120,12 @@ func (logs *Logs) level(lv Level) interface {
 func (logs *Logs) Output(e *Entry) {
 	logs.mu.Lock()
 	defer logs.mu.Unlock()
+
 	logs.w.WriteEntry(e)
+
+	if len(e.Params) < poolMaxParams {
+		entryPool.Put(e)
+	}
 }
 
 // StdLogger 转换成标准库的 Logger

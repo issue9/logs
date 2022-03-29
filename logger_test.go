@@ -4,6 +4,7 @@ package logs
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"strings"
 	"sync"
@@ -30,7 +31,7 @@ func TestEntry_Location(t *testing.T) {
 	a.Empty(e.Path).Zero(e.Line)
 
 	e.Location(1)
-	a.True(strings.HasSuffix(e.Path, "logger_test.go")).Equal(e.Line, 32)
+	a.True(strings.HasSuffix(e.Path, "logger_test.go")).Equal(e.Line, 33)
 }
 
 func TestLogger_location(t *testing.T) {
@@ -43,7 +44,21 @@ func TestLogger_location(t *testing.T) {
 	l.ERROR().Value("k1", "v1").
 		Printf("pf") // 位置记录此行
 	val := buf.String()
-	a.Contains(val, "logger_test.go:44", val).
+	a.Contains(val, "logger_test.go:45").
+		Contains(val, "k1=v1")
+}
+
+func TestLogger_Error(t *testing.T) {
+	a := assert.New(t, false)
+	buf := new(bytes.Buffer)
+	l := New(NewTextWriter("2006-01-02", buf))
+
+	a.NotNil(l)
+	l.Enable(LevelError)
+	l.ERROR().Value("k1", "v1").
+		Error(errors.New("abc"))
+	val := buf.String()
+	a.Contains(val, "abc").
 		Contains(val, "k1=v1")
 }
 

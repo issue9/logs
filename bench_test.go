@@ -63,7 +63,7 @@ func BenchmarkEntry_Printf(b *testing.B) {
 	}
 }
 
-func BenchmarkLogger_Printf_withCallerAndCreated(b *testing.B) {
+func BenchmarkLogger_Printf_withoutCallerAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextWriter("2006-01-02", buf))
@@ -76,7 +76,7 @@ func BenchmarkLogger_Printf_withCallerAndCreated(b *testing.B) {
 	}
 }
 
-func BenchmarkLogger_Error_withCallerAndCreated(b *testing.B) {
+func BenchmarkLogger_Error_withoutCallerAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextWriter("2006-01-02", buf))

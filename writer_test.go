@@ -85,13 +85,14 @@ func TestTermWriter(t *testing.T) {
 
 	t.Log("此测试将在终端输出一段带颜色的日志记录")
 
-	e := newEntry(a, New(nil), LevelWarn)
+	l := New(nil)
+	e := newEntry(a, l, LevelWarn)
 	e.Created = time.Now()
-
 	w := NewTermWriter(layout, colors.Blue, os.Stdout)
 	w.WriteEntry(e)
 
-	e.Level = LevelError
+	l = New(nil, Caller, Created)
+	e = newEntry(a, l, LevelError)
 	e.Message = "error message"
 	w = NewTermWriter(layout, colors.Red, os.Stdout)
 	w.WriteEntry(e)

@@ -61,25 +61,22 @@ type (
 
 func (logs *Logs) NewEntry(lv Level) *Entry {
 	e := entryPool.Get().(*Entry)
-	e.Reset(logs, lv)
-	return e
-}
 
-func (e *Entry) Reset(l *Logs, lv Level) {
-	e.logs = l
-
+	e.logs = logs
 	if e.Params != nil {
 		e.Params = e.Params[:0]
 	}
 	e.Path = ""
 	e.Line = 0
 	e.Message = ""
-	if l.HasCreated() {
+	if logs.HasCreated() {
 		e.Created = time.Now()
 	} else {
 		e.Created = time.Time{}
 	}
 	e.Level = lv
+
+	return e
 }
 
 func (e *Entry) Logs() *Logs { return e.logs }

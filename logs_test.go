@@ -4,6 +4,7 @@ package logs
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/issue9/assert/v2"
@@ -29,15 +30,23 @@ func TestLogs_IsEnable(t *testing.T) {
 	ll, ok := l.WARN().(*logger)
 	a.True(ok).False(ll.enable)
 
-	l = New(NewTextWriter("2006", new(bytes.Buffer)))
+	buf := new(bytes.Buffer)
+	l = New(NewTextWriter("2006", buf))
 	a.NotNil(l)
 	l.Enable(LevelWarn, LevelError)
+
+	ll, ok = l.WARN().(*logger)
+	a.True(ok).True(ll.enable)
 
 	ll, ok = l.FATAL().(*logger)
 	a.True(ok).False(ll.enable)
 
-	ll, ok = l.WARN().(*logger)
-	a.True(ok).True(ll.enable)
+	// enable=false，Value emptyLoggerInst
+	buf.Reset()
+	inst := l.FATAL().Value("k1", "v1")
+	a.Equal(inst, emptyLoggerInst)
+	inst.Value("k2", "v2").Error(errors.New("err"))
+	a.Zero(buf.Len())
 }
 
 func TestLogsLoggers(t *testing.T) {
@@ -76,7 +85,7 @@ func TestLogs_StdLogger(t *testing.T) {
 
 	info := l.StdLogger(LevelInfo)
 	info.Print("abc")
-	a.Contains(buf.String(), "logs_test.go:78")
+	a.Contains(buf.String(), "logs_test.go:87")
 
 	// Enable 未设置 LevelWarn
 	buf.Reset()

@@ -4,10 +4,13 @@ logs
 ![Go version](https://img.shields.io/github/go-mod/go-version/issue9/logs)
 ======
 
+全新的 v4 版本，对所有功能进行了重构，与之前的几个版本完全不同。
+新版本不再追求与标准库的绝对兼容，仅提供了 StdLogger 用于转换成标准库对象的方法。
+
 ```go
 import "github.com/issue9/logs/v4"
 
-l := logs.New()
+l := logs.New(nil)
 l.Debug("debug start...")
 l.Debugf("%v start...", "debug")
 l.DEBUG().Print("debug start...")

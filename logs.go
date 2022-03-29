@@ -13,12 +13,21 @@ type Logs struct {
 	mu      sync.Mutex
 	w       Writer
 	enabled map[Level]bool
+
+	// 是否需要生成调用位置信息和日志生成时间
+	caller, created bool
 }
+
+type Option func(*Logs)
+
+func Caller(l *Logs) { l.caller = true }
+
+func Created(l *Logs) { l.created = true }
 
 // New 声明 Logs 对象
 //
 // w 如果为 nil，则表示采用 NewNopWriter。
-func New(w Writer) *Logs {
+func New(w Writer, o ...Option) *Logs {
 	if w == nil {
 		w = NewNopWriter()
 	}
@@ -28,10 +37,14 @@ func New(w Writer) *Logs {
 		enabled[lv] = true
 	}
 
-	return &Logs{
+	l := &Logs{
 		w:       w,
 		enabled: enabled,
 	}
+	for _, opt := range o {
+		opt(l)
+	}
+	return l
 }
 
 // Enable 允许的日志通道
@@ -114,3 +127,9 @@ func (logs *Logs) Output(e *Entry) {
 // NOTE: 不要设置 log.Logger 的 Prefix 和 flag，这些配置项 logs 本身有提供。
 // log.Logger 应该仅作为输出 Entry.Message 内容使用。
 func (logs *Logs) StdLogger(l Level) *log.Logger { return log.New(logs.level(l), "", 0) }
+
+// HasCaller 是否包含定位信息
+func (logs *Logs) HasCaller() bool { return logs.caller }
+
+// HasCreated 是否包含时间信息
+func (logs *Logs) HasCreated() bool { return logs.created }

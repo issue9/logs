@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const poolMaxParams = 100
+
 var emptyLoggerInst = &emptyLogger{}
 
 var entryPool = &sync.Pool{New: func() interface{} { return &Entry{} }}
@@ -24,6 +26,8 @@ type (
 
 	// Entry 每一条日志产生的数据
 	Entry struct {
+		logs *Logs
+
 		Level   Level     `json:"level"`
 		Created time.Time `json:"created,omitempty"` // 日志的生成时间，如果 IsZero 为 true，表示禁用该功能；
 		Message string    `json:"message"`
@@ -50,37 +54,53 @@ type (
 	emptyLogger struct{}
 )
 
-func NewEntry() *Entry {
+func (logs *Logs) NewEntry() *Entry {
 	e := entryPool.Get().(*Entry)
-	e.Reset()
+	e.Reset(logs)
 	return e
 }
 
-func (e *Entry) Reset() {
+func (e *Entry) Reset(l *Logs) {
+	e.logs = l
+
 	if e.Params != nil {
 		e.Params = e.Params[:0]
 	}
 	e.Path = ""
 	e.Line = 0
 	e.Message = ""
-	e.Created = time.Now()
+	if l.HasCreated() {
+		e.Created = time.Now()
+	} else {
+		e.Created = time.Time{}
+	}
 	e.Level = 0
 }
 
 // Destroy 回收 Entry
 //
-// 非必须的操作，如果是经由 NewEntry 手动申请的 Entry，可以由此方法释放，在一定程序可能会增加性能。
-func (e *Entry) Destroy() { entryPool.Put(e) }
+// 如果是经由 NewEntry 手动申请的 Entry，可以由此方法释放，在一定程度上可能会增加性能。
+func (e *Entry) Destroy() {
+	if len(e.Params) < poolMaxParams {
+		entryPool.Put(e)
+	}
+}
+
+func (e *Entry) Logs() *Logs { return e.logs }
 
 // Location 记录位置信息到 Entry
 //
 // 会同时写入 e.Path 和 e.Line 两个值。
 //
 // depth 表示调用，1 表示调用 Location 的位置；
-func (e *Entry) Location(depth int) { _, e.Path, e.Line, _ = runtime.Caller(depth) }
+func (e *Entry) Location(depth int) {
+	if e.Logs().HasCaller() {
+		_, e.Path, e.Line, _ = runtime.Caller(depth)
+	}
+}
 
 func newLogger(l *Logs, lv Level) *logger {
-	e := NewEntry()
+	e := l.NewEntry()
 	e.Level = lv
 	return &logger{logs: l, e: e, lv: lv}
 }
@@ -90,6 +110,7 @@ func (e *logger) Write(data []byte) (int, error) {
 	e.e.Message = string(data)
 	e.e.Location(4)
 	e.logs.Output(e.e)
+	e.e.Destroy()
 	return len(data), nil
 }
 
@@ -105,7 +126,7 @@ func (e *logger) Print(v ...interface{}) {
 	e.e.Location(2)
 	e.logs.Output(e.e)
 
-	e.e.Reset() // 重置 e，可以复用该对象
+	e.e.Reset(e.logs) // 重置 e，可以复用该对象
 	e.e.Level = e.lv
 }
 
@@ -114,7 +135,7 @@ func (e *logger) Printf(format string, v ...interface{}) {
 	e.e.Location(2)
 	e.logs.Output(e.e)
 
-	e.e.Reset()
+	e.e.Reset(e.logs)
 	e.e.Level = e.lv
 }
 

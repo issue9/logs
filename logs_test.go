@@ -68,7 +68,7 @@ func TestLogs_StdLogger(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
 	w := NewTextWriter("2006-01-02", buf)
-	l := New(w)
+	l := New(w, Created, Caller)
 	a.NotNil(l)
 	l.Enable(LevelInfo, LevelError)
 

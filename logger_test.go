@@ -22,7 +22,7 @@ func TestEntry_Location(t *testing.T) {
 	a := assert.New(t, false)
 	l := New(nil, Caller, Created)
 
-	e := l.NewEntry()
+	e := l.NewEntry(LevelWarn)
 	a.NotNil(e)
 	a.Empty(e.Path).Zero(e.Line)
 

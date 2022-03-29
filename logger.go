@@ -54,13 +54,13 @@ type (
 	emptyLogger struct{}
 )
 
-func (logs *Logs) NewEntry() *Entry {
+func (logs *Logs) NewEntry(lv Level) *Entry {
 	e := entryPool.Get().(*Entry)
-	e.Reset(logs)
+	e.Reset(logs, lv)
 	return e
 }
 
-func (e *Entry) Reset(l *Logs) {
+func (e *Entry) Reset(l *Logs, lv Level) {
 	e.logs = l
 
 	if e.Params != nil {
@@ -74,7 +74,7 @@ func (e *Entry) Reset(l *Logs) {
 	} else {
 		e.Created = time.Time{}
 	}
-	e.Level = 0
+	e.Level = lv
 }
 
 // Destroy 回收 Entry
@@ -100,8 +100,7 @@ func (e *Entry) Location(depth int) {
 }
 
 func newLogger(l *Logs, lv Level) *logger {
-	e := l.NewEntry()
-	e.Level = lv
+	e := l.NewEntry(lv)
 	return &logger{logs: l, e: e, lv: lv}
 }
 
@@ -126,8 +125,7 @@ func (e *logger) Print(v ...interface{}) {
 	e.e.Location(2)
 	e.logs.Output(e.e)
 
-	e.e.Reset(e.logs) // 重置 e，可以复用该对象
-	e.e.Level = e.lv
+	e.e.Reset(e.logs, e.lv) // 重置 e，可以复用该对象
 }
 
 func (e *logger) Printf(format string, v ...interface{}) {
@@ -135,8 +133,7 @@ func (e *logger) Printf(format string, v ...interface{}) {
 	e.e.Location(2)
 	e.logs.Output(e.e)
 
-	e.e.Reset(e.logs)
-	e.e.Level = e.lv
+	e.e.Reset(e.logs, e.lv)
 }
 
 func (l *emptyLogger) Value(_ string, _ interface{}) Logger { return l }

@@ -14,10 +14,9 @@ import (
 )
 
 func newEntry(a *assert.Assertion, logs *Logs, lv Level) *Entry {
-	e := logs.NewEntry()
+	e := logs.NewEntry(lv)
 	a.NotNil(e)
 
-	e.Level = lv
 	e.Message = "msg"
 	e.Path = "path.go"
 	e.Line = 20
@@ -111,10 +110,10 @@ func TestDispatchWriter(t *testing.T) {
 	})
 	l := New(w)
 
-	e := l.NewEntry()
+	e := l.NewEntry(LevelWarn)
 	e.Created = time.Now()
 	l.Warnf("warnf test")
-	a.Zero(txtBuf.Len()).Contains(jsonBuf.String(), "warnf test")
+	a.Zero(txtBuf.Len()).Contains(jsonBuf.String(), "warnf test").True(json.Valid(jsonBuf.Bytes()))
 
 	e.Level = LevelInfo
 	jsonBuf.Reset()

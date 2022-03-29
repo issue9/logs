@@ -75,7 +75,7 @@ func (w *textWriter) WriteEntry(e *Entry) {
 
 	b.WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
 
-	for _, p := range e.Pairs {
+	for _, p := range e.Params {
 		b.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
 	}
 
@@ -84,6 +84,9 @@ func (w *textWriter) WriteEntry(e *Entry) {
 	w.b.Write([]byte(b.String()))
 }
 
+// NewJSONWriter 声明 JSON 格式的输出
+//
+// format 是否格式化 json，如果为 true，会以 \t 作为缩进；
 func NewJSONWriter(format bool, w ...io.Writer) Writer {
 	var ww io.Writer
 	switch len(w) {
@@ -103,17 +106,7 @@ func NewJSONWriter(format bool, w ...io.Writer) Writer {
 }
 
 func (w *jsonWriter) WriteEntry(e *Entry) {
-	m := make(map[string]any, len(e.Pairs)+3)
-
-	m["message"] = e.Message
-	m["level"] = e.Level
-	m["created"] = e.Created
-	m["location"] = e.Path + ":" + strconv.Itoa(e.Line)
-	for _, p := range e.Pairs {
-		m[p.K] = p.V
-	}
-
-	if err := w.enc.Encode(m); err != nil {
+	if err := w.enc.Encode(e); err != nil {
 		fmt.Fprint(os.Stderr, err) // 编码错误
 	}
 }
@@ -142,7 +135,7 @@ func (w *termWriter) WriteEntry(e *Entry) {
 
 	w.w.WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
 
-	for _, p := range e.Pairs {
+	for _, p := range e.Params {
 		w.w.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
 	}
 

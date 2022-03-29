@@ -17,7 +17,7 @@ var benchEntry = &Entry{
 	Message: "msg",
 	Path:    "path.go",
 	Line:    20,
-	Pairs: []Pair{
+	Params: []Pair{
 		{K: "k1", V: "v1"},
 		{K: "k2", V: "v2"},
 	},

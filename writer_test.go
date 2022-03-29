@@ -24,7 +24,7 @@ func TestTextWriter(t *testing.T) {
 		Message: "msg",
 		Path:    "path.go",
 		Line:    20,
-		Pairs: []Pair{
+		Params: []Pair{
 			{K: "k1", V: "v1"},
 			{K: "k2", V: "v2"},
 		},
@@ -57,7 +57,7 @@ func TestJSONFormat(t *testing.T) {
 		Message: "msg",
 		Path:    "path.go",
 		Line:    20,
-		Pairs: []Pair{
+		Params: []Pair{
 			{K: "k1", V: "v1"},
 			{K: "k2", V: "v2"},
 		},
@@ -92,7 +92,7 @@ func TestTermWriter(t *testing.T) {
 		Message: "msg",
 		Path:    "path.go",
 		Line:    20,
-		Pairs: []Pair{
+		Params: []Pair{
 			{K: "k1", V: "v1"},
 			{K: "k2", V: "v2"},
 		},
@@ -126,7 +126,7 @@ func TestDispatchWriter(t *testing.T) {
 		Message: "msg",
 		Path:    "path.go",
 		Line:    20,
-		Pairs: []Pair{
+		Params: []Pair{
 			{K: "k1", V: "v1"},
 			{K: "k2", V: "v2"},
 		},

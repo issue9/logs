@@ -24,14 +24,16 @@ type (
 
 	// Entry 每一条日志产生的数据
 	Entry struct {
-		Pairs   []Pair // 额外的数据保存在此，比如由 Logger.Value 添加的数据。
-		Level   Level
-		Created time.Time // 日志的生成时间，如果 IsZero 为 true，表示禁用该功能；
-		Message string
+		Level   Level     `json:"level"`
+		Created time.Time `json:"created,omitempty"` // 日志的生成时间，如果 IsZero 为 true，表示禁用该功能；
+		Message string    `json:"message"`
 
 		// 以下表示日志的定位信息，如果为空表示未启用定位信息。
-		Path string
-		Line int
+		Path string `json:"path,omitempty"`
+		Line int    `json:"line,omitempty"`
+
+		// 额外的数据保存在此，比如由 Logger.Value 添加的数据。
+		Params []Pair `json:"params,omitempty"`
 	}
 
 	Pair struct {
@@ -55,8 +57,8 @@ func NewEntry() *Entry {
 }
 
 func (e *Entry) Reset() {
-	if e.Pairs != nil {
-		e.Pairs = e.Pairs[:0]
+	if e.Params != nil {
+		e.Params = e.Params[:0]
 	}
 	e.Path = ""
 	e.Line = 0
@@ -92,7 +94,7 @@ func (e *logger) Write(data []byte) (int, error) {
 }
 
 func (e *logger) Value(name string, val interface{}) Logger {
-	e.e.Pairs = append(e.e.Pairs, Pair{K: name, V: val})
+	e.e.Params = append(e.e.Params, Pair{K: name, V: val})
 	return e
 }
 

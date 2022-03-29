@@ -29,14 +29,11 @@ type Rotate struct {
 
 // New 新建 Rotate
 //
-// format 文件名格式，可以包含以下格式内容：
-//  %y 表示两位数的年份；
-//  %Y 四位数的年份；
-//  %m 表示月份；
-//  %d 表示当前月中的第几天；
-//  %h 表示 12 进制的小时；
-//  %H 表示 24 进制的小时；
-//  %i 表示同一时间段内的，多个的文件的计数器。
+// format 文件名格式，除了标准库支持的时间格式之外，还可以有以下占位符：
+//  %i 表示同一时间段内的产生多个文件时的计数器。
+// 比如：
+//  2006-01-02-15-04-%i-01-02.log
+// 表示
 // dir 为文件保存的目录，若不存在会尝试创建。
 // size 为每个文件的最大尺寸，单位为 byte。
 func New(format, dir string, size int64) (*Rotate, error) {
@@ -62,7 +59,7 @@ func New(format, dir string, size int64) (*Rotate, error) {
 		}
 	}
 
-	p, s, err := parseFormat(format)
+	p, s, err := cutString(format)
 	if err != nil {
 		return nil, err
 	}

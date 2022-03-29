@@ -11,23 +11,23 @@ import (
 	"github.com/issue9/assert/v2"
 )
 
-func TestParseFormat(t *testing.T) {
+func TestCutString(t *testing.T) {
 	a := assert.New(t, false)
 
-	p, s, err := parseFormat("")
+	p, s, err := cutString("")
 	a.Empty(p).Empty(s).Equal(err, ErrIndexNotExists)
 
-	p, s, err = parseFormat("%i")
+	p, s, err = cutString("%i")
 	a.NotError(err).
 		Empty(p).
 		Empty(s)
 
-	p, s, err = parseFormat("test%i")
+	p, s, err = cutString("test%i")
 	a.NotError(err).
 		Equal(p, "test").
 		Empty(s)
 
-	p, s, err = parseFormat("test-%Y%d%i%yy%m-%H")
+	p, s, err = cutString("test-200602%i06y01-15")
 	a.NotError(err).
 		Equal(p, "test-200602").
 		Equal(s, "06y01-15")

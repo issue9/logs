@@ -15,24 +15,12 @@ const indexPlaceholder = "%i"
 // ErrIndexNotExists 格式化字符串 %i 不存在
 var ErrIndexNotExists = errors.New("必须存在 %i")
 
-var dateRelpacer = strings.NewReplacer(
-	"%y", "06",
-	"%Y", "2006",
-	"%m", "01",
-	"%d", "02",
-	"%h", "03",
-	"%H", "15")
-
-func parseFormat(format string) (prefix, suffix string, err error) {
-	index := strings.Index(format, indexPlaceholder)
-	if index < 0 {
-		return "", "", ErrIndexNotExists
+// TODO(go1.18): 可以采用 strings.Cut 代替
+func cutString(format string) (prefix, suffix string, err error) {
+	if index := strings.Index(format, indexPlaceholder); index >= 0 {
+		return format[:index], format[index+len(indexPlaceholder):], nil
 	}
-
-	prefix = format[:index]
-	suffix = format[index+len(indexPlaceholder):]
-
-	return dateRelpacer.Replace(prefix), dateRelpacer.Replace(suffix), nil
+	return "", "", ErrIndexNotExists
 }
 
 // 获取指定目录下，去掉前后缀之后，最大的索引值。

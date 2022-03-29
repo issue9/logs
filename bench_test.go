@@ -5,48 +5,47 @@ package logs
 import (
 	"bytes"
 	"testing"
-	"time"
 
 	"github.com/issue9/assert/v2"
 	"github.com/issue9/term/v3/colors"
 )
 
-var benchEntry = &Entry{
-	Level:   LevelWarn,
-	Created: time.Now(),
-	Message: "msg",
-	Path:    "path.go",
-	Line:    20,
-	Params: []Pair{
-		{K: "k1", V: "v1"},
-		{K: "k2", V: "v2"},
-	},
-}
-
 func BenchmarkTextWriter(b *testing.B) {
+	a := assert.New(b, false)
+
 	buf := new(bytes.Buffer)
 	w := NewTextWriter("2006-01-02", buf)
+	l := New(w, Caller, Created)
+	e := newEntry(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
-		w.WriteEntry(benchEntry)
+		w.WriteEntry(e)
 	}
 }
 
 func BenchmarkJSONWriter(b *testing.B) {
+	a := assert.New(b, false)
+
 	buf := new(bytes.Buffer)
 	w := NewJSONWriter(true, buf)
+	l := New(w, Caller, Created)
+	e := newEntry(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
-		w.WriteEntry(benchEntry)
+		w.WriteEntry(e)
 	}
 }
 
 func BenchmarkTermWriter(b *testing.B) {
+	a := assert.New(b, false)
+
 	buf := new(bytes.Buffer)
 	w := NewTermWriter("2006-01-02", colors.Red, buf)
+	l := New(w, Caller, Created)
+	e := newEntry(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
-		w.WriteEntry(benchEntry)
+		w.WriteEntry(e)
 	}
 }
 

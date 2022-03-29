@@ -67,13 +67,15 @@ func (w *textWriter) WriteEntry(e *Entry) {
 	b := errwrap.StringBuilder{}
 	b.WByte('[').WString(e.Level.String()).WString("] ")
 
-	if w.timeLayout != "" {
+	if e.Logs().HasCreated() {
 		b.WString(e.Created.Format(w.timeLayout)).WByte(' ')
 	}
 
 	b.WString(e.Message).WByte('\t')
 
-	b.WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+	if e.Logs().HasCaller() {
+		b.WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+	}
 
 	for _, p := range e.Params {
 		b.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))

@@ -13,22 +13,29 @@ import (
 	"github.com/issue9/term/v3/colors"
 )
 
+func newEntry(a *assert.Assertion, logs *Logs, lv Level) *Entry {
+	e := logs.NewEntry()
+	a.NotNil(e)
+
+	e.Level = lv
+	e.Message = "msg"
+	e.Path = "path.go"
+	e.Line = 20
+	e.Params = []Pair{
+		{K: "k1", V: "v1"},
+		{K: "k2", V: "v2"},
+	}
+
+	return e
+}
+
 func TestTextWriter(t *testing.T) {
 	a := assert.New(t, false)
 	layout := "15:04:05"
 	now := time.Now()
 
-	e := &Entry{
-		Level:   LevelWarn,
-		Created: now,
-		Message: "msg",
-		Path:    "path.go",
-		Line:    20,
-		Params: []Pair{
-			{K: "k1", V: "v1"},
-			{K: "k2", V: "v2"},
-		},
-	}
+	e := newEntry(a, New(nil, Created, Caller), LevelWarn)
+	e.Created = now
 
 	a.PanicString(func() {
 		NewTextWriter(layout)
@@ -51,17 +58,8 @@ func TestJSONFormat(t *testing.T) {
 	a := assert.New(t, false)
 	now := time.Now()
 
-	e := &Entry{
-		Level:   LevelWarn,
-		Created: now,
-		Message: "msg",
-		Path:    "path.go",
-		Line:    20,
-		Params: []Pair{
-			{K: "k1", V: "v1"},
-			{K: "k2", V: "v2"},
-		},
-	}
+	e := newEntry(a, New(nil), LevelWarn)
+	e.Created = now
 
 	a.PanicString(func() {
 		NewJSONWriter(false)
@@ -83,20 +81,13 @@ func TestJSONFormat(t *testing.T) {
 }
 
 func TestTermWriter(t *testing.T) {
+	a := assert.New(t, false)
+	layout := "15:04:05"
+
 	t.Log("此测试将在终端输出一段带颜色的日志记录")
 
-	layout := "15:04:05"
-	e := &Entry{
-		Level:   LevelWarn,
-		Created: time.Now(),
-		Message: "msg",
-		Path:    "path.go",
-		Line:    20,
-		Params: []Pair{
-			{K: "k1", V: "v1"},
-			{K: "k2", V: "v2"},
-		},
-	}
+	e := newEntry(a, New(nil), LevelWarn)
+	e.Created = time.Now()
 
 	w := NewTermWriter(layout, colors.Blue, os.Stdout)
 	w.WriteEntry(e)
@@ -120,17 +111,8 @@ func TestDispatchWriter(t *testing.T) {
 	})
 	l := New(w)
 
-	e := &Entry{
-		Level:   LevelWarn,
-		Created: time.Now(),
-		Message: "msg",
-		Path:    "path.go",
-		Line:    20,
-		Params: []Pair{
-			{K: "k1", V: "v1"},
-			{K: "k2", V: "v2"},
-		},
-	}
+	e := l.NewEntry()
+	e.Created = time.Now()
 	l.Warnf("warnf test")
 	a.Zero(txtBuf.Len()).Contains(jsonBuf.String(), "warnf test")
 

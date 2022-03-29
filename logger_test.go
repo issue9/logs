@@ -3,48 +3,82 @@
 package logs
 
 import (
+	"bytes"
 	"io"
-	"log"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/issue9/assert/v2"
-
-	"github.com/issue9/logs/v3/writers"
 )
 
 var (
-	_ io.Writer     = &logger{}
-	_ writers.Adder = &logger{}
+	_ Logger    = &logger{}
+	_ io.Writer = &logger{}
+
+	_ Logger = &emptyLogger{}
+
+	_ Logger = &Entry{}
 )
 
-func TestLogger_SetOutput(t *testing.T) {
+func TestEntry_Location(t *testing.T) {
 	a := assert.New(t, false)
+	l := New(nil, Caller, Created)
 
-	l := newLogger("", 0)
-	a.Equal(l.container.Len(), 0)
+	e := l.NewEntry(LevelWarn)
+	a.NotNil(e)
+	a.Empty(e.Path).Zero(e.Line)
 
-	cont := writers.NewContainer()
-	a.NotError(l.SetOutput(cont))
-	a.Equal(l.container.Len(), 1)
-
-	// setOutput 会替换旧有的 writer
-	a.NotError(l.SetOutput(cont))
-	a.Equal(l.container.Len(), 1)
-
-	a.NotError(l.SetOutput(nil))
-	a.Equal(l.container.Len(), 0)
+	e.Location(1)
+	a.True(strings.HasSuffix(e.Path, "logger_test.go")).Equal(e.Line, 32)
 }
 
-func TestParseFlag(t *testing.T) {
+func TestLogger_location(t *testing.T) {
 	a := assert.New(t, false)
 
-	eq := func(str string, v int) {
-		ret, err := parseFlag(str)
-		a.NotError(err).Equal(ret, v)
-	}
+	buf := new(bytes.Buffer)
+	l := New(NewTextWriter("2006-01-02", buf), Caller, Created)
+	a.NotNil(l)
+	l.Enable(LevelError)
+	l.ERROR().Value("k1", "v1").
+		Printf("pf") // 位置记录此行
+	val := buf.String()
+	a.Contains(val, "logger_test.go:44", val).
+		Contains(val, "k1=v1")
+}
 
-	eq("log.Ldate|log.ltime", log.Ldate|log.Ltime)
-	eq("log.Ldate| log.Ltime", log.Ldate|log.Ltime)
-	eq(" ", 0)
-	eq("", 0)
+func TestLogger_printf(t *testing.T) {
+	a := assert.New(t, false)
+
+	buf := new(bytes.Buffer)
+	l := New(NewTextWriter("2006-01-02", buf))
+	a.NotNil(l)
+	l.Enable(LevelError)
+
+	g := sync.WaitGroup{}
+	err := l.ERROR()
+
+	g.Add(1)
+	go func() {
+		err.Printf("这是一段不可分割的文字内容 1")
+		g.Done()
+	}()
+
+	g.Add(1)
+	go func() {
+		err.Printf("这是一段不可分割的文字内容 2")
+		g.Done()
+	}()
+
+	g.Add(1)
+	go func() {
+		err.Printf("这是一段不可分割的文字内容 3")
+		g.Done()
+	}()
+
+	g.Wait()
+
+	a.Contains(buf.String(), "这是一段不可分割的文字内容 1")
+	a.Contains(buf.String(), "这是一段不可分割的文字内容 2")
+	a.Contains(buf.String(), "这是一段不可分割的文字内容 3")
 }

@@ -16,7 +16,7 @@ var entryPool = &sync.Pool{New: func() interface{} { return &Entry{} }}
 type (
 	Logger interface {
 		// Value 为日志提供额外的参数
-		Value(name string, val any) Logger
+		Value(name string, val interface{}) Logger
 
 		Print(v ...interface{})
 		Printf(format string, v ...interface{})
@@ -38,7 +38,7 @@ type (
 
 	Pair struct {
 		K string
-		V any
+		V interface{}
 	}
 
 	logger struct {
@@ -98,7 +98,7 @@ func (e *logger) Value(name string, val interface{}) Logger {
 	return e
 }
 
-func (e *logger) Print(v ...any) {
+func (e *logger) Print(v ...interface{}) {
 	if len(v) > 0 {
 		e.e.Message = fmt.Sprint(v...)
 	}

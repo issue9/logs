@@ -20,6 +20,11 @@ type (
 		// Value 为日志提供额外的参数
 		Value(name string, val interface{}) Logger
 
+		// Error 输出 error 接口数据
+		//
+		// 这是 Print 的特化版本，在输出 error 时性能上会比直接用 Print(err) 好。
+		Error(err error)
+
 		Print(v ...interface{})
 		Printf(format string, v ...interface{})
 	}
@@ -97,6 +102,16 @@ func (e *Entry) Value(name string, val interface{}) Logger {
 	return e
 }
 
+func (e *Entry) Error(err error) { e.err(3, err) }
+
+func (e *Entry) err(depth int, err error) {
+	if err != nil {
+		e.Message = err.Error()
+	}
+	e.Location(depth)
+	e.logs.Output(e)
+}
+
 func (e *Entry) Print(v ...interface{}) { e.print(3, v...) }
 
 func (e *Entry) print(depth int, v ...interface{}) {
@@ -133,6 +148,12 @@ func (l *logger) Value(name string, val interface{}) Logger {
 	return emptyLoggerInst
 }
 
+func (l *logger) Error(err error) {
+	if l.enable {
+		l.logs.NewEntry(l.lv).err(3, err)
+	}
+}
+
 func (l *logger) Print(v ...interface{}) {
 	if l.enable {
 		l.logs.NewEntry(l.lv).print(3, v...)
@@ -146,6 +167,8 @@ func (l *logger) Printf(format string, v ...interface{}) {
 }
 
 func (l *emptyLogger) Value(_ string, _ interface{}) Logger { return l }
+
+func (l *emptyLogger) Error(_ error) {}
 
 func (l *emptyLogger) Print(_ ...interface{}) {}
 

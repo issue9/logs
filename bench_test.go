@@ -4,6 +4,7 @@ package logs
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/issue9/assert/v2"
@@ -62,7 +63,7 @@ func BenchmarkEntry_Printf(b *testing.B) {
 	}
 }
 
-func BenchmarkEntry_Printf_withCallerAndCreated(b *testing.B) {
+func BenchmarkLogger_Printf_withCallerAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextWriter("2006-01-02", buf))
@@ -72,6 +73,19 @@ func BenchmarkEntry_Printf_withCallerAndCreated(b *testing.B) {
 	err := l.ERROR()
 	for i := 0; i < b.N; i++ {
 		err.Value("k1", "v1").Printf("p1")
+	}
+}
+
+func BenchmarkLogger_Error_withCallerAndCreated(b *testing.B) {
+	a := assert.New(b, false)
+	buf := new(bytes.Buffer)
+	l := New(NewTextWriter("2006-01-02", buf))
+	a.NotNil(l)
+	l.Enable(LevelError)
+
+	err := l.ERROR()
+	for i := 0; i < b.N; i++ {
+		err.Value("k1", "v1").Error(errors.New("err"))
 	}
 }
 

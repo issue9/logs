@@ -85,7 +85,9 @@ func (w *textWriter) WriteEntry(e *Entry) {
 
 	b.WByte('\n')
 
-	w.b.Write([]byte(b.String()))
+	if _, err := w.b.Write([]byte(b.String())); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
 }
 
 // NewJSONWriter 声明 JSON 格式的输出
@@ -111,7 +113,7 @@ func NewJSONWriter(format bool, w ...io.Writer) Writer {
 
 func (w *jsonWriter) WriteEntry(e *Entry) {
 	if err := w.enc.Encode(e); err != nil {
-		fmt.Fprint(os.Stderr, err) // 编码错误
+		fmt.Fprintln(os.Stderr, err) // 编码错误
 	}
 }
 

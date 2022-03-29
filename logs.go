@@ -19,8 +19,10 @@ type Logs struct {
 
 type Option func(*Logs)
 
+// Caller 是否显示记录的定位信息
 func Caller(l *Logs) { l.caller = true }
 
+// Created 是否显示记录的创建时间
 func Created(l *Logs) { l.created = true }
 
 // New 声明 Logs 对象

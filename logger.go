@@ -46,8 +46,8 @@ type (
 	}
 
 	Pair struct {
-		K string
-		V interface{}
+		K string      `json:"k"`
+		V interface{} `json:"v"`
 	}
 
 	logger struct {

@@ -4,10 +4,50 @@ package logs
 
 import (
 	"encoding"
+	"encoding/json"
 	"fmt"
+	"testing"
+
+	"github.com/issue9/assert/v2"
 )
 
 var (
-	_ encoding.TextMarshaler = LevelDebug
-	_ fmt.Stringer           = LevelError
+	testLevel = LevelInfo
+
+	_ encoding.TextMarshaler   = LevelDebug
+	_ encoding.TextUnmarshaler = &testLevel
+	_ fmt.Stringer             = LevelError
 )
+
+func TestParseLevel(t *testing.T) {
+	a := assert.New(t, false)
+
+	lv, err := ParseLevel("INFO")
+	a.NotError(err).Equal(lv, LevelInfo)
+
+	lv, err = ParseLevel("erro")
+	a.NotError(err).Equal(lv, LevelError)
+
+	lv, err = ParseLevel("not-exists")
+	a.ErrorString(err, "无效的值")
+
+	lv, err = ParseLevel(levelStrings[levelDisable])
+	a.ErrorString(err, "无效的值")
+}
+
+func TestLevel_UnmarshalText(t *testing.T) {
+	a := assert.New(t, false)
+
+	/*data :=&struct{
+		L Level `json:"l"`
+	}{}
+
+	*/
+
+	l := LevelWarn
+	a.NotError(json.Unmarshal([]byte(`"inFo"`), &l))
+	a.Equal(l, LevelInfo)
+
+	l = LevelWarn
+	a.ErrorString(json.Unmarshal([]byte(`"not-exists"`), &l), "无效的值")
+}

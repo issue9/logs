@@ -32,8 +32,9 @@ func TestTextWriter(t *testing.T) {
 	a := assert.New(t, false)
 	layout := "15:04:05"
 	now := time.Now()
+	l := New(nil, Created, Caller)
 
-	e := newEntry(a, New(nil, Created, Caller), LevelWarn)
+	e := newEntry(a, l, LevelWarn)
 	e.Created = now
 
 	a.PanicString(func() {
@@ -41,13 +42,15 @@ func TestTextWriter(t *testing.T) {
 	}, "参数 w 不能为空")
 
 	buf := new(bytes.Buffer)
-	NewTextWriter(layout, buf).WriteEntry(e)
+	l.SetOutput(NewTextWriter(layout, buf))
+	l.Output(e)
 	a.Equal(buf.String(), "[WARN] "+now.Format(layout)+" msg\tpath.go:20 k1=v1 k2=v2\n")
 
 	b1 := new(bytes.Buffer)
 	b2 := new(bytes.Buffer)
 	b3 := new(bytes.Buffer)
-	NewTextWriter(layout, b1, b2, b3).WriteEntry(e)
+	l.SetOutput(NewTextWriter(layout, b1, b2, b3))
+	l.Output(e)
 	a.Equal(b1.String(), "[WARN] "+now.Format(layout)+" msg\tpath.go:20 k1=v1 k2=v2\n")
 	a.Equal(b2.String(), "[WARN] "+now.Format(layout)+" msg\tpath.go:20 k1=v1 k2=v2\n")
 	a.Equal(b3.String(), "[WARN] "+now.Format(layout)+" msg\tpath.go:20 k1=v1 k2=v2\n")

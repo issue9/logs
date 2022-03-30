@@ -49,6 +49,8 @@ func New(w Writer, o ...Option) *Logs {
 	return l
 }
 
+func (logs *Logs) SetOutput(w Writer) { logs.w = w }
+
 // Enable 允许的日志通道
 //
 // 调用此函数之后，所有不在 level 参数的通道都将被关闭。

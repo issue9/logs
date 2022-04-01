@@ -34,10 +34,10 @@ type (
 		logs *Logs
 
 		Level   Level     `json:"level"`
-		Created time.Time `json:"created,omitempty"` // 日志的生成时间，如果 IsZero 为 true，表示禁用该功能；
+		Created time.Time `json:"created,omitempty"` // 日志的生成时间
 		Message string    `json:"message"`
 
-		// 以下表示日志的定位信息，如果为空表示未启用定位信息。
+		// 以下表示日志的定位信息
 		Path string `json:"path,omitempty"`
 		Line int    `json:"line,omitempty"`
 
@@ -88,10 +88,11 @@ func (e *Entry) Logs() *Logs { return e.logs }
 // depth 表示调用，1 表示调用 Location 的位置；
 //
 // 如果 Logs.HasCaller 为 false，那么此调用将不产生任何内容。
-func (e *Entry) Location(depth int) {
+func (e *Entry) Location(depth int) *Entry {
 	if e.Logs().HasCaller() {
 		_, e.Path, e.Line, _ = runtime.Caller(depth)
 	}
+	return e
 }
 
 func (e *Entry) Value(name string, val interface{}) Logger {

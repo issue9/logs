@@ -37,7 +37,7 @@ func TestEntry_Location(t *testing.T) {
 func TestLogger_location(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter("2006-01-02", buf), Caller, Created)
+	l := New(NewTextWriter(MicroLayout, buf), Caller, Created)
 	a.NotNil(l)
 	l.Enable(LevelError)
 
@@ -67,7 +67,7 @@ func TestLogger_location(t *testing.T) {
 func TestLogger_Error(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter("2006-01-02", buf))
+	l := New(NewTextWriter(MicroLayout, buf))
 	a.NotNil(l)
 
 	// Entry.Error
@@ -87,7 +87,7 @@ func TestLogger_Printf(t *testing.T) {
 	a := assert.New(t, false)
 
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter("2006-01-02", buf))
+	l := New(NewTextWriter(MicroLayout, buf))
 	a.NotNil(l)
 	l.Enable(LevelError)
 

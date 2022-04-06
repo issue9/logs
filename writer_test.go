@@ -30,7 +30,7 @@ func newEntry(a *assert.Assertion, logs *Logs, lv Level) *Entry {
 
 func TestTextWriter(t *testing.T) {
 	a := assert.New(t, false)
-	layout := "15:04:05"
+	layout := MilliLayout
 	now := time.Now()
 	l := New(nil, Created, Caller)
 
@@ -84,32 +84,30 @@ func TestJSONFormat(t *testing.T) {
 
 func TestTermWriter(t *testing.T) {
 	a := assert.New(t, false)
-	layout := "15:04:05"
 
 	t.Log("此测试将在终端输出一段带颜色的日志记录")
 
 	l := New(nil)
 	e := newEntry(a, l, LevelWarn)
 	e.Created = time.Now()
-	w := NewTermWriter(layout, colors.Blue, os.Stdout)
+	w := NewTermWriter(MilliLayout, colors.Blue, os.Stdout)
 	w.WriteEntry(e)
 
 	l = New(nil, Caller, Created)
 	e = newEntry(a, l, LevelError)
 	e.Message = "error message"
-	w = NewTermWriter(layout, colors.Red, os.Stdout)
+	w = NewTermWriter(MicroLayout, colors.Red, os.Stdout)
 	w.WriteEntry(e)
 }
 
 func TestDispatchWriter(t *testing.T) {
 	a := assert.New(t, false)
-	layout := "15:04:05"
 
 	txtBuf := new(bytes.Buffer)
 	jsonBuf := new(bytes.Buffer)
 
 	w := NewDispatchWriter(map[Level]Writer{
-		LevelInfo: NewTextWriter(layout, txtBuf),
+		LevelInfo: NewTextWriter(NanoLayout, txtBuf),
 		LevelWarn: NewJSONWriter(true, jsonBuf),
 	})
 	l := New(w)

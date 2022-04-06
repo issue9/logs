@@ -13,6 +13,12 @@ import (
 	"github.com/issue9/term/v3/colors"
 )
 
+const (
+	MilliLayout = "15:04:05.000"
+	MicroLayout = "15:04:05.000000"
+	NanoLayout  = "15:04:05.000000000"
+)
+
 var nop = &nopWriter{}
 
 type (

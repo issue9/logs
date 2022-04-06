@@ -11,9 +11,9 @@ import (
 
 // SMTP 实现 io.Writer 接口的邮件发送
 type SMTP struct {
-	username string   // smtp账号
-	password string   // smtp密码
-	host     string   // smtp主机，需要带上端口
+	username string   // smtp 账号
+	password string   // smtp 密码
+	host     string   // smtp 主机，需要带上端口
 	sendTo   []string // 接收者。
 	subject  string   // 邮件主题。
 

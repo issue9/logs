@@ -36,16 +36,32 @@ func TestEntry_Location(t *testing.T) {
 
 func TestLogger_location(t *testing.T) {
 	a := assert.New(t, false)
-
 	buf := new(bytes.Buffer)
 	l := New(NewTextWriter("2006-01-02", buf), Caller, Created)
 	a.NotNil(l)
 	l.Enable(LevelError)
+
+	// Entry.Location
 	l.ERROR().Value("k1", "v1").
-		Printf("pf") // 位置记录此行
+		Printf("Entry.Printf") // 位置记录此行
 	val := buf.String()
-	a.Contains(val, "logger_test.go:45").
-		Contains(val, "k1=v1")
+	a.Contains(val, "logger_test.go:46").
+		Contains(val, "k1=v1").
+		Contains(val, "Entry.Printf")
+
+	// Logs.Location
+	buf.Reset()
+	l.Errorf("Logs.%s", "Errorf")
+	val = buf.String()
+	a.Contains(val, "logger_test.go:54").
+		Contains(val, "Logs.Errorf")
+
+	// logger.Location
+	buf.Reset()
+	l.ERROR().Print("logger.Print")
+	val = buf.String()
+	a.Contains(val, "logger_test.go:61").
+		Contains(val, "logger.Print")
 }
 
 func TestLogger_Error(t *testing.T) {
@@ -62,7 +78,7 @@ func TestLogger_Error(t *testing.T) {
 		Contains(val, "k1=v1")
 }
 
-func TestLogger_printf(t *testing.T) {
+func TestLogger_Printf(t *testing.T) {
 	a := assert.New(t, false)
 
 	buf := new(bytes.Buffer)

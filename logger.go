@@ -152,15 +152,19 @@ func (l *logger) Error(err error) {
 	}
 }
 
-func (l *logger) Print(v ...interface{}) {
+func (l *logger) Print(v ...interface{}) { l.print(4, v...) }
+
+func (l *logger) Printf(format string, v ...interface{}) { l.printf(4, format, v...) }
+
+func (l *logger) print(depth int, v ...interface{}) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).print(3, v...)
+		l.logs.NewEntry(l.lv).print(depth, v...)
 	}
 }
 
-func (l *logger) Printf(format string, v ...interface{}) {
+func (l *logger) printf(depth int, format string, v ...interface{}) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).printf(3, format, v...)
+		l.logs.NewEntry(l.lv).printf(depth, format, v...)
 	}
 }
 

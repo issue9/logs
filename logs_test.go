@@ -53,18 +53,20 @@ func TestLogsLoggers(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
 	w := NewTextWriter("2006-01-02", buf)
-	l := New(w)
+	l := New(w, Caller, Created)
 	a.NotNil(l)
 	l.Enable(LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
 
 	testLogger := func(a *assert.Assertion, p func(...interface{}), pf func(string, ...interface{}), w *bytes.Buffer) {
 		p("p1")
 		val := w.String()
-		a.Contains(val, "p1")
+		a.Contains(val, "p1").
+			Contains(val, "logs_test.go:61") // 行数是否正确
 
 		pf("p2")
 		val = w.String()
-		a.Contains(val, "p2")
+		a.Contains(val, "p2").
+			Contains(val, "logs_test.go:66") // 行数是否正确
 	}
 
 	testLogger(a, l.Info, l.Infof, buf)
@@ -85,7 +87,7 @@ func TestLogs_StdLogger(t *testing.T) {
 
 	info := l.StdLogger(LevelInfo)
 	info.Print("abc")
-	a.Contains(buf.String(), "logs_test.go:87")
+	a.Contains(buf.String(), "logs_test.go:89") // 行数是否正确
 
 	// Enable 未设置 LevelWarn
 	buf.Reset()

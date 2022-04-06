@@ -77,39 +77,51 @@ func (logs *Logs) IsEnable(l Level) bool { return logs.loggers[l].enable }
 
 func (logs *Logs) INFO() Logger { return logs.level(LevelInfo) }
 
-func (logs *Logs) Info(v ...interface{}) { logs.INFO().Print(v...) }
+func (logs *Logs) Info(v ...interface{}) { logs.level(LevelInfo).print(4, v...) }
 
-func (logs *Logs) Infof(format string, v ...interface{}) { logs.INFO().Printf(format, v...) }
+func (logs *Logs) Infof(format string, v ...interface{}) {
+	logs.level(LevelInfo).printf(4, format, v...)
+}
 
 func (logs *Logs) DEBUG() Logger { return logs.level(LevelDebug) }
 
-func (logs *Logs) Debug(v ...interface{}) { logs.DEBUG().Print(v...) }
+func (logs *Logs) Debug(v ...interface{}) { logs.level(LevelDebug).print(4, v...) }
 
-func (logs *Logs) Debugf(format string, v ...interface{}) { logs.DEBUG().Printf(format, v...) }
+func (logs *Logs) Debugf(format string, v ...interface{}) {
+	logs.level(LevelDebug).printf(4, format, v...)
+}
 
 func (logs *Logs) TRACE() Logger { return logs.level(LevelTrace) }
 
-func (logs *Logs) Trace(v ...interface{}) { logs.TRACE().Print(v...) }
+func (logs *Logs) Trace(v ...interface{}) { logs.level(LevelTrace).print(4, v...) }
 
-func (logs *Logs) Tracef(format string, v ...interface{}) { logs.TRACE().Printf(format, v...) }
+func (logs *Logs) Tracef(format string, v ...interface{}) {
+	logs.level(LevelTrace).printf(4, format, v...)
+}
 
 func (logs *Logs) WARN() Logger { return logs.level(LevelWarn) }
 
-func (logs *Logs) Warn(v ...interface{}) { logs.WARN().Print(v...) }
+func (logs *Logs) Warn(v ...interface{}) { logs.level(LevelWarn).print(4, v...) }
 
-func (logs *Logs) Warnf(format string, v ...interface{}) { logs.WARN().Printf(format, v...) }
+func (logs *Logs) Warnf(format string, v ...interface{}) {
+	logs.level(LevelWarn).printf(4, format, v...)
+}
 
 func (logs *Logs) ERROR() Logger { return logs.level(LevelError) }
 
-func (logs *Logs) Error(v ...interface{}) { logs.ERROR().Print(v...) }
+func (logs *Logs) Error(v ...interface{}) { logs.level(LevelError).print(4, v...) }
 
-func (logs *Logs) Errorf(format string, v ...interface{}) { logs.ERROR().Printf(format, v...) }
+func (logs *Logs) Errorf(format string, v ...interface{}) {
+	logs.level(LevelError).printf(4, format, v...)
+}
 
 func (logs *Logs) FATAL() Logger { return logs.level(LevelFatal) }
 
-func (logs *Logs) Fatal(v ...interface{}) { logs.FATAL().Print(v...) }
+func (logs *Logs) Fatal(v ...interface{}) { logs.level(LevelFatal).print(4, v...) }
 
-func (logs *Logs) Fatalf(format string, v ...interface{}) { logs.FATAL().Printf(format, v...) }
+func (logs *Logs) Fatalf(format string, v ...interface{}) {
+	logs.level(LevelFatal).printf(4, format, v...)
+}
 
 func (logs *Logs) level(lv Level) *logger {
 	if logs.w == nop {

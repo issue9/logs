@@ -75,7 +75,7 @@ func (logs *Logs) Enable(level ...Level) {
 
 func (logs *Logs) IsEnable(l Level) bool { return logs.loggers[l].enable }
 
-func (logs *Logs) INFO() Logger { return logs.level(LevelInfo) }
+func (logs *Logs) INFO() Logger { return logs.Logger(LevelInfo) }
 
 func (logs *Logs) Info(v ...interface{}) { logs.level(LevelInfo).print(4, v...) }
 
@@ -83,7 +83,7 @@ func (logs *Logs) Infof(format string, v ...interface{}) {
 	logs.level(LevelInfo).printf(4, format, v...)
 }
 
-func (logs *Logs) DEBUG() Logger { return logs.level(LevelDebug) }
+func (logs *Logs) DEBUG() Logger { return logs.Logger(LevelDebug) }
 
 func (logs *Logs) Debug(v ...interface{}) { logs.level(LevelDebug).print(4, v...) }
 
@@ -91,7 +91,7 @@ func (logs *Logs) Debugf(format string, v ...interface{}) {
 	logs.level(LevelDebug).printf(4, format, v...)
 }
 
-func (logs *Logs) TRACE() Logger { return logs.level(LevelTrace) }
+func (logs *Logs) TRACE() Logger { return logs.Logger(LevelTrace) }
 
 func (logs *Logs) Trace(v ...interface{}) { logs.level(LevelTrace).print(4, v...) }
 
@@ -99,7 +99,7 @@ func (logs *Logs) Tracef(format string, v ...interface{}) {
 	logs.level(LevelTrace).printf(4, format, v...)
 }
 
-func (logs *Logs) WARN() Logger { return logs.level(LevelWarn) }
+func (logs *Logs) WARN() Logger { return logs.Logger(LevelWarn) }
 
 func (logs *Logs) Warn(v ...interface{}) { logs.level(LevelWarn).print(4, v...) }
 
@@ -107,7 +107,7 @@ func (logs *Logs) Warnf(format string, v ...interface{}) {
 	logs.level(LevelWarn).printf(4, format, v...)
 }
 
-func (logs *Logs) ERROR() Logger { return logs.level(LevelError) }
+func (logs *Logs) ERROR() Logger { return logs.Logger(LevelError) }
 
 func (logs *Logs) Error(v ...interface{}) { logs.level(LevelError).print(4, v...) }
 
@@ -115,13 +115,16 @@ func (logs *Logs) Errorf(format string, v ...interface{}) {
 	logs.level(LevelError).printf(4, format, v...)
 }
 
-func (logs *Logs) FATAL() Logger { return logs.level(LevelFatal) }
+func (logs *Logs) FATAL() Logger { return logs.Logger(LevelFatal) }
 
 func (logs *Logs) Fatal(v ...interface{}) { logs.level(LevelFatal).print(4, v...) }
 
 func (logs *Logs) Fatalf(format string, v ...interface{}) {
 	logs.level(LevelFatal).printf(4, format, v...)
 }
+
+// Logger 返回指定级别的日志接口
+func (logs *Logs) Logger(lv Level) Logger { return logs.level(lv) }
 
 func (logs *Logs) level(lv Level) *logger {
 	if logs.w == nop {

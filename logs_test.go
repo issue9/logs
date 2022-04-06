@@ -10,45 +10,6 @@ import (
 	"github.com/issue9/assert/v2"
 )
 
-func TestLogs_IsEnable(t *testing.T) {
-	a := assert.New(t, false)
-
-	l := New(nil)
-	a.NotNil(l)
-	l.Enable(LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
-	a.True(l.IsEnable(LevelInfo)).
-		True(l.IsEnable(LevelFatal)).
-		True(l.IsEnable(LevelWarn))
-
-	l.Enable(LevelWarn, LevelError)
-	a.False(l.IsEnable(LevelInfo)).
-		False(l.IsEnable(LevelFatal)).
-		True(l.IsEnable(LevelWarn)).
-		True(l.IsEnable(LevelError))
-
-	// WARN 属于 enable，但是没有 logs.w 为 Nop
-	ll, ok := l.WARN().(*logger)
-	a.True(ok).False(ll.enable)
-
-	buf := new(bytes.Buffer)
-	l = New(NewTextWriter("2006", buf))
-	a.NotNil(l)
-	l.Enable(LevelWarn, LevelError)
-
-	ll, ok = l.WARN().(*logger)
-	a.True(ok).True(ll.enable)
-
-	ll, ok = l.FATAL().(*logger)
-	a.True(ok).False(ll.enable)
-
-	// enable=false，Value emptyLoggerInst
-	buf.Reset()
-	inst := l.FATAL().Value("k1", "v1")
-	a.Equal(inst, emptyLoggerInst)
-	inst.Value("k2", "v2").Error(errors.New("err"))
-	a.Zero(buf.Len())
-}
-
 func TestLogsLoggers(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
@@ -61,12 +22,12 @@ func TestLogsLoggers(t *testing.T) {
 		p("p1")
 		val := w.String()
 		a.Contains(val, "p1").
-			Contains(val, "logs_test.go:61") // 行数是否正确
+			Contains(val, "logs_test.go:22") // 行数是否正确
 
 		pf("p2")
 		val = w.String()
 		a.Contains(val, "p2").
-			Contains(val, "logs_test.go:66") // 行数是否正确
+			Contains(val, "logs_test.go:27") // 行数是否正确
 	}
 
 	testLogger(a, l.Info, l.Infof, buf)
@@ -87,11 +48,59 @@ func TestLogs_StdLogger(t *testing.T) {
 
 	info := l.StdLogger(LevelInfo)
 	info.Print("abc")
-	a.Contains(buf.String(), "logs_test.go:89") // 行数是否正确
+	a.Contains(buf.String(), "logs_test.go:50") // 行数是否正确
 
 	// Enable 未设置 LevelWarn
 	buf.Reset()
 	warn := l.StdLogger(LevelWarn)
 	warn.Print("abc")
 	a.Equal(buf.Len(), 0)
+}
+
+func TestLogs_IsEnable(t *testing.T) {
+	a := assert.New(t, false)
+
+	l := New(nil)
+	a.NotNil(l)
+	l.Enable(LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
+	a.True(l.IsEnable(LevelInfo)).
+		True(l.IsEnable(LevelFatal)).
+		True(l.IsEnable(LevelWarn))
+
+	l.Enable(LevelWarn, LevelError)
+	a.False(l.IsEnable(LevelInfo)).
+		False(l.IsEnable(LevelFatal)).
+		True(l.IsEnable(LevelWarn)).
+		True(l.IsEnable(LevelError))
+
+	// WARN 属于 enable，但是 logs.w 为 nop
+	ll, ok := l.WARN().(*logger)
+	a.True(ok).False(ll.enable)
+
+	buf := new(bytes.Buffer)
+	l = New(NewTextWriter("2006", buf))
+	a.NotNil(l)
+	l.Enable(LevelWarn, LevelError)
+
+	ll, ok = l.WARN().(*logger)
+	a.True(ok).True(ll.enable)
+
+	ll, ok = l.FATAL().(*logger)
+	a.True(ok).False(ll.enable)
+
+	// enable=false，Value emptyLoggerInst
+	buf.Reset()
+	inst := l.FATAL()
+	a.Equal(inst.Value("k1", "v1"), emptyLoggerInst)
+	inst.Value("k2", "v2").Error(errors.New("err"))
+	a.Zero(buf.Len())
+
+	// 运行过程中调整了 Level 的值
+	l.Enable(LevelFatal)
+	inst = l.FATAL()
+	a.NotEqual(inst.Value("k1", "v1"), emptyLoggerInst) // k1=v1 并未保存
+	inst.Value("k2", "v2").Error(errors.New("err"))
+	a.NotContains(buf.String(), "k1=v1").
+		Contains(buf.String(), "k2=v2").
+		Contains(buf.String(), "err")
 }

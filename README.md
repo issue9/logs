@@ -2,6 +2,7 @@ logs
 [![Go](https://github.com/issue9/logs/workflows/Go/badge.svg)](https://github.com/issue9/logs/actions?query=workflow%3AGo)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/logs/v4)](https://pkg.go.dev/github.com/issue9/logs/v4)
 ![Go version](https://img.shields.io/github/go-mod/go-version/issue9/logs)
+[![codecov](https://codecov.io/gh/issue9/logs/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/logs)
 ======
 
 全新的 v4 版本，对所有功能进行了重构，与之前的几个版本完全不同。

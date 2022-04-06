@@ -68,14 +68,19 @@ func TestLogger_Error(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextWriter("2006-01-02", buf))
-
 	a.NotNil(l)
-	l.Enable(LevelError)
+
+	// Entry.Error
 	l.ERROR().Value("k1", "v1").
-		Error(errors.New("abc"))
+		Error(errors.New("err"))
 	val := buf.String()
-	a.Contains(val, "abc").
+	a.Contains(val, "err").
 		Contains(val, "k1=v1")
+
+	// logger.Error
+	buf.Reset()
+	l.DEBUG().Error(errors.New("info"))
+	a.Contains(buf.String(), "info")
 }
 
 func TestLogger_Printf(t *testing.T) {

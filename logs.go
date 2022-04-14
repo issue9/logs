@@ -151,7 +151,7 @@ func (logs *Logs) Output(e *Entry) {
 //
 // NOTE: 不要设置 log.Logger 的 Prefix 和 flag，这些配置项 logs 本身有提供。
 // log.Logger 应该仅作为输出 Entry.Message 内容使用。
-func (logs *Logs) StdLogger(l Level) *log.Logger { return log.New(logs.level(l), "", 0) }
+func (logs *Logs) StdLogger(l Level) *log.Logger { return logs.level(l).stdLogger() }
 
 // HasCaller 是否包含定位信息
 func (logs *Logs) HasCaller() bool { return logs.caller }

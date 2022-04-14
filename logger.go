@@ -4,6 +4,7 @@ package logs
 
 import (
 	"fmt"
+	"log"
 	"runtime"
 	"sync"
 	"time"
@@ -54,6 +55,7 @@ type (
 		lv     Level
 		logs   *Logs
 		enable bool
+		std    *log.Logger
 	}
 
 	emptyLogger struct{}
@@ -137,6 +139,13 @@ func (l *logger) Write(data []byte) (int, error) {
 		l.logs.Output(ee)
 	}
 	return len(data), nil
+}
+
+func (l *logger) stdLogger() *log.Logger {
+	if l.std == nil {
+		l.std = log.New(l, "", 0)
+	}
+	return l.std
 }
 
 func (l *logger) Value(name string, val interface{}) Logger {

@@ -15,7 +15,7 @@ func BenchmarkTextWriter(b *testing.B) {
 	a := assert.New(b, false)
 
 	buf := new(bytes.Buffer)
-	w := NewTextWriter("2006-01-02", buf)
+	w := NewTextWriter(MilliLayout, buf)
 	l := New(w, Caller, Created)
 	e := newEntry(a, l, LevelWarn)
 
@@ -41,7 +41,7 @@ func BenchmarkTermWriter(b *testing.B) {
 	a := assert.New(b, false)
 
 	buf := new(bytes.Buffer)
-	w := NewTermWriter("2006-01-02", colors.Red, buf)
+	w := NewTermWriter(MilliLayout, colors.Red, buf)
 	l := New(w, Caller, Created)
 	e := newEntry(a, l, LevelWarn)
 
@@ -53,7 +53,7 @@ func BenchmarkTermWriter(b *testing.B) {
 func BenchmarkEntry_Printf(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter("2006-01-02", buf), Created, Caller)
+	l := New(NewTextWriter(MilliLayout, buf), Created, Caller)
 	a.NotNil(l)
 	l.Enable(LevelError)
 
@@ -66,7 +66,7 @@ func BenchmarkEntry_Printf(b *testing.B) {
 func BenchmarkLogger_Printf_withoutCallerAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter("2006-01-02", buf))
+	l := New(NewTextWriter(MicroLayout, buf))
 	a.NotNil(l)
 	l.Enable(LevelError)
 
@@ -79,7 +79,7 @@ func BenchmarkLogger_Printf_withoutCallerAndCreated(b *testing.B) {
 func BenchmarkLogger_Error_withoutCallerAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter("2006-01-02", buf))
+	l := New(NewTextWriter(MicroLayout, buf))
 	a.NotNil(l)
 	l.Enable(LevelError)
 
@@ -92,7 +92,7 @@ func BenchmarkLogger_Error_withoutCallerAndCreated(b *testing.B) {
 func BenchmarkLogs_disableLogger(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	w := NewTextWriter("2006-01-02", buf)
+	w := NewTextWriter(MicroLayout, buf)
 	l := New(w)
 	a.NotNil(l)
 	l.Enable(LevelInfo)
@@ -118,12 +118,23 @@ func BenchmarkLogs_nop(b *testing.B) {
 func BenchmarkLogs_StdLogger(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter("2006-01-02", buf))
+	l := New(NewTextWriter(MicroLayout, buf))
 	a.NotNil(l)
 	l.Enable(LevelError)
 
-	err := l.StdLogger(LevelError)
 	for i := 0; i < b.N; i++ {
-		err.Printf("std log")
+		l.StdLogger(LevelError).Printf("std log")
+	}
+}
+
+func BenchmarkLogs_StdLogger_withDisable(b *testing.B) {
+	a := assert.New(b, false)
+	buf := new(bytes.Buffer)
+	l := New(NewTextWriter(MicroLayout, buf))
+	a.NotNil(l)
+	l.Enable(LevelInfo)
+
+	for i := 0; i < b.N; i++ {
+		l.StdLogger(LevelError).Printf("std log")
 	}
 }

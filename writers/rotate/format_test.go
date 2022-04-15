@@ -31,6 +31,9 @@ func TestCutString(t *testing.T) {
 	a.NotError(err).
 		Equal(p, "test-200602").
 		Equal(s, "06y01-15")
+
+	p, s, err = cutString("test-200602/06y01-15")
+	a.ErrorString(err, "不能包含")
 }
 
 func TestGetIndex(t *testing.T) {

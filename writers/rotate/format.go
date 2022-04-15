@@ -17,6 +17,10 @@ var ErrIndexNotExists = errors.New("必须存在 %i")
 
 // TODO(go1.18): 可以采用 strings.Cut 代替
 func cutString(format string) (prefix, suffix string, err error) {
+	if strings.ContainsAny(format, "/\\") {
+		return "", "", errors.New("不能包含路径分隔符 / 或 \\")
+	}
+
 	if index := strings.Index(format, indexPlaceholder); index >= 0 {
 		return format[:index], format[index+len(indexPlaceholder):], nil
 	}

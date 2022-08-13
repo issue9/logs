@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/issue9/assert/v2"
+	"github.com/issue9/assert/v3"
 )
 
 var _ io.WriteCloser = &Rotate{}

@@ -17,7 +17,7 @@ func TestRotate(t *testing.T) {
 	a := assert.New(t, false)
 
 	a.NotError(os.RemoveAll("./testdata"))
-	w, err := New("%m-%d-%i", "./testdata", 100)
+	w, err := New("01-02-%i", "./testdata", 100)
 	a.NotError(err).NotNil(w)
 	a.Equal(w.size, 100)
 

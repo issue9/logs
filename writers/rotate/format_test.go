@@ -33,7 +33,7 @@ func TestCutString(t *testing.T) {
 		Equal(s, "06y01-15")
 
 	p, s, err = cutString("test-200602/06y01-15")
-	a.ErrorString(err, "不能包含")
+	a.ErrorString(err, "不能包含").Empty(p).Empty(s)
 }
 
 func TestGetIndex(t *testing.T) {

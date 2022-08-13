@@ -13,10 +13,10 @@ import (
 
 // Rotate 可按大小进行分割的文件
 //
-//  import "log"
-//  // 每个文件以 100M 大小进行分割，以日期名作为文件名保存在 /var/log 下。
-//  f,_ := NewRotate("debug-%y%m%i", "/var/log", 100*1024*1024)
-//  l := log.New(f, "DEBUG", log.LstdFlags)
+//	import "log"
+//	// 每个文件以 100M 大小进行分割，以日期名作为文件名保存在 /var/log 下。
+//	f,_ := NewRotate("debug-200601%i", "/var/log", 100*1024*1024)
+//	l := log.New(f, "DEBUG", log.LstdFlags)
 type Rotate struct {
 	dir    string // 文件的保存目录
 	size   int64  // 每个文件的最大尺寸
@@ -30,9 +30,13 @@ type Rotate struct {
 // New 新建 Rotate
 //
 // format 文件名格式，除了标准库支持的时间格式之外，还可以有以下占位符：
-//  %i 表示同一时间段内的产生多个文件时的计数器。
+//
+//	%i 表示同一时间段内的产生多个文件时的计数器。
+//
 // 比如：
-//  2006-01-02-15-04-%i-01-02.log
+//
+//	2006-01-02-15-04-%i-01-02.log
+//
 // 表示
 // dir 为文件保存的目录，若不存在会尝试创建。
 // size 为每个文件的最大尺寸，单位为 byte。

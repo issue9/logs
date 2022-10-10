@@ -34,21 +34,21 @@ type (
 	Entry struct {
 		logs *Logs
 
-		Level   Level     `json:"level"`
-		Created time.Time `json:"created,omitempty"` // 日志的生成时间
-		Message string    `json:"message"`
+		Level   Level
+		Created time.Time // 日志的生成时间
+		Message string
 
 		// 以下表示日志的定位信息
-		Path string `json:"path,omitempty"`
-		Line int    `json:"line,omitempty"`
+		Path string
+		Line int
 
 		// 额外的数据保存在此，比如由 Logger.With 添加的数据。
-		Params []Pair `json:"params,omitempty"`
+		Params []Pair
 	}
 
 	Pair struct {
-		K string      `json:"k"`
-		V interface{} `json:"v"`
+		K string
+		V interface{}
 	}
 
 	logger struct {

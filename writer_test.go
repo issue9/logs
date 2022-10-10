@@ -64,18 +64,18 @@ func TestJSONFormat(t *testing.T) {
 	e.Created = now
 
 	a.PanicString(func() {
-		NewJSONWriter(false)
+		NewJSONWriter(MicroLayout)
 	}, "参数 w 不能为空")
 
 	buf := new(bytes.Buffer)
-	NewJSONWriter(true, buf).WriteEntry(e)
+	NewJSONWriter(MicroLayout, buf).WriteEntry(e)
 	a.True(json.Valid(buf.Bytes())).
 		Contains(buf.String(), LevelWarn.String()).
 		Contains(buf.String(), "k1")
 
 	b1 := new(bytes.Buffer)
 	b2 := new(bytes.Buffer)
-	NewJSONWriter(true, b1, b2).WriteEntry(e)
+	NewJSONWriter(MicroLayout, b1, b2).WriteEntry(e)
 	a.True(json.Valid(b1.Bytes())).
 		Contains(b1.String(), LevelWarn.String()).
 		Contains(b1.String(), "k1")
@@ -108,7 +108,7 @@ func TestDispatchWriter(t *testing.T) {
 
 	w := NewDispatchWriter(map[Level]Writer{
 		LevelInfo: NewTextWriter(NanoLayout, txtBuf),
-		LevelWarn: NewJSONWriter(true, jsonBuf),
+		LevelWarn: NewJSONWriter(MicroLayout, jsonBuf),
 	})
 	l := New(w)
 

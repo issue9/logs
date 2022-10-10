@@ -22,9 +22,9 @@ const (
 var nop = &nopWriter{}
 
 type (
-	// Writer 将 Entry 转换成文本并输出的功能
+	// Writer 将 [Entry] 转换成文本并输出的功能
 	Writer interface {
-		// WriteEntry 将 Entry 写入日志通道
+		// WriteEntry 将 [Entry] 写入日志通道
 		//
 		// NOTE: 此方法应该保证以换行符结尾。
 		WriteEntry(*Entry)
@@ -32,11 +32,12 @@ type (
 
 	textWriter struct {
 		timeLayout string
-		b          io.Writer
+		w          io.Writer
 	}
 
 	jsonWriter struct {
-		enc *json.Encoder
+		timeLayout string
+		w          io.Writer
 	}
 
 	termWriter struct {
@@ -66,7 +67,7 @@ func NewTextWriter(timeLayout string, w ...io.Writer) Writer {
 	default:
 		ww = ws(w)
 	}
-	return &textWriter{timeLayout: timeLayout, b: ww}
+	return &textWriter{timeLayout: timeLayout, w: ww}
 }
 
 func (w *textWriter) WriteEntry(e *Entry) {
@@ -92,15 +93,14 @@ func (w *textWriter) WriteEntry(e *Entry) {
 
 	b.WByte('\n')
 
-	if _, err := w.b.Write([]byte(b.String())); err != nil {
+	// 一次性写入，性能更好一些。
+	if _, err := w.w.Write([]byte(b.String())); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
 }
 
 // NewJSONWriter 声明 JSON 格式的输出
-//
-// format 是否格式化 json，如果为 true，会以 \t 作为缩进；
-func NewJSONWriter(format bool, w ...io.Writer) Writer {
+func NewJSONWriter(timeLayout string, w ...io.Writer) Writer {
 	var ww io.Writer
 	switch len(w) {
 	case 0:
@@ -111,16 +111,47 @@ func NewJSONWriter(format bool, w ...io.Writer) Writer {
 		ww = ws(w)
 	}
 
-	enc := json.NewEncoder(ww)
-	if format {
-		enc.SetIndent("", "\t")
-	}
-	return &jsonWriter{enc: enc}
+	return &jsonWriter{timeLayout: timeLayout, w: ww}
 }
 
 func (w *jsonWriter) WriteEntry(e *Entry) {
-	if err := w.enc.Encode(e); err != nil {
-		fmt.Fprintln(os.Stderr, err) // 编码错误
+	b := errwrap.StringBuilder{}
+	b.WByte('{')
+
+	b.WString(`"level":"`).WString(e.Level.String()).WString(`",`).
+		WString(`"message":"`).WString(e.Message).WByte('"')
+
+	if e.Logs().HasCreated() {
+		b.WString(`,"created":"`).WString(e.Created.Format(w.timeLayout)).WByte('"')
+	}
+
+	if e.Logs().HasCaller() {
+		b.WString(`,"path":"`).WString(e.Path).WString(`",`).
+			WString(`"line":`).WString(strconv.Itoa(e.Line))
+	}
+
+	if len(e.Params) > 0 {
+		b.WString(`,"params":[`)
+
+		for i, p := range e.Params {
+			val, err := json.Marshal(p.V)
+			if err != nil { // 理论上不应该触发此错误，所以直接 panic
+				panic(err)
+			}
+
+			if i > 0 {
+				b.WByte(',')
+			}
+			b.WString(`{"`).WString(p.K).WString(`":`).WBytes(val).WByte('}')
+		}
+
+		b.WByte(']')
+	}
+
+	b.WByte('}')
+
+	if _, err := w.w.Write([]byte(b.String())); err != nil {
+		fmt.Fprintln(os.Stderr, err)
 	}
 }
 

@@ -28,7 +28,7 @@ func BenchmarkJSONWriter(b *testing.B) {
 	a := assert.New(b, false)
 
 	buf := new(bytes.Buffer)
-	w := NewJSONWriter(true, buf)
+	w := NewJSONWriter(MicroLayout, buf)
 	l := New(w, Caller, Created)
 	e := newEntry(a, l, LevelWarn)
 
@@ -63,7 +63,7 @@ func BenchmarkEntry_Printf(b *testing.B) {
 	}
 }
 
-func BenchmarkLogger_Printf_withoutCallerAndCreated(b *testing.B) {
+func BenchmarkEntry_Printf_withoutCallerAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextWriter(MicroLayout, buf))
@@ -76,7 +76,7 @@ func BenchmarkLogger_Printf_withoutCallerAndCreated(b *testing.B) {
 	}
 }
 
-func BenchmarkLogger_Error_withoutCallerAndCreated(b *testing.B) {
+func BenchmarkEntry_Error_withoutCallerAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextWriter(MicroLayout, buf))

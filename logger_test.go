@@ -42,7 +42,7 @@ func TestLogger_location(t *testing.T) {
 	l.Enable(LevelError)
 
 	// Entry.Location
-	l.ERROR().Value("k1", "v1").
+	l.ERROR().With("k1", "v1").
 		Printf("Entry.Printf") // 位置记录此行
 	val := buf.String()
 	a.Contains(val, "logger_test.go:46").
@@ -71,7 +71,7 @@ func TestLogger_Error(t *testing.T) {
 	a.NotNil(l)
 
 	// Entry.Error
-	l.ERROR().Value("k1", "v1").
+	l.ERROR().With("k1", "v1").
 		Error(errors.New("err"))
 	val := buf.String()
 	a.Contains(val, "err").

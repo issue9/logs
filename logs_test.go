@@ -88,18 +88,18 @@ func TestLogs_IsEnable(t *testing.T) {
 	ll, ok = l.FATAL().(*logger)
 	a.True(ok).False(ll.enable)
 
-	// enable=false，Value emptyLoggerInst
+	// enable=false，emptyLoggerInst.With
 	buf.Reset()
 	inst := l.FATAL()
-	a.Equal(inst.Value("k1", "v1"), emptyLoggerInst)
-	inst.Value("k2", "v2").Error(errors.New("err"))
+	a.Equal(inst.With("k1", "v1").With("k2", "v2"), emptyLoggerInst)
+	inst.With("k2", "v2").Error(errors.New("err"))
 	a.Zero(buf.Len())
 
 	// 运行过程中调整了 Level 的值
 	l.Enable(LevelFatal)
 	inst = l.FATAL()
-	a.NotEqual(inst.Value("k1", "v1"), emptyLoggerInst) // k1=v1 并未保存
-	inst.Value("k2", "v2").Error(errors.New("err"))
+	a.NotEqual(inst.With("k1", "v1"), emptyLoggerInst) // k1=v1 并未保存
+	inst.With("k2", "v2").Error(errors.New("err"))
 	a.NotContains(buf.String(), "k1=v1").
 		Contains(buf.String(), "k2=v2").
 		Contains(buf.String(), "err")

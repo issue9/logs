@@ -18,8 +18,8 @@ var entryPool = &sync.Pool{New: func() interface{} { return &Entry{} }}
 
 type (
 	Logger interface {
-		// Value 为日志提供额外的参数
-		Value(name string, val interface{}) Logger
+		// With 为日志提供额外的参数
+		With(name string, val interface{}) Logger
 
 		// Error 输出 error 接口数据
 		//
@@ -42,7 +42,7 @@ type (
 		Path string `json:"path,omitempty"`
 		Line int    `json:"line,omitempty"`
 
-		// 额外的数据保存在此，比如由 Logger.Value 添加的数据。
+		// 额外的数据保存在此，比如由 Logger.With 添加的数据。
 		Params []Pair `json:"params,omitempty"`
 	}
 
@@ -97,7 +97,7 @@ func (e *Entry) Location(depth int) *Entry {
 	return e
 }
 
-func (e *Entry) Value(name string, val interface{}) Logger {
+func (e *Entry) With(name string, val interface{}) Logger {
 	e.Params = append(e.Params, Pair{K: name, V: val})
 	return e
 }
@@ -148,9 +148,9 @@ func (l *logger) stdLogger() *log.Logger {
 	return l.std
 }
 
-func (l *logger) Value(name string, val interface{}) Logger {
+func (l *logger) With(name string, val interface{}) Logger {
 	if l.enable {
-		return l.logs.NewEntry(l.lv).Value(name, val)
+		return l.logs.NewEntry(l.lv).With(name, val)
 	}
 	return emptyLoggerInst
 }
@@ -177,7 +177,7 @@ func (l *logger) printf(depth int, format string, v ...interface{}) {
 	}
 }
 
-func (l *emptyLogger) Value(_ string, _ interface{}) Logger { return l }
+func (l *emptyLogger) With(_ string, _ interface{}) Logger { return l }
 
 func (l *emptyLogger) Error(_ error) {}
 

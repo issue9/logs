@@ -59,7 +59,7 @@ func BenchmarkEntry_Printf(b *testing.B) {
 
 	err := l.ERROR()
 	for i := 0; i < b.N; i++ {
-		err.Value("k1", "v1").Printf("p1")
+		err.With("k1", "v1").Printf("p1")
 	}
 }
 
@@ -72,7 +72,7 @@ func BenchmarkLogger_Printf_withoutCallerAndCreated(b *testing.B) {
 
 	err := l.ERROR()
 	for i := 0; i < b.N; i++ {
-		err.Value("k1", "v1").Printf("p1")
+		err.With("k1", "v1").Printf("p1")
 	}
 }
 
@@ -85,7 +85,7 @@ func BenchmarkLogger_Error_withoutCallerAndCreated(b *testing.B) {
 
 	err := l.ERROR()
 	for i := 0; i < b.N; i++ {
-		err.Value("k1", "v1").Error(errors.New("err"))
+		err.With("k1", "v1").Error(errors.New("err"))
 	}
 }
 
@@ -99,7 +99,7 @@ func BenchmarkLogs_disableLogger(b *testing.B) {
 
 	err := l.ERROR()
 	for i := 0; i < b.N; i++ {
-		err.Value("k1", "v1").Printf("p1")
+		err.With("k1", "v1").Printf("p1")
 	}
 }
 
@@ -111,7 +111,7 @@ func BenchmarkLogs_nop(b *testing.B) {
 
 	err := l.ERROR()
 	for i := 0; i < b.N; i++ {
-		err.Value("k1", "v1").Printf("p1")
+		err.With("k1", "v1").Printf("p1")
 	}
 }
 

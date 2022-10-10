@@ -29,10 +29,10 @@ func TestParseLevel(t *testing.T) {
 	a.NotError(err).Equal(lv, LevelError)
 
 	lv, err = ParseLevel("not-exists")
-	a.ErrorString(err, "无效的值")
+	a.ErrorString(err, "无效的值").Equal(lv, -1)
 
 	lv, err = ParseLevel(levelStrings[levelDisable])
-	a.ErrorString(err, "无效的值")
+	a.ErrorString(err, "无效的值").Equal(lv, -1)
 }
 
 func TestLevel_UnmarshalText(t *testing.T) {

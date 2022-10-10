@@ -1,9 +1,11 @@
-github.com/issue9/assert/v3 v3.0.0 h1:/emHhxUb1QP9UmZLy69RhkMyvlyhyqnu+toDlSyWhZg=
 github.com/issue9/assert/v3 v3.0.0/go.mod h1:yft/uaskRpwQTyBT3n1zRl91SR1wNlO4fLZHzOa4bdM=
+github.com/issue9/assert/v3 v3.0.4 h1:WsYZQ6PQmM/pGFrbkn5GIXjWeVZHv+wcl2829UTX1Qc=
+github.com/issue9/assert/v3 v3.0.4/go.mod h1:yft/uaskRpwQTyBT3n1zRl91SR1wNlO4fLZHzOa4bdM=
 github.com/issue9/errwrap v0.3.1 h1:8g4lYJaGnoiXyZ1oZyH/7zPDGgw5RNiE9Q6ri9kE6Z8=
 github.com/issue9/errwrap v0.3.1/go.mod h1:HLR0e5iimd2aJXM9YrThOsRj3/6lMtk77lVp7zyvJ4E=
 github.com/issue9/sliceutil v0.11.0/go.mod h1:o6Th8chH+PTCVfqHksJvWZnmZhDa5bnufgQbtO1x7zI=
-github.com/issue9/term/v3 v3.0.1 h1:hHI443oqpuYrM+57pmvtc4Om6/+A5GN5UqjVbyOVXm4=
-github.com/issue9/term/v3 v3.0.1/go.mod h1:MlRXsODuHriTqguWAIZBCEogX2H2w9eZrz/NVzCXZO8=
-golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8 h1:OH54vjqzRWmbJ62fjuhxy7AxFFgoHN0/DPc/UrL8cAs=
+github.com/issue9/term/v3 v3.0.2 h1:sTY2woSBbRZvDMv4SruTCc3K53zFMsMCqg7ZWS+3PV0=
+github.com/issue9/term/v3 v3.0.2/go.mod h1:J9U2JdQ1q0XpJNYTx6BwF9h5ucHWb8MWgNrhGc4zHbQ=
 golang.org/x/sys v0.0.0-20220319134239-a9b59b0215f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 h1:h+EGohizhe9XlX18rfpa8k8RAc5XyaeamM+0VHRd4lc=
+golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

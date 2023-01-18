@@ -149,8 +149,8 @@ func (logs *Logs) Output(e *Entry) {
 
 // StdLogger 转换成标准库的 Logger
 //
-// NOTE: 不要设置 log.Logger 的 Prefix 和 flag，这些配置项 logs 本身有提供。
-// log.Logger 应该仅作为输出 Entry.Message 内容使用。
+// NOTE: 不要设置 [log.Logger] 的 Prefix 和 flag，这些配置项 logs 本身有提供。
+// [log.Logger] 应该仅作为输出 Entry.Message 内容使用。
 func (logs *Logs) StdLogger(l Level) *log.Logger { return logs.level(l).stdLogger() }
 
 // HasCaller 是否包含定位信息

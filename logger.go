@@ -3,7 +3,6 @@
 package logs
 
 import (
-	"fmt"
 	"log"
 	"runtime"
 	"sync"
@@ -89,7 +88,7 @@ func (e *Entry) Logs() *Logs { return e.logs }
 //
 // depth 表示调用，1 表示调用 Location 的位置；
 //
-// 如果 Logs.HasCaller 为 false，那么此调用将不产生任何内容。
+// 如果 [Logs.HasCaller] 为 false，那么此调用将不产生任何内容。
 func (e *Entry) Location(depth int) *Entry {
 	if e.Logs().HasCaller() {
 		_, e.Path, e.Line, _ = runtime.Caller(depth)
@@ -106,7 +105,7 @@ func (e *Entry) Error(err error) { e.err(3, err) }
 
 func (e *Entry) err(depth int, err error) {
 	if err != nil {
-		e.Message = err.Error()
+		e.Message = e.logs.printer.Error(err)
 	}
 	e.Location(depth)
 	e.logs.Output(e)
@@ -116,7 +115,7 @@ func (e *Entry) Print(v ...interface{}) { e.print(3, v...) }
 
 func (e *Entry) print(depth int, v ...interface{}) {
 	if len(v) > 0 {
-		e.Message = fmt.Sprint(v...)
+		e.Message = e.logs.printer.Print(v...)
 	}
 	e.Location(depth)
 	e.logs.Output(e)
@@ -125,7 +124,7 @@ func (e *Entry) print(depth int, v ...interface{}) {
 func (e *Entry) Printf(format string, v ...interface{}) { e.printf(3, format, v...) }
 
 func (e *Entry) printf(depth int, format string, v ...interface{}) {
-	e.Message = fmt.Sprintf(format, v...)
+	e.Message = e.logs.printer.Printf(format, v...)
 	e.Location(depth)
 	e.logs.Output(e)
 }

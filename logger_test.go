@@ -83,6 +83,25 @@ func TestLogger_Error(t *testing.T) {
 	a.Contains(buf.String(), "info")
 }
 
+func TestLogger_String(t *testing.T) {
+	a := assert.New(t, false)
+	buf := new(bytes.Buffer)
+	l := New(NewTextWriter(MicroLayout, buf))
+	a.NotNil(l)
+
+	// Entry.String
+	l.ERROR().With("k1", "v1").
+		String("string")
+	val := buf.String()
+	a.Contains(val, "string").
+		Contains(val, "k1=v1")
+
+	// logger.String
+	buf.Reset()
+	l.DEBUG().String("info")
+	a.Contains(buf.String(), "info")
+}
+
 func TestLogger_Printf(t *testing.T) {
 	a := assert.New(t, false)
 

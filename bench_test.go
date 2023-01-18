@@ -90,6 +90,12 @@ func BenchmarkLogger_withoutCallerAndCreated(b *testing.B) {
 			err.With("k1", "v1").Error(e)
 		}
 	})
+
+	b.Run("string", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			err.With("k1", "v1").String("err")
+		}
+	})
 }
 
 func BenchmarkLogs_disableLogger(b *testing.B) {

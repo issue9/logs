@@ -10,13 +10,16 @@ type Option func(*Logs)
 //
 // 每个函数分别对 [Logger] 相应的输入方法，对其提供的内容进行格式化。
 type Printer interface {
-	// Error 格式由 [Logger.Error] 提供的内容
+	// Error 对 [Logger.Error] 提供的内容进行二次处理
 	Error(error) string
 
-	// Printf 格式化由 [Logger.Printf] 提供的内容
+	// String 对 [Logger.String] 提供的内容进行二次处理
+	String(string) string
+
+	// Printf 对 [Logger.Printf] 提供的内容进行二次处理
 	Printf(string, ...interface{}) string
 
-	// Print 格式化由 [Logger.Print] 提供的内容
+	// Print 对 [Logger.Print] 提供的内容进行二次处理
 	Print(...interface{}) string
 }
 
@@ -39,12 +42,14 @@ func (logs *Logs) HasCaller() bool { return logs.caller }
 // HasCreated 是否包含时间信息
 func (logs *Logs) HasCreated() bool { return logs.created }
 
-func (f *defaultPrinter) Error(err error) string { return err.Error() }
+func (p *defaultPrinter) Error(err error) string { return err.Error() }
 
-func (f *defaultPrinter) Print(v ...interface{}) string {
+func (p *defaultPrinter) String(s string) string { return s }
+
+func (p *defaultPrinter) Print(v ...interface{}) string {
 	return fmt.Sprint(v...)
 }
 
-func (f *defaultPrinter) Printf(format string, v ...interface{}) string {
+func (p *defaultPrinter) Printf(format string, v ...interface{}) string {
 	return fmt.Sprintf(format, v...)
 }

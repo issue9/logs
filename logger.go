@@ -21,12 +21,19 @@ type (
 		// With 为日志提供额外的参数
 		With(name string, val interface{}) Logger
 
-		// Error 输出 error 接口数据
+		// Error 将一条错误信息作为一条日志输出
 		//
-		// 这是 Print 的特化版本，在输出 error 时性能上会比直接用 Print(err) 好。
+		// 这是 Print 的特化版本，在已知类型为 error 时，
+		// 采用此方法会比 Print(err) 有更好的性能。
 		Error(err error)
 
-		// 输出任意的信息到日志
+		// String 将字符串作为一条日志输出
+		//
+		// 这是 Print 的特化版本，在已知类型为字符串时，
+		// 采用此方法会比 Print(s) 有更好的性能。
+		String(s string)
+
+		// 输出一条日志信息
 		Print(v ...interface{})
 		Printf(format string, v ...interface{})
 	}
@@ -113,6 +120,14 @@ func (e *Entry) err(depth int, err error) {
 	e.logs.Output(e)
 }
 
+func (e *Entry) String(s string) { e.str(3, s) }
+
+func (e *Entry) str(depth int, s string) {
+	e.Message = e.logs.printer.String(s)
+	e.Location(depth)
+	e.logs.Output(e)
+}
+
 func (e *Entry) Print(v ...interface{}) { e.print(3, v...) }
 
 func (e *Entry) print(depth int, v ...interface{}) {
@@ -162,6 +177,12 @@ func (l *logger) Error(err error) {
 	}
 }
 
+func (l *logger) String(s string) {
+	if l.enable {
+		l.logs.NewEntry(l.lv).str(4, s)
+	}
+}
+
 func (l *logger) Print(v ...interface{}) { l.print(4, v...) }
 
 func (l *logger) Printf(format string, v ...interface{}) { l.printf(4, format, v...) }
@@ -181,6 +202,8 @@ func (l *logger) printf(depth int, format string, v ...interface{}) {
 func (l *emptyLogger) With(_ string, _ interface{}) Logger { return l }
 
 func (l *emptyLogger) Error(_ error) {}
+
+func (l *emptyLogger) String(_ string) {}
 
 func (l *emptyLogger) Print(_ ...interface{}) {}
 

@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: MIT
 
 // Package logs 日志系统
+//
+// # 格式
+//
+// 提供了 [Writer] 接口用于处理输出的日志格式，用户可以自己实现，
+// 系统也提供了几种常用的供用户选择。
+//
+// 同时还提供了 [Printer] 接口用于处理 [Logger.Print] 方法输入的数据。
+// [Printer] 一般用于对用户输入的数据进行二次处理，比如进行本地化翻译等。
 package logs
 
 import (

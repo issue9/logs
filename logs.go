@@ -15,15 +15,9 @@ type Logs struct {
 
 	// 是否需要生成调用位置信息和日志生成时间
 	caller, created bool
+
+	printer Printer
 }
-
-type Option func(*Logs)
-
-// Caller 是否显示记录的定位信息
-func Caller(l *Logs) { l.caller = true }
-
-// Created 是否显示记录的创建时间
-func Created(l *Logs) { l.created = true }
 
 // New 声明 Logs 对象
 //
@@ -46,6 +40,11 @@ func New(w Writer, o ...Option) *Logs {
 	for _, opt := range o {
 		opt(l)
 	}
+
+	if l.printer == nil {
+		DefaultPrint(l)
+	}
+
 	return l
 }
 
@@ -152,9 +151,3 @@ func (logs *Logs) Output(e *Entry) {
 // NOTE: 不要设置 [log.Logger] 的 Prefix 和 flag，这些配置项 logs 本身有提供。
 // [log.Logger] 应该仅作为输出 Entry.Message 内容使用。
 func (logs *Logs) StdLogger(l Level) *log.Logger { return logs.level(l).stdLogger() }
-
-// HasCaller 是否包含定位信息
-func (logs *Logs) HasCaller() bool { return logs.caller }
-
-// HasCreated 是否包含时间信息
-func (logs *Logs) HasCreated() bool { return logs.created }

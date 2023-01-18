@@ -63,7 +63,7 @@ func BenchmarkEntry_Printf(b *testing.B) {
 	}
 }
 
-func BenchmarkEntry_Printf_withoutCallerAndCreated(b *testing.B) {
+func BenchmarkLogger_withoutCallerAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextWriter(MicroLayout, buf))
@@ -71,22 +71,25 @@ func BenchmarkEntry_Printf_withoutCallerAndCreated(b *testing.B) {
 	l.Enable(LevelError)
 
 	err := l.ERROR()
-	for i := 0; i < b.N; i++ {
-		err.With("k1", "v1").Printf("p1")
-	}
-}
+	e := errors.New("err")
 
-func BenchmarkEntry_Error_withoutCallerAndCreated(b *testing.B) {
-	a := assert.New(b, false)
-	buf := new(bytes.Buffer)
-	l := New(NewTextWriter(MicroLayout, buf))
-	a.NotNil(l)
-	l.Enable(LevelError)
+	b.Run("print", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			err.With("k1", "v1").Print(e)
+		}
+	})
 
-	err := l.ERROR()
-	for i := 0; i < b.N; i++ {
-		err.With("k1", "v1").Error(errors.New("err"))
-	}
+	b.Run("printf", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			err.With("k1", "v1").Printf("%v", e)
+		}
+	})
+
+	b.Run("error", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			err.With("k1", "v1").Error(e)
+		}
+	})
 }
 
 func BenchmarkLogs_disableLogger(b *testing.B) {

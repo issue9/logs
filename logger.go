@@ -16,6 +16,7 @@ var emptyLoggerInst = &emptyLogger{}
 var entryPool = &sync.Pool{New: func() interface{} { return &Entry{} }}
 
 type (
+	// Logger 日志输出接口
 	Logger interface {
 		// With 为日志提供额外的参数
 		With(name string, val interface{}) Logger
@@ -25,6 +26,7 @@ type (
 		// 这是 Print 的特化版本，在输出 error 时性能上会比直接用 Print(err) 好。
 		Error(err error)
 
+		// 输出任意的信息到日志
 		Print(v ...interface{})
 		Printf(format string, v ...interface{})
 	}

@@ -21,7 +21,7 @@ type Logs struct {
 
 // New 声明 Logs 对象
 //
-// w 如果为 nil，则表示采用 NewNopWriter。
+// w 如果为 nil，则表示采用 [NewNopWriter]。
 func New(w Writer, o ...Option) *Logs {
 	if w == nil {
 		w = NewNopWriter()
@@ -132,7 +132,7 @@ func (logs *Logs) level(lv Level) *logger {
 	return logs.loggers[lv]
 }
 
-// Output 输出 Entry 对象
+// Output 输出 [Entry] 对象
 //
 // 相对于其它方法，该方法比较自由，可以由 e 决定最终输出到哪儿，内容也由用户定义。
 func (logs *Logs) Output(e *Entry) {
@@ -149,5 +149,5 @@ func (logs *Logs) Output(e *Entry) {
 // StdLogger 转换成标准库的 Logger
 //
 // NOTE: 不要设置 [log.Logger] 的 Prefix 和 flag，这些配置项 logs 本身有提供。
-// [log.Logger] 应该仅作为输出 Entry.Message 内容使用。
+// [log.Logger] 应该仅作为输出 [Entry.Message] 内容使用。
 func (logs *Logs) StdLogger(l Level) *log.Logger { return logs.level(l).stdLogger() }

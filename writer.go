@@ -157,9 +157,11 @@ func (w *jsonWriter) WriteEntry(e *Entry) {
 
 // NewTermWriter 带颜色的终端输出通道
 //
-// timeLayout 表示输出的时间格式，遵守 time.Format 的参数要求，如果为空，则不输出时间信息；
+// timeLayout 表示输出的时间格式，遵守 time.Format 的参数要求，
+// 如果为空，则不输出时间信息；
 // fore 表示终端信息的字符颜色，背景始终是默认色；
-// w 表示终端的接口，可以是 os.Stderr 或是 os.Stdout，如果是其它的实现者则会带控制字符一起输出；
+// w 表示终端的接口，可以是 [os.Stderr] 或是 [os.Stdout]，
+// 如果是其它的实现者则会带控制字符一起输出；
 func NewTermWriter(timeLayout string, fore colors.Color, w io.Writer) Writer {
 	return &termWriter{
 		timeLayout: timeLayout,

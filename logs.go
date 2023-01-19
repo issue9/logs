@@ -2,11 +2,20 @@
 
 // Package logs 日志系统
 //
+// # 格式
+//
 // 提供了 [Writer] 接口用于处理输出的日志格式，用户可以自己实现，
 // 系统也提供了几种常用的供用户选择。
 //
-// 同时还提供了 [Printer] 接口用于处理 [Logger.Print] 方法输入的数据。
+// 同时还提供了 [Printer] 接口用于处理 [Logger.Print] 等方法输入的数据。
 // [Printer] 一般用于对用户输入的数据进行二次处理，比如进行本地化翻译等。
+//
+// # Logger
+//
+// [Logger] 为实际的日志输出接口，提供多种 [Logger] 接口的实现。
+//
+// - [Logs.ERROR] 等为普通的日志对象；
+// - [Logs.With] 返回的是带固定参数的日志对象；
 package logs
 
 import (

@@ -83,6 +83,40 @@ func TestLogger_Error(t *testing.T) {
 	a.Contains(buf.String(), "info")
 }
 
+func TestLogger_With(t *testing.T) {
+	a := assert.New(t, false)
+	buf := new(bytes.Buffer)
+	l := New(NewTextWriter(MicroLayout, buf), Caller)
+	a.NotNil(l)
+
+	err := l.With(LevelError, map[string]interface{}{"k1": "v1"})
+	err.Printf("err1")
+	a.Contains(buf.String(), "err1").
+		Contains(buf.String(), "k1=v1").
+		Contains(buf.String(), "logger_test.go:93")
+
+	buf.Reset()
+	err.With("k2", "v2").Printf("err2")
+	a.Contains(buf.String(), "err2").
+		Contains(buf.String(), "k1=v1").
+		Contains(buf.String(), "k2=v2").
+		NotContains(buf.String(), "err1")
+
+	buf.Reset()
+	err.With("k3", "v3").Print("err3")
+	a.Contains(buf.String(), "err3").
+		Contains(buf.String(), "k1=v1").
+		Contains(buf.String(), "k3=v3").
+		NotContains(buf.String(), "err1").
+		NotContains(buf.String(), "k2=v2").
+		NotContains(buf.String(), "err2")
+
+	buf.Reset()
+	err.Error(errors.New("err1"))
+	a.Contains(buf.String(), "err1").
+		Contains(buf.String(), "k1=v1")
+}
+
 func TestLogger_String(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)

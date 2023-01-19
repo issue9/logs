@@ -19,6 +19,8 @@ type (
 	// Logger 日志输出接口
 	Logger interface {
 		// With 为日志提供额外的参数
+		//
+		// 返回值是当前对象，并不能通过 With 构建一个新的 Logger 实例。
 		With(name string, val interface{}) Logger
 
 		// Error 将一条错误信息作为一条日志输出
@@ -38,7 +40,7 @@ type (
 		Printf(format string, v ...interface{})
 	}
 
-	// Entry 每一条日志产生的数据
+	// Entry 每一条日志的表示对象
 	Entry struct {
 		logs *Logs
 
@@ -67,6 +69,11 @@ type (
 	}
 
 	emptyLogger struct{}
+
+	withLogger struct {
+		l     *logger
+		pairs []Pair
+	}
 )
 
 func (logs *Logs) NewEntry(lv Level) *Entry {
@@ -208,3 +215,44 @@ func (l *emptyLogger) String(_ string) {}
 func (l *emptyLogger) Print(_ ...interface{}) {}
 
 func (l *emptyLogger) Printf(_ string, _ ...interface{}) {}
+
+// With 创建带有指定参数的日志对象
+//
+// params 自动添加的参数，每条日志都将自动带上这些参数；
+func (logs *Logs) With(lv Level, params map[string]interface{}) Logger {
+	pairs := make([]Pair, 0, len(params))
+	for k, v := range params {
+		pairs = append(pairs, Pair{K: k, V: v})
+	}
+
+	return &withLogger{
+		l:     logs.level(lv),
+		pairs: pairs,
+	}
+}
+
+func (l *withLogger) with() *Entry {
+	if !l.l.enable {
+		return nil
+	}
+
+	e := l.l.logs.NewEntry(l.l.lv)
+	for _, pair := range l.pairs {
+		e.With(pair.K, pair.V)
+	}
+	return e
+}
+
+func (l *withLogger) With(k string, v interface{}) Logger {
+	return l.with().With(k, v)
+}
+
+func (l *withLogger) Error(err error) { l.with().err(3, err) }
+
+func (l *withLogger) String(s string) { l.with().str(3, s) }
+
+func (l *withLogger) Print(v ...interface{}) { l.with().print(3, v...) }
+
+func (l *withLogger) Printf(format string, v ...interface{}) {
+	l.with().printf(3, format, v...)
+}

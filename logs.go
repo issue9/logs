@@ -2,8 +2,6 @@
 
 // Package logs 日志系统
 //
-// # 格式
-//
 // 提供了 [Writer] 接口用于处理输出的日志格式，用户可以自己实现，
 // 系统也提供了几种常用的供用户选择。
 //
@@ -48,15 +46,12 @@ func New(w Writer, o ...Option) *Logs {
 	for _, opt := range o {
 		opt(l)
 	}
-
 	if l.printer == nil {
 		DefaultPrint(l)
 	}
 
 	return l
 }
-
-func (logs *Logs) SetOutput(w Writer) { logs.w = w }
 
 // Enable 允许的日志通道
 //
@@ -139,6 +134,8 @@ func (logs *Logs) level(lv Level) *logger {
 	}
 	return logs.loggers[lv]
 }
+
+func (logs *Logs) SetOutput(w Writer) { logs.w = w }
 
 // Output 输出 [Entry] 对象
 //

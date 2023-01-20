@@ -53,3 +53,19 @@ func (logs *Logs) HasCaller() bool { return logs.caller }
 
 // HasCreated 是否包含时间信息
 func (logs *Logs) HasCreated() bool { return logs.created }
+
+// SetCaller 是否显示位置信息
+func (logs *Logs) SetCaller(v bool) { logs.caller = v }
+
+// SetCreated 是否显示时间信息
+func (logs *Logs) SetCreated(v bool) { logs.created = v }
+
+// SetPrinter 设置 [Printer] 对象
+//
+// 如果 p 为 nil，表示采用默认值。
+func (logs *Logs) SetPrinter(p Printer) {
+	if p == nil {
+		p = &defaultPrinter{}
+	}
+	logs.printer = p
+}

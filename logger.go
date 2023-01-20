@@ -98,7 +98,7 @@ func (logs *Logs) NewEntry(lv Level) *Entry {
 
 func (e *Entry) Logs() *Logs { return e.logs }
 
-// Location 记录位置信息到 Entry
+// Location 记录位置信息
 //
 // 会同时写入 e.Path 和 e.Line 两个值。
 //

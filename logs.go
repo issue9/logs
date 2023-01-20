@@ -28,10 +28,10 @@ type Logs struct {
 	w       Writer
 	loggers map[Level]*logger
 
-	// 是否需要生成调用位置信息和日志生成时间
-	caller, created bool
+	// option
 
-	printer Printer
+	caller, created bool // 是否需要生成调用位置信息和日志生成时间
+	printer         Printer
 }
 
 // New 声明 Logs 对象
@@ -162,6 +162,6 @@ func (logs *Logs) Output(e *Entry) {
 
 // StdLogger 转换成标准库的 Logger
 //
-// NOTE: 不要设置 [log.Logger] 的 Prefix 和 flag，这些配置项 logs 本身有提供。
-// [log.Logger] 应该仅作为输出 [Entry.Message] 内容使用。
+// NOTE: 不要设置返回对象的 Prefix 和 Flag，这些配置项与 Logs 的功能有重叠。
+// [log.Logger] 应该仅作为向 [Logger] 输入 [Entry.Message] 内容使用。
 func (logs *Logs) StdLogger(l Level) *log.Logger { return logs.level(l).stdLogger() }

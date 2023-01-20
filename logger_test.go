@@ -14,12 +14,12 @@ import (
 )
 
 var (
-	_ Logger    = &logger{}
 	_ io.Writer = &logger{}
 
+	_ Logger = &logger{}
 	_ Logger = &emptyLogger{}
-
 	_ Logger = &Entry{}
+	_ Logger = &withLogger{}
 )
 
 func TestEntry_Location(t *testing.T) {
@@ -62,6 +62,13 @@ func TestLogger_location(t *testing.T) {
 	val = buf.String()
 	a.Contains(val, "logger_test.go:61").
 		Contains(val, "logger.Print")
+
+	buf.Reset()
+	l.SetCaller(false)
+	l.ERROR().Printf("caller=false")
+	val = buf.String()
+	a.NotContains(val, "logger_test.go").
+		Contains(val, "caller=false")
 }
 
 func TestLogger_Error(t *testing.T) {
@@ -93,7 +100,7 @@ func TestLogger_With(t *testing.T) {
 	err.Printf("err1")
 	a.Contains(buf.String(), "err1").
 		Contains(buf.String(), "k1=v1").
-		Contains(buf.String(), "logger_test.go:93")
+		Contains(buf.String(), "logger_test.go:100")
 
 	buf.Reset()
 	err.With("k2", "v2").Printf("err2")

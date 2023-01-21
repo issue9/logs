@@ -140,6 +140,8 @@ func (e *Entry) printf(depth int, format string, v ...interface{}) {
 	e.logs.Output(e)
 }
 
+func (e *Entry) Output() { e.logs.output(e) }
+
 func (l *emptyInput) With(_ string, _ interface{}) Input { return l }
 
 func (l *emptyInput) Error(_ error) {}

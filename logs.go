@@ -149,7 +149,11 @@ func (logs *Logs) SetOutput(w Writer) { logs.w = w }
 // Output 输出 [Entry] 对象
 //
 // 相对于其它方法，该方法比较自由，可以由 e 决定最终输出到哪儿，内容也由用户定义。
-func (logs *Logs) Output(e *Entry) {
+//
+// Deprecated: 请使用 [Entry.Output] 代替
+func (logs *Logs) Output(e *Entry) { logs.output(e) }
+
+func (logs *Logs) output(e *Entry) {
 	logs.mu.Lock()
 	defer logs.mu.Unlock()
 

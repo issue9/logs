@@ -38,25 +38,6 @@ func TestLogsLoggers(t *testing.T) {
 	testLogger(a, l.Fatal, l.Fatalf, buf)
 }
 
-func TestLogs_StdLogger(t *testing.T) {
-	a := assert.New(t, false)
-	buf := new(bytes.Buffer)
-	w := NewTextWriter(MicroLayout, buf)
-	l := New(w, Created, Caller)
-	a.NotNil(l)
-	l.Enable(LevelInfo, LevelError)
-
-	info := l.StdLogger(LevelInfo)
-	info.Print("abc")
-	a.Contains(buf.String(), "logs_test.go:50") // 行数是否正确
-
-	// Enable 未设置 LevelWarn
-	buf.Reset()
-	warn := l.StdLogger(LevelWarn)
-	warn.Print("abc")
-	a.Equal(buf.Len(), 0)
-}
-
 func TestLogs_IsEnable(t *testing.T) {
 	a := assert.New(t, false)
 
@@ -91,14 +72,14 @@ func TestLogs_IsEnable(t *testing.T) {
 	// enable=false，emptyLoggerInst.With
 	buf.Reset()
 	inst := l.FATAL()
-	a.Equal(inst.With("k1", "v1").With("k2", "v2"), emptyLoggerInst)
+	a.Equal(inst.With("k1", "v1").With("k2", "v2"), emptyInputInst)
 	inst.With("k2", "v2").Error(errors.New("err"))
 	a.Zero(buf.Len())
 
 	// 运行过程中调整了 Level 的值
 	l.Enable(LevelFatal)
 	inst = l.FATAL()
-	a.NotEqual(inst.With("k1", "v1"), emptyLoggerInst) // k1=v1 并未保存
+	a.NotEqual(inst.With("k1", "v1"), emptyInputInst) // k1=v1 并未保存
 	inst.With("k2", "v2").Error(errors.New("err"))
 	a.NotContains(buf.String(), "k1=v1").
 		Contains(buf.String(), "k2=v2").

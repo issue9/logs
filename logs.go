@@ -164,4 +164,6 @@ func (logs *Logs) Output(e *Entry) {
 //
 // NOTE: 不要设置返回对象的 Prefix 和 Flag，这些配置项与 Logs 的功能有重叠。
 // [log.Logger] 应该仅作为向 [Logger] 输入 [Entry.Message] 内容使用。
-func (logs *Logs) StdLogger(l Level) *log.Logger { return logs.level(l).stdLogger() }
+//
+// Deprecated: 请使用 [Logger.StdLogger] 代替
+func (logs *Logs) StdLogger(l Level) *log.Logger { return logs.level(l).StdLogger() }

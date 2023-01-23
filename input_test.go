@@ -14,7 +14,7 @@ var (
 	_ Input = &Entry{}
 )
 
-func TestEntry_Location(t *testing.T) {
+func TestEntry_location(t *testing.T) {
 	a := assert.New(t, false)
 	l := New(nil, Caller, Created)
 

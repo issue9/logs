@@ -88,50 +88,50 @@ func (logs *Logs) IsEnable(l Level) bool { return logs.loggers[l].enable }
 
 func (logs *Logs) INFO() Logger { return logs.Logger(LevelInfo) }
 
-func (logs *Logs) Info(v ...interface{}) { logs.level(LevelInfo).print(4, v...) }
+func (logs *Logs) Info(v ...interface{}) { logs.level(LevelInfo).print(3, v...) }
 
 func (logs *Logs) Infof(format string, v ...interface{}) {
-	logs.level(LevelInfo).printf(4, format, v...)
+	logs.level(LevelInfo).printf(3, format, v...)
 }
 
 func (logs *Logs) DEBUG() Logger { return logs.Logger(LevelDebug) }
 
-func (logs *Logs) Debug(v ...interface{}) { logs.level(LevelDebug).print(4, v...) }
+func (logs *Logs) Debug(v ...interface{}) { logs.level(LevelDebug).print(3, v...) }
 
 func (logs *Logs) Debugf(format string, v ...interface{}) {
-	logs.level(LevelDebug).printf(4, format, v...)
+	logs.level(LevelDebug).printf(3, format, v...)
 }
 
 func (logs *Logs) TRACE() Logger { return logs.Logger(LevelTrace) }
 
-func (logs *Logs) Trace(v ...interface{}) { logs.level(LevelTrace).print(4, v...) }
+func (logs *Logs) Trace(v ...interface{}) { logs.level(LevelTrace).print(3, v...) }
 
 func (logs *Logs) Tracef(format string, v ...interface{}) {
-	logs.level(LevelTrace).printf(4, format, v...)
+	logs.level(LevelTrace).printf(3, format, v...)
 }
 
 func (logs *Logs) WARN() Logger { return logs.Logger(LevelWarn) }
 
-func (logs *Logs) Warn(v ...interface{}) { logs.level(LevelWarn).print(4, v...) }
+func (logs *Logs) Warn(v ...interface{}) { logs.level(LevelWarn).print(3, v...) }
 
 func (logs *Logs) Warnf(format string, v ...interface{}) {
-	logs.level(LevelWarn).printf(4, format, v...)
+	logs.level(LevelWarn).printf(3, format, v...)
 }
 
 func (logs *Logs) ERROR() Logger { return logs.Logger(LevelError) }
 
-func (logs *Logs) Error(v ...interface{}) { logs.level(LevelError).print(4, v...) }
+func (logs *Logs) Error(v ...interface{}) { logs.level(LevelError).print(3, v...) }
 
 func (logs *Logs) Errorf(format string, v ...interface{}) {
-	logs.level(LevelError).printf(4, format, v...)
+	logs.level(LevelError).printf(3, format, v...)
 }
 
 func (logs *Logs) FATAL() Logger { return logs.Logger(LevelFatal) }
 
-func (logs *Logs) Fatal(v ...interface{}) { logs.level(LevelFatal).print(4, v...) }
+func (logs *Logs) Fatal(v ...interface{}) { logs.level(LevelFatal).print(3, v...) }
 
 func (logs *Logs) Fatalf(format string, v ...interface{}) {
-	logs.level(LevelFatal).printf(4, format, v...)
+	logs.level(LevelFatal).printf(3, format, v...)
 }
 
 // Logger 返回指定级别的日志接口
@@ -150,7 +150,7 @@ func (logs *Logs) SetOutput(w Writer) { logs.w = w }
 //
 // 相对于其它方法，该方法比较自由，可以由 e 决定最终输出到哪儿，内容也由用户定义。
 //
-// Deprecated: 请使用 [Entry.Output] 代替
+// Deprecated: [Entry.DepthError] 等方法自带了 Output 方法
 func (logs *Logs) Output(e *Entry) { logs.output(e) }
 
 func (logs *Logs) output(e *Entry) {

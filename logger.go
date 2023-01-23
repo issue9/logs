@@ -35,7 +35,7 @@ func (l *logger) Write(data []byte) (int, error) {
 	if l.enable {
 		ee := l.logs.NewEntry(l.lv)
 		ee.Message = string(data)
-		ee.Location(4)
+		ee.setLocation(4)
 		l.logs.Output(ee)
 	}
 	return len(data), nil
@@ -57,29 +57,29 @@ func (l *logger) With(name string, val interface{}) Input {
 
 func (l *logger) Error(err error) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).err(3, err)
+		l.logs.NewEntry(l.lv).DepthError(3, err)
 	}
 }
 
 func (l *logger) String(s string) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).str(4, s)
+		l.logs.NewEntry(l.lv).DepthString(2, s)
 	}
 }
 
-func (l *logger) Print(v ...interface{}) { l.print(4, v...) }
+func (l *logger) Print(v ...interface{}) { l.print(3, v...) }
 
-func (l *logger) Printf(format string, v ...interface{}) { l.printf(4, format, v...) }
+func (l *logger) Printf(format string, v ...interface{}) { l.printf(3, format, v...) }
 
 func (l *logger) print(depth int, v ...interface{}) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).print(depth, v...)
+		l.logs.NewEntry(l.lv).DepthPrint(depth, v...)
 	}
 }
 
 func (l *logger) printf(depth int, format string, v ...interface{}) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).printf(depth, format, v...)
+		l.logs.NewEntry(l.lv).DepthPrintf(depth, format, v...)
 	}
 }
 
@@ -121,20 +121,20 @@ func (l *withLogger) With(k string, v interface{}) Input {
 	return l.with().With(k, v)
 }
 
-func (l *withLogger) Error(err error) { l.with().err(3, err) }
+func (l *withLogger) Error(err error) { l.with().DepthError(2, err) }
 
-func (l *withLogger) String(s string) { l.with().str(3, s) }
+func (l *withLogger) String(s string) { l.with().DepthString(2, s) }
 
-func (l *withLogger) Print(v ...interface{}) { l.with().print(3, v...) }
+func (l *withLogger) Print(v ...interface{}) { l.with().DepthPrint(2, v...) }
 
 func (l *withLogger) Printf(format string, v ...interface{}) {
-	l.with().printf(3, format, v...)
+	l.with().DepthPrintf(2, format, v...)
 }
 
 // Write 实现 io.Writer 供 logs.StdLogger 使用
 func (l *withLogger) Write(data []byte) (int, error) {
 	e := l.with()
-	e.Location(4)
+	e.setLocation(4)
 	e.Message = string(data)
 	l.l.logs.Output(e)
 	return len(data), nil

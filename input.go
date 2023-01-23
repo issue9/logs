@@ -45,13 +45,17 @@ type (
 
 		Level   Level
 		Created time.Time // 日志的生成时间
+
+		// 日志的实际内容
+		//
+		// 如果要改变此值，请使用 Depth* 系列的方法。
 		Message string
 
 		// 以下表示日志的定位信息
 		Path string
 		Line int
 
-		// 额外的数据保存在此，比如由 Logger.With 添加的数据。
+		// 额外的数据保存在此，比如由 [Logger.With] 添加的数据。
 		Params []Pair
 	}
 
@@ -92,7 +96,16 @@ func (e *Entry) Logs() *Logs { return e.logs }
 // depth 表示调用，1 表示调用 Location 的位置；
 //
 // 如果 [Logs.HasCaller] 为 false，那么此调用将不产生任何内容。
+//
+// Deprecated: 可以直接使用 [Entry.DepthError] 等方法代替
 func (e *Entry) Location(depth int) *Entry {
+	return e.setLocation(depth + 1)
+}
+
+// depth 表示调用，1 表示调用 Location 的位置；
+//
+// 如果 [Logs.HasCaller] 为 false，那么此调用将不产生任何内容。
+func (e *Entry) setLocation(depth int) *Entry {
 	if e.Logs().HasCaller() {
 		_, e.Path, e.Line, _ = runtime.Caller(depth)
 	}
@@ -104,43 +117,61 @@ func (e *Entry) With(name string, val interface{}) Input {
 	return e
 }
 
-func (e *Entry) Error(err error) { e.err(3, err) }
+func (e *Entry) Error(err error) { e.DepthError(2, err) }
 
-func (e *Entry) err(depth int, err error) {
+// DepthError 输出 error 类型的内容到日志
+//
+// depth 表示调用，1 表示调用此方法的位置；
+//
+// 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
+func (e *Entry) DepthError(depth int, err error) {
 	if err != nil {
 		e.Message = e.logs.printer.Error(err)
 	}
-	e.Location(depth)
+	e.setLocation(depth + 1)
 	e.logs.Output(e)
 }
 
-func (e *Entry) String(s string) { e.str(3, s) }
+func (e *Entry) String(s string) { e.DepthString(2, s) }
 
-func (e *Entry) str(depth int, s string) {
+// DepthString 输出字符串类型的内容到日志
+//
+// depth 表示调用，1 表示调用此方法的位置；
+//
+// 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
+func (e *Entry) DepthString(depth int, s string) {
 	e.Message = e.logs.printer.String(s)
-	e.Location(depth)
+	e.setLocation(depth + 1)
 	e.logs.Output(e)
 }
 
-func (e *Entry) Print(v ...interface{}) { e.print(3, v...) }
+func (e *Entry) Print(v ...interface{}) { e.DepthPrint(2, v...) }
 
-func (e *Entry) print(depth int, v ...interface{}) {
+// DepthPrint 输出任意类型的内容到日志
+//
+// depth 表示调用，1 表示调用此方法的位置；
+//
+// 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
+func (e *Entry) DepthPrint(depth int, v ...interface{}) {
 	if len(v) > 0 {
 		e.Message = e.logs.printer.Print(v...)
 	}
-	e.Location(depth)
+	e.setLocation(depth + 1)
 	e.logs.Output(e)
 }
 
-func (e *Entry) Printf(format string, v ...interface{}) { e.printf(3, format, v...) }
+func (e *Entry) Printf(format string, v ...interface{}) { e.DepthPrintf(2, format, v...) }
 
-func (e *Entry) printf(depth int, format string, v ...interface{}) {
+// DepthPrintf 输出任意类型的内容到日志
+//
+// depth 表示调用，1 表示调用此方法的位置；
+//
+// 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
+func (e *Entry) DepthPrintf(depth int, format string, v ...interface{}) {
 	e.Message = e.logs.printer.Printf(format, v...)
-	e.Location(depth)
+	e.setLocation(depth + 1)
 	e.logs.Output(e)
 }
-
-func (e *Entry) Output() { e.logs.output(e) }
 
 func (l *emptyInput) With(_ string, _ interface{}) Input { return l }
 

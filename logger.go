@@ -30,13 +30,10 @@ type (
 	}
 )
 
-// Write 实现 io.Writer 供 logs.StdLogger 使用
+// 实现 io.Writer 供 [Logger.StdLogger] 使用
 func (l *logger) Write(data []byte) (int, error) {
 	if l.enable {
-		ee := l.logs.NewEntry(l.lv)
-		ee.Message = string(data)
-		ee.setLocation(4)
-		l.logs.Output(ee)
+		l.logs.NewEntry(l.lv).DepthString(4, string(data))
 	}
 	return len(data), nil
 }
@@ -131,11 +128,8 @@ func (l *withLogger) Printf(format string, v ...interface{}) {
 	l.with().DepthPrintf(2, format, v...)
 }
 
-// Write 实现 io.Writer 供 logs.StdLogger 使用
+// 实现 io.Writer 供 [Logger.StdLogger] 使用
 func (l *withLogger) Write(data []byte) (int, error) {
-	e := l.with()
-	e.setLocation(4)
-	e.Message = string(data)
-	l.l.logs.Output(e)
+	l.with().DepthString(4, string(data))
 	return len(data), nil
 }

@@ -22,6 +22,6 @@ func TestEntry_location(t *testing.T) {
 	a.NotNil(e)
 	a.Empty(e.Path).Zero(e.Line)
 
-	e.Location(1)
+	e.setLocation(1)
 	a.True(strings.HasSuffix(e.Path, "input_test.go")).Equal(e.Line, 25)
 }

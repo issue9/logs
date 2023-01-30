@@ -130,9 +130,10 @@ func BenchmarkLogs_StdLogger(b *testing.B) {
 	l := New(NewTextWriter(MicroLayout, buf))
 	a.NotNil(l)
 	l.Enable(LevelError)
+	err := l.ERROR()
 
 	for i := 0; i < b.N; i++ {
-		l.StdLogger(LevelError).Printf("std log")
+		err.StdLogger().Printf("std log")
 	}
 }
 
@@ -142,8 +143,9 @@ func BenchmarkLogs_StdLogger_withDisable(b *testing.B) {
 	l := New(NewTextWriter(MicroLayout, buf))
 	a.NotNil(l)
 	l.Enable(LevelInfo)
+	err := l.ERROR()
 
 	for i := 0; i < b.N; i++ {
-		l.StdLogger(LevelError).Printf("std log")
+		err.StdLogger().Printf("std log")
 	}
 }

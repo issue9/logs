@@ -129,7 +129,7 @@ func (e *Entry) DepthError(depth int, err error) {
 		e.Message = e.logs.printer.Error(err)
 	}
 	e.setLocation(depth + 1)
-	e.logs.Output(e)
+	e.logs.output(e)
 }
 
 func (e *Entry) String(s string) { e.DepthString(2, s) }
@@ -142,7 +142,7 @@ func (e *Entry) String(s string) { e.DepthString(2, s) }
 func (e *Entry) DepthString(depth int, s string) {
 	e.Message = e.logs.printer.String(s)
 	e.setLocation(depth + 1)
-	e.logs.Output(e)
+	e.logs.output(e)
 }
 
 func (e *Entry) Print(v ...interface{}) { e.DepthPrint(2, v...) }
@@ -157,7 +157,7 @@ func (e *Entry) DepthPrint(depth int, v ...interface{}) {
 		e.Message = e.logs.printer.Print(v...)
 	}
 	e.setLocation(depth + 1)
-	e.logs.Output(e)
+	e.logs.output(e)
 }
 
 func (e *Entry) Printf(format string, v ...interface{}) { e.DepthPrintf(2, format, v...) }
@@ -170,7 +170,7 @@ func (e *Entry) Printf(format string, v ...interface{}) { e.DepthPrintf(2, forma
 func (e *Entry) DepthPrintf(depth int, format string, v ...interface{}) {
 	e.Message = e.logs.printer.Printf(format, v...)
 	e.setLocation(depth + 1)
-	e.logs.Output(e)
+	e.logs.output(e)
 }
 
 func (l *emptyInput) With(_ string, _ interface{}) Input { return l }

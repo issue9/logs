@@ -43,14 +43,14 @@ func TestTextWriter(t *testing.T) {
 
 	buf := new(bytes.Buffer)
 	l.SetOutput(NewTextWriter(layout, buf))
-	l.Output(e)
+	l.output(e)
 	a.Equal(buf.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")
 
 	b1 := new(bytes.Buffer)
 	b2 := new(bytes.Buffer)
 	b3 := new(bytes.Buffer)
 	l.SetOutput(NewTextWriter(layout, b1, b2, b3))
-	l.Output(e)
+	l.output(e)
 	a.Equal(b1.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")
 	a.Equal(b2.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")
 	a.Equal(b3.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")

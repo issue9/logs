@@ -138,13 +138,13 @@ func TestLogger_StdLogger(t *testing.T) {
 
 	// logger.StdLogger
 
-	info := l.StdLogger(LevelInfo)
+	info := l.INFO().StdLogger()
 	info.Print("abc")
 	a.Contains(buf.String(), "logger_test.go:142") // 行数是否正确
 
 	// Enable 未设置 LevelWarn
 	buf.Reset()
-	warn := l.StdLogger(LevelWarn)
+	warn := l.WARN().StdLogger()
 	warn.Print("abc")
 	a.Equal(buf.Len(), 0)
 

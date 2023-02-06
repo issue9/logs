@@ -13,7 +13,6 @@
 // # Logger
 //
 // [Logger] 为实际的日志输出接口，提供多种 [Logger] 接口的实现。
-//
 // - [Logs.ERROR] 等为普通的日志对象；
 // - [Logs.With] 返回的是带固定参数的日志对象；
 package logs

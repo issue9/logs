@@ -21,6 +21,9 @@ type Printer interface {
 
 	// Print 对 [Input.Print] 提供的内容进行二次处理
 	Print(...interface{}) string
+
+	// Println 对 [Input.Println] 提供的内容进行二次处理
+	Println(...interface{}) string
 }
 
 type defaultPrinter struct{}
@@ -31,6 +34,10 @@ func (p *defaultPrinter) String(s string) string { return s }
 
 func (p *defaultPrinter) Print(v ...interface{}) string {
 	return fmt.Sprint(v...)
+}
+
+func (p *defaultPrinter) Println(v ...interface{}) string {
+	return fmt.Sprintln(v...)
 }
 
 func (p *defaultPrinter) Printf(format string, v ...interface{}) string {

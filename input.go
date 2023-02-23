@@ -36,6 +36,7 @@ type (
 
 		// 输出一条日志信息
 		Print(v ...interface{})
+		Println(v ...interface{})
 		Printf(format string, v ...interface{})
 	}
 
@@ -173,6 +174,21 @@ func (e *Entry) DepthPrintf(depth int, format string, v ...interface{}) {
 	e.logs.output(e)
 }
 
+func (e *Entry) Println(v ...interface{}) { e.DepthPrintln(2, v...) }
+
+// DepthPrintln 输出任意类型的内容到日志
+//
+// depth 表示调用，1 表示调用此方法的位置；
+//
+// 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
+func (e *Entry) DepthPrintln(depth int, v ...interface{}) {
+	if len(v) > 0 {
+		e.Message = e.logs.printer.Println(v...)
+	}
+	e.setLocation(depth + 1)
+	e.logs.output(e)
+}
+
 func (l *emptyInput) With(_ string, _ interface{}) Input { return l }
 
 func (l *emptyInput) Error(_ error) {}
@@ -182,3 +198,5 @@ func (l *emptyInput) String(_ string) {}
 func (l *emptyInput) Print(_ ...interface{}) {}
 
 func (l *emptyInput) Printf(_ string, _ ...interface{}) {}
+
+func (l *emptyInput) Println(_ ...interface{}) {}

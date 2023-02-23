@@ -66,11 +66,19 @@ func (l *logger) String(s string) {
 
 func (l *logger) Print(v ...interface{}) { l.print(3, v...) }
 
+func (l *logger) Println(v ...interface{}) { l.println(3, v...) }
+
 func (l *logger) Printf(format string, v ...interface{}) { l.printf(3, format, v...) }
 
 func (l *logger) print(depth int, v ...interface{}) {
 	if l.enable {
 		l.logs.NewEntry(l.lv).DepthPrint(depth, v...)
+	}
+}
+
+func (l *logger) println(depth int, v ...interface{}) {
+	if l.enable {
+		l.logs.NewEntry(l.lv).DepthPrintln(depth, v...)
 	}
 }
 
@@ -123,6 +131,8 @@ func (l *withLogger) Error(err error) { l.with().DepthError(2, err) }
 func (l *withLogger) String(s string) { l.with().DepthString(2, s) }
 
 func (l *withLogger) Print(v ...interface{}) { l.with().DepthPrint(2, v...) }
+
+func (l *withLogger) Println(v ...interface{}) { l.with().DepthPrintln(2, v...) }
 
 func (l *withLogger) Printf(format string, v ...interface{}) {
 	l.with().DepthPrintf(2, format, v...)

@@ -30,6 +30,8 @@ type (
 		WriteEntry(*Entry)
 	}
 
+	WriteEntry func(*Entry)
+
 	textWriter struct {
 		timeLayout string
 		w          io.Writer
@@ -46,16 +48,12 @@ type (
 		w          *colors.Colorize
 	}
 
-	dispatchWriter map[Level]Writer
-
 	nopWriter struct{}
-
-	writers struct {
-		ws []Writer
-	}
 
 	ws []io.Writer
 )
+
+func (w WriteEntry) WriteEntry(e *Entry) { w(e) }
 
 func NewTextWriter(timeLayout string, w ...io.Writer) Writer {
 	var ww io.Writer
@@ -194,9 +192,9 @@ func (w *termWriter) WriteEntry(e *Entry) {
 }
 
 // NewDispatchWriter 根据 Level 派发到不同的 Writer 对象
-func NewDispatchWriter(d map[Level]Writer) Writer { return dispatchWriter(d) }
-
-func (w dispatchWriter) WriteEntry(e *Entry) { w[e.Level].WriteEntry(e) }
+func NewDispatchWriter(d map[Level]Writer) Writer {
+	return WriteEntry(func(e *Entry) { d[e.Level].WriteEntry(e) })
+}
 
 // NewNopWriter 空的 Writer 接口实现
 func NewNopWriter() Writer { return nop }
@@ -204,12 +202,12 @@ func NewNopWriter() Writer { return nop }
 func (w *nopWriter) WriteEntry(_ *Entry) {}
 
 // MergeWriter 将多个 Writer 合并成一个 Writer 接口对象
-func MergeWriter(w ...Writer) Writer { return &writers{ws: w} }
-
-func (w *writers) WriteEntry(e *Entry) {
-	for _, ww := range w.ws {
-		ww.WriteEntry(e)
-	}
+func MergeWriter(w ...Writer) Writer {
+	return WriteEntry(func(e *Entry) {
+		for _, ww := range w {
+			ww.WriteEntry(e)
+		}
+	})
 }
 
 func (w ws) Write(data []byte) (n int, err error) {

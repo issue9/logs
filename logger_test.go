@@ -107,6 +107,14 @@ func TestLogger_With(t *testing.T) {
 	err.Error(errors.New("err1"))
 	a.Contains(buf.String(), "err1").
 		Contains(buf.String(), "k1=v1")
+
+	buf.Reset()
+	l.Enable(LevelDebug)
+	err = l.With(LevelError, map[string]interface{}{"k2": "v2"})
+	err.Println("err")
+	a.Equal(err, emptyLLoggerInst).
+		Nil(err.StdLogger()).
+		Empty(buf.String())
 }
 
 func TestLogger_String(t *testing.T) {
@@ -140,7 +148,7 @@ func TestLogger_StdLogger(t *testing.T) {
 
 	info := l.INFO().StdLogger()
 	info.Print("abc")
-	a.Contains(buf.String(), "logger_test.go:142") // 行数是否正确
+	a.Contains(buf.String(), "logger_test.go:150") // 行数是否正确
 
 	// Enable 未设置 LevelWarn
 	buf.Reset()
@@ -153,7 +161,7 @@ func TestLogger_StdLogger(t *testing.T) {
 	buf.Reset()
 	err := l.With(LevelError, map[string]interface{}{"k1": "v1"}).StdLogger()
 	err.Print("abc")
-	a.Contains(buf.String(), "logger_test.go:155"). // 行数是否正确
+	a.Contains(buf.String(), "logger_test.go:163"). // 行数是否正确
 							Contains(buf.String(), "k1=v1")
 }
 

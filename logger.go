@@ -4,6 +4,8 @@ package logs
 
 import "log"
 
+var emptyLLoggerInst = &emptyLogger{}
+
 type (
 	// Logger 日志接口
 	Logger interface {
@@ -28,6 +30,8 @@ type (
 		std   *log.Logger
 		pairs []Pair
 	}
+
+	emptyLogger struct{}
 )
 
 // 实现 io.Writer 供 [Logger.StdLogger] 使用
@@ -49,7 +53,7 @@ func (l *logger) With(name string, val interface{}) Input {
 	if l.enable {
 		return l.logs.NewEntry(l.lv).With(name, val)
 	}
-	return emptyInputInst
+	return emptyLLoggerInst
 }
 
 func (l *logger) Error(err error) {
@@ -92,6 +96,11 @@ func (l *logger) printf(depth int, format string, v ...interface{}) {
 //
 // params 自动添加的参数，每条日志都将自动带上这些参数；
 func (logs *Logs) With(lv Level, params map[string]interface{}) Logger {
+	l := logs.level(lv)
+	if !l.enable {
+		return emptyLLoggerInst
+	}
+
 	pairs := make([]Pair, 0, len(params))
 	for k, v := range params {
 		pairs = append(pairs, Pair{K: k, V: v})
@@ -104,10 +113,6 @@ func (logs *Logs) With(lv Level, params map[string]interface{}) Logger {
 }
 
 func (l *withLogger) with() *Entry {
-	if !l.l.enable {
-		return nil
-	}
-
 	e := l.l.logs.NewEntry(l.l.lv)
 	for _, pair := range l.pairs {
 		e.With(pair.K, pair.V)
@@ -143,3 +148,17 @@ func (l *withLogger) Write(data []byte) (int, error) {
 	l.with().DepthString(4, string(data))
 	return len(data), nil
 }
+
+func (l *emptyLogger) With(_ string, _ interface{}) Input { return l }
+
+func (l *emptyLogger) Error(_ error) {}
+
+func (l *emptyLogger) String(_ string) {}
+
+func (l *emptyLogger) Print(_ ...interface{}) {}
+
+func (l *emptyLogger) Printf(_ string, _ ...interface{}) {}
+
+func (l *emptyLogger) Println(_ ...interface{}) {}
+
+func (l *emptyLogger) StdLogger() *log.Logger { return nil }

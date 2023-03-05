@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	_ Input = &emptyInput{}
+	_ Input = &emptyLogger{}
 	_ Input = &Entry{}
 )
 

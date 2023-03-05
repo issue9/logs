@@ -10,8 +10,6 @@ import (
 
 const poolMaxParams = 100
 
-var emptyInputInst = &emptyInput{}
-
 var entryPool = &sync.Pool{New: func() interface{} { return &Entry{} }}
 
 type (
@@ -64,8 +62,6 @@ type (
 		K string
 		V interface{}
 	}
-
-	emptyInput struct{}
 )
 
 func (logs *Logs) NewEntry(lv Level) *Entry {
@@ -188,15 +184,3 @@ func (e *Entry) DepthPrintln(depth int, v ...interface{}) {
 	e.setLocation(depth + 1)
 	e.logs.output(e)
 }
-
-func (l *emptyInput) With(_ string, _ interface{}) Input { return l }
-
-func (l *emptyInput) Error(_ error) {}
-
-func (l *emptyInput) String(_ string) {}
-
-func (l *emptyInput) Print(_ ...interface{}) {}
-
-func (l *emptyInput) Printf(_ string, _ ...interface{}) {}
-
-func (l *emptyInput) Println(_ ...interface{}) {}

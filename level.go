@@ -30,6 +30,8 @@ var levelStrings = map[Level]string{
 	LevelFatal:   "FATL",
 }
 
+func IsValidLevel(l Level) bool { return l > levelDisable && l <= LevelFatal }
+
 func (l Level) String() string { return levelStrings[l] }
 
 func (l Level) MarshalText() ([]byte, error) { return []byte(l.String()), nil }

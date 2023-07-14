@@ -32,7 +32,7 @@ type (
 		Handle(*Record)
 	}
 
-	Handle func(*Record)
+	HandleFunc func(*Record)
 
 	textHandler struct {
 		timeLayout string
@@ -56,7 +56,7 @@ type (
 	ws []io.Writer
 )
 
-func (w Handle) Handle(e *Record) { w(e) }
+func (w HandleFunc) Handle(e *Record) { w(e) }
 
 func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
 	var ww io.Writer
@@ -210,7 +210,7 @@ func (w *termHandler) Handle(e *Record) {
 
 // NewDispatchHandler 根据 Level 派发到不同的 Writer 对象
 func NewDispatchHandler(d map[Level]Handler) Handler {
-	return Handle(func(e *Record) { d[e.Level].Handle(e) })
+	return HandleFunc(func(e *Record) { d[e.Level].Handle(e) })
 }
 
 // NewNopHandler 空的 Handler 接口实现
@@ -220,7 +220,7 @@ func (w *nopHandler) Handle(_ *Record) {}
 
 // MergeHandler 将多个 Handler 合并成一个 Handler 接口对象
 func MergeHandler(w ...Handler) Handler {
-	return Handle(func(e *Record) {
+	return HandleFunc(func(e *Record) {
 		for _, ww := range w {
 			ww.Handle(e)
 		}

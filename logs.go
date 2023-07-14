@@ -24,15 +24,14 @@ type Logs struct {
 	handler Handler
 	loggers map[Level]*logger
 
-	// option
-
 	caller, created bool // 是否需要生成调用位置信息和日志生成时间
-	printer         Printer
 }
+
+type Option func(*Logs)
 
 // New 声明 Logs 对象
 //
-// w 如果为 nil，则表示采用 [NewNopHandler]。
+// h 如果为 nil，则表示采用 [NewNopHandler]。
 func New(h Handler, o ...Option) *Logs {
 	if h == nil {
 		h = NewNopHandler()
@@ -50,9 +49,6 @@ func New(h Handler, o ...Option) *Logs {
 
 	for _, opt := range o {
 		opt(l)
-	}
-	if l.printer == nil {
-		DefaultPrint(l)
 	}
 
 	return l
@@ -152,3 +148,21 @@ func (logs *Logs) output(e *Record) {
 		recordPool.Put(e)
 	}
 }
+
+// Caller 是否显示记录的定位信息
+func Caller(l *Logs) { l.caller = true }
+
+// Created 是否显示记录的创建时间
+func Created(l *Logs) { l.created = true }
+
+// HasCaller 是否包含定位信息
+func (logs *Logs) HasCaller() bool { return logs.caller }
+
+// HasCreated 是否包含时间信息
+func (logs *Logs) HasCreated() bool { return logs.created }
+
+// SetCaller 是否显示位置信息
+func (logs *Logs) SetCaller(v bool) { logs.caller = v }
+
+// SetCreated 是否显示时间信息
+func (logs *Logs) SetCreated(v bool) { logs.created = v }

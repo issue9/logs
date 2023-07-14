@@ -3,6 +3,7 @@
 package logs
 
 import (
+	"fmt"
 	"log"
 	"runtime"
 	"sync"
@@ -52,8 +53,6 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 	e.Message = ""
 	if logs.HasCreated() {
 		e.Created = time.Now()
-	} else {
-		e.Created = time.Time{}
 	}
 	e.Level = lv
 
@@ -95,7 +94,7 @@ func (e *Record) Error(err error) { e.DepthError(2, err) }
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthError(depth int, err error) {
 	if err != nil {
-		e.Message = e.logs.printer.Error(err)
+		e.Message = err.Error()
 	}
 	e.setLocation(depth + 1)
 	e.logs.output(e)
@@ -109,7 +108,7 @@ func (e *Record) String(s string) { e.DepthString(2, s) }
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthString(depth int, s string) {
-	e.Message = e.logs.printer.String(s)
+	e.Message = s
 	e.setLocation(depth + 1)
 	e.logs.output(e)
 }
@@ -123,7 +122,7 @@ func (e *Record) Print(v ...any) { e.DepthPrint(2, v...) }
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrint(depth int, v ...any) {
 	if len(v) > 0 {
-		e.Message = e.logs.printer.Print(v...)
+		e.Message = fmt.Sprint(v...)
 	}
 	e.setLocation(depth + 1)
 	e.logs.output(e)
@@ -137,7 +136,7 @@ func (e *Record) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintf(depth int, format string, v ...any) {
-	e.Message = e.logs.printer.Printf(format, v...)
+	e.Message = fmt.Sprintf(format, v...)
 	e.setLocation(depth + 1)
 	e.logs.output(e)
 }
@@ -151,7 +150,7 @@ func (e *Record) Println(v ...any) { e.DepthPrintln(2, v...) }
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintln(depth int, v ...any) {
 	if len(v) > 0 {
-		e.Message = e.logs.printer.Println(v...)
+		e.Message = fmt.Sprintln(v...)
 	}
 	e.setLocation(depth + 1)
 	e.logs.output(e)

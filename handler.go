@@ -3,10 +3,11 @@
 package logs
 
 import (
+	"encoding"
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
+	"log"
 	"strconv"
 
 	"github.com/issue9/errwrap"
@@ -86,14 +87,23 @@ func (w *textHandler) Handle(e *Record) {
 	b.WByte(indent).WString(e.Message)
 
 	for _, p := range e.Params {
-		b.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
+		b.WByte(' ').WString(p.K).WByte('=')
+		if m, ok := p.V.(encoding.TextMarshaler); ok {
+			bs, err := m.MarshalText()
+			if err != nil {
+				log.Panicln("TextHandler.Handle:", err)
+			} else {
+				b.WBytes(bs)
+			}
+		}
+		b.Print(p.V)
 	}
 
 	b.WByte('\n')
 
 	// 一次性写入，性能更好一些。
 	if _, err := w.w.Write([]byte(b.String())); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		log.Println("JSONHandler.Handle:", err)
 	}
 }
 
@@ -133,8 +143,8 @@ func (w *jsonHandler) Handle(e *Record) {
 
 		for i, p := range e.Params {
 			val, err := json.Marshal(p.V)
-			if err != nil { // 理论上不应该触发此错误，所以直接 panic
-				panic(err)
+			if err != nil {
+				log.Println("JSONHandler.Handle:", err)
 			}
 
 			if i > 0 {
@@ -149,7 +159,7 @@ func (w *jsonHandler) Handle(e *Record) {
 	b.WByte('}')
 
 	if _, err := w.w.Write([]byte(b.String())); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		log.Println("JSONHandler.Handle:", err)
 	}
 }
 

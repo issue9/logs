@@ -49,7 +49,7 @@ func (l *logger) StdLogger() *log.Logger {
 	return l.std
 }
 
-func (l *logger) With(name string, val interface{}) Input {
+func (l *logger) With(name string, val any) Input {
 	if l.enable {
 		return l.logs.NewEntry(l.lv).With(name, val)
 	}
@@ -68,25 +68,25 @@ func (l *logger) String(s string) {
 	}
 }
 
-func (l *logger) Print(v ...interface{}) { l.print(3, v...) }
+func (l *logger) Print(v ...any) { l.print(3, v...) }
 
-func (l *logger) Println(v ...interface{}) { l.println(3, v...) }
+func (l *logger) Println(v ...any) { l.println(3, v...) }
 
-func (l *logger) Printf(format string, v ...interface{}) { l.printf(3, format, v...) }
+func (l *logger) Printf(format string, v ...any) { l.printf(3, format, v...) }
 
-func (l *logger) print(depth int, v ...interface{}) {
+func (l *logger) print(depth int, v ...any) {
 	if l.enable {
 		l.logs.NewEntry(l.lv).DepthPrint(depth, v...)
 	}
 }
 
-func (l *logger) println(depth int, v ...interface{}) {
+func (l *logger) println(depth int, v ...any) {
 	if l.enable {
 		l.logs.NewEntry(l.lv).DepthPrintln(depth, v...)
 	}
 }
 
-func (l *logger) printf(depth int, format string, v ...interface{}) {
+func (l *logger) printf(depth int, format string, v ...any) {
 	if l.enable {
 		l.logs.NewEntry(l.lv).DepthPrintf(depth, format, v...)
 	}
@@ -95,7 +95,7 @@ func (l *logger) printf(depth int, format string, v ...interface{}) {
 // With 创建带有指定参数的日志对象
 //
 // params 自动添加的参数，每条日志都将自动带上这些参数；
-func (logs *Logs) With(lv Level, params map[string]interface{}) Logger {
+func (logs *Logs) With(lv Level, params map[string]any) Logger {
 	l := logs.level(lv)
 	if !l.enable {
 		return emptyLLoggerInst
@@ -127,7 +127,7 @@ func (l *withLogger) StdLogger() *log.Logger {
 	return l.std
 }
 
-func (l *withLogger) With(k string, v interface{}) Input {
+func (l *withLogger) With(k string, v any) Input {
 	return l.with().With(k, v)
 }
 
@@ -135,11 +135,11 @@ func (l *withLogger) Error(err error) { l.with().DepthError(2, err) }
 
 func (l *withLogger) String(s string) { l.with().DepthString(2, s) }
 
-func (l *withLogger) Print(v ...interface{}) { l.with().DepthPrint(2, v...) }
+func (l *withLogger) Print(v ...any) { l.with().DepthPrint(2, v...) }
 
-func (l *withLogger) Println(v ...interface{}) { l.with().DepthPrintln(2, v...) }
+func (l *withLogger) Println(v ...any) { l.with().DepthPrintln(2, v...) }
 
-func (l *withLogger) Printf(format string, v ...interface{}) {
+func (l *withLogger) Printf(format string, v ...any) {
 	l.with().DepthPrintf(2, format, v...)
 }
 
@@ -149,16 +149,16 @@ func (l *withLogger) Write(data []byte) (int, error) {
 	return len(data), nil
 }
 
-func (l *emptyLogger) With(_ string, _ interface{}) Input { return l }
+func (l *emptyLogger) With(_ string, _ any) Input { return l }
 
 func (l *emptyLogger) Error(_ error) {}
 
 func (l *emptyLogger) String(_ string) {}
 
-func (l *emptyLogger) Print(_ ...interface{}) {}
+func (l *emptyLogger) Print(_ ...any) {}
 
-func (l *emptyLogger) Printf(_ string, _ ...interface{}) {}
+func (l *emptyLogger) Printf(_ string, _ ...any) {}
 
-func (l *emptyLogger) Println(_ ...interface{}) {}
+func (l *emptyLogger) Println(_ ...any) {}
 
 func (l *emptyLogger) StdLogger() *log.Logger { return nil }

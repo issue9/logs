@@ -81,7 +81,7 @@ func TestLogger_With(t *testing.T) {
 	l := New(NewTextWriter(MicroLayout, buf), Caller)
 	a.NotNil(l)
 
-	err := l.With(LevelError, map[string]interface{}{"k1": "v1"})
+	err := l.With(LevelError, map[string]any{"k1": "v1"})
 	err.Printf("err1")
 	a.Contains(buf.String(), "err1").
 		Contains(buf.String(), "k1=v1").
@@ -110,7 +110,7 @@ func TestLogger_With(t *testing.T) {
 
 	buf.Reset()
 	l.Enable(LevelDebug)
-	err = l.With(LevelError, map[string]interface{}{"k2": "v2"})
+	err = l.With(LevelError, map[string]any{"k2": "v2"})
 	err.Println("err")
 	a.Equal(err, emptyLLoggerInst).
 		Nil(err.StdLogger()).
@@ -159,7 +159,7 @@ func TestLogger_StdLogger(t *testing.T) {
 	// withLogger.StdLogger
 
 	buf.Reset()
-	err := l.With(LevelError, map[string]interface{}{"k1": "v1"}).StdLogger()
+	err := l.With(LevelError, map[string]any{"k1": "v1"}).StdLogger()
 	err.Print("abc")
 	a.Contains(buf.String(), "logger_test.go:163"). // 行数是否正确
 							Contains(buf.String(), "k1=v1")

@@ -18,7 +18,7 @@ func TestLogsLoggers(t *testing.T) {
 	a.NotNil(l)
 	l.Enable(LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
 
-	testLogger := func(a *assert.Assertion, p func(...interface{}), pf func(string, ...interface{}), w *bytes.Buffer) {
+	testLogger := func(a *assert.Assertion, p func(...any), pf func(string, ...any), w *bytes.Buffer) {
 		p("p1")
 		val := w.String()
 		a.Contains(val, "p1").

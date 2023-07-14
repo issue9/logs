@@ -17,13 +17,13 @@ type Printer interface {
 	String(string) string
 
 	// Printf 对 [Input.Printf] 提供的内容进行二次处理
-	Printf(string, ...interface{}) string
+	Printf(string, ...any) string
 
 	// Print 对 [Input.Print] 提供的内容进行二次处理
-	Print(...interface{}) string
+	Print(...any) string
 
 	// Println 对 [Input.Println] 提供的内容进行二次处理
-	Println(...interface{}) string
+	Println(...any) string
 }
 
 type defaultPrinter struct{}
@@ -32,15 +32,15 @@ func (p *defaultPrinter) Error(err error) string { return err.Error() }
 
 func (p *defaultPrinter) String(s string) string { return s }
 
-func (p *defaultPrinter) Print(v ...interface{}) string {
+func (p *defaultPrinter) Print(v ...any) string {
 	return fmt.Sprint(v...)
 }
 
-func (p *defaultPrinter) Println(v ...interface{}) string {
+func (p *defaultPrinter) Println(v ...any) string {
 	return fmt.Sprintln(v...)
 }
 
-func (p *defaultPrinter) Printf(format string, v ...interface{}) string {
+func (p *defaultPrinter) Printf(format string, v ...any) string {
 	return fmt.Sprintf(format, v...)
 }
 

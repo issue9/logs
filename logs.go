@@ -7,7 +7,7 @@
 // 提供了 [Writer] 接口用于处理输出的日志格式，用户可以自己实现，
 // 系统也提供了几种常用的供用户选择。
 //
-// 同时还提供了 [Printer] 接口用于处理 [Logger.Print] 等方法输入的数据。
+// 同时还提供了 [Printer] 接口用于处理由 [Logger.Print] 等方法输入的数据。
 // [Printer] 一般用于对用户输入的数据进行二次处理，比如进行本地化翻译等。
 //
 // # Logger
@@ -17,10 +17,7 @@
 //   - [Logs.With] 返回的是带固定参数的日志对象；
 package logs
 
-import (
-	"log"
-	"sync"
-)
+import "sync"
 
 type Logs struct {
 	mu      sync.Mutex
@@ -87,49 +84,49 @@ func (logs *Logs) IsEnable(l Level) bool { return logs.loggers[l].enable }
 
 func (logs *Logs) INFO() Logger { return logs.Logger(LevelInfo) }
 
-func (logs *Logs) Info(v ...interface{}) { logs.level(LevelInfo).print(3, v...) }
+func (logs *Logs) Info(v ...any) { logs.level(LevelInfo).print(3, v...) }
 
-func (logs *Logs) Infof(format string, v ...interface{}) {
+func (logs *Logs) Infof(format string, v ...any) {
 	logs.level(LevelInfo).printf(3, format, v...)
 }
 
 func (logs *Logs) DEBUG() Logger { return logs.Logger(LevelDebug) }
 
-func (logs *Logs) Debug(v ...interface{}) { logs.level(LevelDebug).print(3, v...) }
+func (logs *Logs) Debug(v ...any) { logs.level(LevelDebug).print(3, v...) }
 
-func (logs *Logs) Debugf(format string, v ...interface{}) {
+func (logs *Logs) Debugf(format string, v ...any) {
 	logs.level(LevelDebug).printf(3, format, v...)
 }
 
 func (logs *Logs) TRACE() Logger { return logs.Logger(LevelTrace) }
 
-func (logs *Logs) Trace(v ...interface{}) { logs.level(LevelTrace).print(3, v...) }
+func (logs *Logs) Trace(v ...any) { logs.level(LevelTrace).print(3, v...) }
 
-func (logs *Logs) Tracef(format string, v ...interface{}) {
+func (logs *Logs) Tracef(format string, v ...any) {
 	logs.level(LevelTrace).printf(3, format, v...)
 }
 
 func (logs *Logs) WARN() Logger { return logs.Logger(LevelWarn) }
 
-func (logs *Logs) Warn(v ...interface{}) { logs.level(LevelWarn).print(3, v...) }
+func (logs *Logs) Warn(v ...any) { logs.level(LevelWarn).print(3, v...) }
 
-func (logs *Logs) Warnf(format string, v ...interface{}) {
+func (logs *Logs) Warnf(format string, v ...any) {
 	logs.level(LevelWarn).printf(3, format, v...)
 }
 
 func (logs *Logs) ERROR() Logger { return logs.Logger(LevelError) }
 
-func (logs *Logs) Error(v ...interface{}) { logs.level(LevelError).print(3, v...) }
+func (logs *Logs) Error(v ...any) { logs.level(LevelError).print(3, v...) }
 
-func (logs *Logs) Errorf(format string, v ...interface{}) {
+func (logs *Logs) Errorf(format string, v ...any) {
 	logs.level(LevelError).printf(3, format, v...)
 }
 
 func (logs *Logs) FATAL() Logger { return logs.Logger(LevelFatal) }
 
-func (logs *Logs) Fatal(v ...interface{}) { logs.level(LevelFatal).print(3, v...) }
+func (logs *Logs) Fatal(v ...any) { logs.level(LevelFatal).print(3, v...) }
 
-func (logs *Logs) Fatalf(format string, v ...interface{}) {
+func (logs *Logs) Fatalf(format string, v ...any) {
 	logs.level(LevelFatal).printf(3, format, v...)
 }
 
@@ -145,13 +142,6 @@ func (logs *Logs) level(lv Level) *logger {
 
 func (logs *Logs) SetOutput(w Writer) { logs.w = w }
 
-// Output 输出 [Entry] 对象
-//
-// 相对于其它方法，该方法比较自由，可以由 e 决定最终输出到哪儿，内容也由用户定义。
-//
-// Deprecated: [Entry.DepthError] 等方法自带了 Output 方法
-func (logs *Logs) Output(e *Entry) { logs.output(e) }
-
 func (logs *Logs) output(e *Entry) {
 	logs.mu.Lock()
 	defer logs.mu.Unlock()
@@ -162,11 +152,3 @@ func (logs *Logs) output(e *Entry) {
 		entryPool.Put(e)
 	}
 }
-
-// StdLogger 转换成标准库的 Logger
-//
-// NOTE: 不要设置返回对象的 Prefix 和 Flag，这些配置项与 Logs 的功能有重叠。
-// [log.Logger] 应该仅作为向 [Logger] 输入 [Entry.Message] 内容使用。
-//
-// Deprecated: 请使用 [Logger.StdLogger] 代替
-func (logs *Logs) StdLogger(l Level) *log.Logger { return logs.level(l).StdLogger() }

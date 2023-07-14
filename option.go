@@ -6,23 +6,23 @@ import "fmt"
 
 type Option func(*Logs)
 
-// Printer 对 [Input] 输入的内容进行二次处理
+// Printer 对 [Logger] 输入的内容进行二次处理
 //
-// 每个函数分别对 [Input] 相应的输入方法，对其提供的内容进行格式化。
+// 每个函数分别对 [Logger] 相应的输入方法，对其提供的内容进行格式化。
 type Printer interface {
-	// Error 对 [Input.Error] 提供的内容进行二次处理
+	// Error 对 [Logger.Error] 提供的内容进行二次处理
 	Error(error) string
 
-	// String 对 [Input.String] 提供的内容进行二次处理
+	// String 对 [Logger.String] 提供的内容进行二次处理
 	String(string) string
 
-	// Printf 对 [Input.Printf] 提供的内容进行二次处理
+	// Printf 对 [Logger.Printf] 提供的内容进行二次处理
 	Printf(string, ...any) string
 
-	// Print 对 [Input.Print] 提供的内容进行二次处理
+	// Print 对 [Logger.Print] 提供的内容进行二次处理
 	Print(...any) string
 
-	// Println 对 [Input.Println] 提供的内容进行二次处理
+	// Println 对 [Logger.Println] 提供的内容进行二次处理
 	Println(...any) string
 }
 

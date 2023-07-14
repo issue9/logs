@@ -4,7 +4,7 @@
 //
 // # 格式
 //
-// 提供了 [Writer] 接口用于处理输出的日志格式，用户可以自己实现，
+// 提供了 [Handler] 接口用于处理输出的日志格式，用户可以自己实现，
 // 系统也提供了几种常用的供用户选择。
 //
 // 同时还提供了 [Printer] 接口用于处理由 [Logger.Print] 等方法输入的数据。
@@ -21,7 +21,7 @@ import "sync"
 
 type Logs struct {
 	mu      sync.Mutex
-	w       Writer
+	handler Handler
 	loggers map[Level]*logger
 
 	// option
@@ -32,12 +32,12 @@ type Logs struct {
 
 // New 声明 Logs 对象
 //
-// w 如果为 nil，则表示采用 [NewNopWriter]。
-func New(w Writer, o ...Option) *Logs {
-	if w == nil {
-		w = NewNopWriter()
+// w 如果为 nil，则表示采用 [NewNopHandler]。
+func New(h Handler, o ...Option) *Logs {
+	if h == nil {
+		h = NewNopHandler()
 	}
-	l := &Logs{w: w}
+	l := &Logs{handler: h}
 
 	l.loggers = make(map[Level]*logger, len(levelStrings))
 	for lv := range levelStrings {
@@ -134,19 +134,19 @@ func (logs *Logs) Fatalf(format string, v ...any) {
 func (logs *Logs) Logger(lv Level) Logger { return logs.level(lv) }
 
 func (logs *Logs) level(lv Level) *logger {
-	if logs.w == nop {
+	if logs.handler == nop {
 		return logs.loggers[levelDisable]
 	}
 	return logs.loggers[lv]
 }
 
-func (logs *Logs) SetOutput(w Writer) { logs.w = w }
+func (logs *Logs) SetHandler(w Handler) { logs.handler = w }
 
 func (logs *Logs) output(e *Record) {
 	logs.mu.Lock()
 	defer logs.mu.Unlock()
 
-	logs.w.WriteRecord(e)
+	logs.handler.Handle(e)
 
 	if len(e.Params) < poolMaxParams {
 		recordPool.Put(e)

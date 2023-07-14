@@ -13,7 +13,7 @@ import (
 func TestLogsLoggers(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	w := NewTextWriter(MicroLayout, buf)
+	w := NewTextHandler(MicroLayout, buf)
 	l := New(w, Caller, Created)
 	a.NotNil(l)
 	l.Enable(LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
@@ -59,7 +59,7 @@ func TestLogs_IsEnable(t *testing.T) {
 	a.True(ok).False(ll.enable)
 
 	buf := new(bytes.Buffer)
-	l = New(NewTextWriter(MicroLayout, buf))
+	l = New(NewTextHandler(MicroLayout, buf))
 	a.NotNil(l)
 	l.Enable(LevelWarn, LevelError)
 

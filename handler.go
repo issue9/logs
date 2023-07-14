@@ -19,43 +19,43 @@ const (
 	NanoLayout  = "15:04:05.000000000"
 )
 
-var nop = &nopWriter{}
+var nop = &nopHandler{}
 
 type (
-	// Writer 将 [Record] 转换成文本并输出的功能
-	Writer interface {
-		// WriteRecord 将 [Record] 写入日志通道
+	// Handler 将 [Record] 转换成文本并输出的功能
+	Handler interface {
+		// Handle 将 [Record] 写入日志通道
 		//
 		// NOTE: 此方法应该保证以换行符结尾。
-		WriteRecord(*Record)
+		Handle(*Record)
 	}
 
-	WriteRecord func(*Record)
+	Handle func(*Record)
 
-	textWriter struct {
+	textHandler struct {
 		timeLayout string
 		w          io.Writer
 	}
 
-	jsonWriter struct {
+	jsonHandler struct {
 		timeLayout string
 		w          io.Writer
 	}
 
-	termWriter struct {
+	termHandler struct {
 		timeLayout string
 		fore       colors.Color
 		w          *colors.Colorize
 	}
 
-	nopWriter struct{}
+	nopHandler struct{}
 
 	ws []io.Writer
 )
 
-func (w WriteRecord) WriteRecord(e *Record) { w(e) }
+func (w Handle) Handle(e *Record) { w(e) }
 
-func NewTextWriter(timeLayout string, w ...io.Writer) Writer {
+func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
 	var ww io.Writer
 	switch len(w) {
 	case 0:
@@ -65,10 +65,10 @@ func NewTextWriter(timeLayout string, w ...io.Writer) Writer {
 	default:
 		ww = ws(w)
 	}
-	return &textWriter{timeLayout: timeLayout, w: ww}
+	return &textHandler{timeLayout: timeLayout, w: ww}
 }
 
-func (w *textWriter) WriteRecord(e *Record) {
+func (w *textHandler) Handle(e *Record) {
 	b := errwrap.StringBuilder{}
 	b.WByte('[').WString(e.Level.String()).WByte(']')
 
@@ -97,8 +97,8 @@ func (w *textWriter) WriteRecord(e *Record) {
 	}
 }
 
-// NewJSONWriter 声明 JSON 格式的输出
-func NewJSONWriter(timeLayout string, w ...io.Writer) Writer {
+// NewJSONHandler 声明 JSON 格式的输出
+func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 	var ww io.Writer
 	switch len(w) {
 	case 0:
@@ -109,10 +109,10 @@ func NewJSONWriter(timeLayout string, w ...io.Writer) Writer {
 		ww = ws(w)
 	}
 
-	return &jsonWriter{timeLayout: timeLayout, w: ww}
+	return &jsonHandler{timeLayout: timeLayout, w: ww}
 }
 
-func (w *jsonWriter) WriteRecord(e *Record) {
+func (w *jsonHandler) Handle(e *Record) {
 	b := errwrap.StringBuilder{}
 	b.WByte('{')
 
@@ -153,22 +153,22 @@ func (w *jsonWriter) WriteRecord(e *Record) {
 	}
 }
 
-// NewTermWriter 带颜色的终端输出通道
+// NewTermHandler 带颜色的终端输出通道
 //
 // timeLayout 表示输出的时间格式，遵守 time.Format 的参数要求，
 // 如果为空，则不输出时间信息；
 // fore 表示终端信息的字符颜色，背景始终是默认色；
 // w 表示终端的接口，可以是 [os.Stderr] 或是 [os.Stdout]，
 // 如果是其它的实现者则会带控制字符一起输出；
-func NewTermWriter(timeLayout string, fore colors.Color, w io.Writer) Writer {
-	return &termWriter{
+func NewTermHandler(timeLayout string, fore colors.Color, w io.Writer) Handler {
+	return &termHandler{
 		timeLayout: timeLayout,
 		fore:       fore,
 		w:          colors.New(w),
 	}
 }
 
-func (w *termWriter) WriteRecord(e *Record) {
+func (w *termHandler) Handle(e *Record) {
 	w.w.WByte('[').Color(colors.Normal, w.fore, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
 
 	var indent byte = ' '
@@ -191,21 +191,21 @@ func (w *termWriter) WriteRecord(e *Record) {
 	w.w.WByte('\n')
 }
 
-// NewDispatchWriter 根据 Level 派发到不同的 Writer 对象
-func NewDispatchWriter(d map[Level]Writer) Writer {
-	return WriteRecord(func(e *Record) { d[e.Level].WriteRecord(e) })
+// NewDispatchHandler 根据 Level 派发到不同的 Writer 对象
+func NewDispatchHandler(d map[Level]Handler) Handler {
+	return Handle(func(e *Record) { d[e.Level].Handle(e) })
 }
 
-// NewNopWriter 空的 Writer 接口实现
-func NewNopWriter() Writer { return nop }
+// NewNopHandler 空的 Handler 接口实现
+func NewNopHandler() Handler { return nop }
 
-func (w *nopWriter) WriteRecord(_ *Record) {}
+func (w *nopHandler) Handle(_ *Record) {}
 
-// MergeWriter 将多个 Writer 合并成一个 Writer 接口对象
-func MergeWriter(w ...Writer) Writer {
-	return WriteRecord(func(e *Record) {
+// MergeHandler 将多个 Handler 合并成一个 Handler 接口对象
+func MergeHandler(w ...Handler) Handler {
+	return Handle(func(e *Record) {
 		for _, ww := range w {
-			ww.WriteRecord(e)
+			ww.Handle(e)
 		}
 	})
 }

@@ -11,49 +11,49 @@ import (
 	"github.com/issue9/term/v3/colors"
 )
 
-func BenchmarkTextWriter(b *testing.B) {
+func BenchmarkTextHandler(b *testing.B) {
 	a := assert.New(b, false)
 
 	buf := new(bytes.Buffer)
-	w := NewTextWriter(MilliLayout, buf)
+	w := NewTextHandler(MilliLayout, buf)
 	l := New(w, Caller, Created)
 	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
-		w.WriteRecord(e)
+		w.Handle(e)
 	}
 }
 
-func BenchmarkJSONWriter(b *testing.B) {
+func BenchmarkJSONHandler(b *testing.B) {
 	a := assert.New(b, false)
 
 	buf := new(bytes.Buffer)
-	w := NewJSONWriter(MicroLayout, buf)
+	w := NewJSONHandler(MicroLayout, buf)
 	l := New(w, Caller, Created)
 	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
-		w.WriteRecord(e)
+		w.Handle(e)
 	}
 }
 
-func BenchmarkTermWriter(b *testing.B) {
+func BenchmarkTermHandler(b *testing.B) {
 	a := assert.New(b, false)
 
 	buf := new(bytes.Buffer)
-	w := NewTermWriter(MilliLayout, colors.Red, buf)
+	w := NewTermHandler(MilliLayout, colors.Red, buf)
 	l := New(w, Caller, Created)
 	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
-		w.WriteRecord(e)
+		w.Handle(e)
 	}
 }
 
 func BenchmarkRecord_Printf(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter(MilliLayout, buf), Created, Caller)
+	l := New(NewTextHandler(MilliLayout, buf), Created, Caller)
 	a.NotNil(l)
 	l.Enable(LevelError)
 
@@ -66,7 +66,7 @@ func BenchmarkRecord_Printf(b *testing.B) {
 func BenchmarkLogger_withoutCallerAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter(MicroLayout, buf))
+	l := New(NewTextHandler(MicroLayout, buf))
 	a.NotNil(l)
 	l.Enable(LevelError)
 
@@ -101,7 +101,7 @@ func BenchmarkLogger_withoutCallerAndCreated(b *testing.B) {
 func BenchmarkLogs_disableLogger(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	w := NewTextWriter(MicroLayout, buf)
+	w := NewTextHandler(MicroLayout, buf)
 	l := New(w)
 	a.NotNil(l)
 	l.Enable(LevelInfo)
@@ -127,7 +127,7 @@ func BenchmarkLogs_nop(b *testing.B) {
 func BenchmarkLogs_StdLogger(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter(MicroLayout, buf))
+	l := New(NewTextHandler(MicroLayout, buf))
 	a.NotNil(l)
 	l.Enable(LevelError)
 	err := l.ERROR()
@@ -140,7 +140,7 @@ func BenchmarkLogs_StdLogger(b *testing.B) {
 func BenchmarkLogs_StdLogger_withDisable(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextWriter(MicroLayout, buf))
+	l := New(NewTextHandler(MicroLayout, buf))
 	a.NotNil(l)
 	l.Enable(LevelInfo)
 	err := l.ERROR()

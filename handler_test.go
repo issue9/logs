@@ -28,7 +28,7 @@ func newRecord(a *assert.Assertion, logs *Logs, lv Level) *Record {
 	return e
 }
 
-func TestTextWriter(t *testing.T) {
+func TestTextHandler(t *testing.T) {
 	a := assert.New(t, false)
 	layout := MilliLayout
 	now := time.Now()
@@ -38,18 +38,18 @@ func TestTextWriter(t *testing.T) {
 	e.Created = now
 
 	a.PanicString(func() {
-		NewTextWriter(layout)
+		NewTextHandler(layout)
 	}, "参数 w 不能为空")
 
 	buf := new(bytes.Buffer)
-	l.SetOutput(NewTextWriter(layout, buf))
+	l.SetHandler(NewTextHandler(layout, buf))
 	l.output(e)
 	a.Equal(buf.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")
 
 	b1 := new(bytes.Buffer)
 	b2 := new(bytes.Buffer)
 	b3 := new(bytes.Buffer)
-	l.SetOutput(NewTextWriter(layout, b1, b2, b3))
+	l.SetHandler(NewTextHandler(layout, b1, b2, b3))
 	l.output(e)
 	a.Equal(b1.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")
 	a.Equal(b2.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")
@@ -64,25 +64,25 @@ func TestJSONFormat(t *testing.T) {
 	e.Created = now
 
 	a.PanicString(func() {
-		NewJSONWriter(MicroLayout)
+		NewJSONHandler(MicroLayout)
 	}, "参数 w 不能为空")
 
 	buf := new(bytes.Buffer)
-	NewJSONWriter(MicroLayout, buf).WriteRecord(e)
+	NewJSONHandler(MicroLayout, buf).Handle(e)
 	a.True(json.Valid(buf.Bytes())).
 		Contains(buf.String(), LevelWarn.String()).
 		Contains(buf.String(), "k1")
 
 	b1 := new(bytes.Buffer)
 	b2 := new(bytes.Buffer)
-	NewJSONWriter(MicroLayout, b1, b2).WriteRecord(e)
+	NewJSONHandler(MicroLayout, b1, b2).Handle(e)
 	a.True(json.Valid(b1.Bytes())).
 		Contains(b1.String(), LevelWarn.String()).
 		Contains(b1.String(), "k1")
 	a.Equal(b1.String(), b2.String())
 }
 
-func TestTermWriter(t *testing.T) {
+func TestTermHandler(t *testing.T) {
 	a := assert.New(t, false)
 
 	t.Log("此测试将在终端输出一段带颜色的日志记录")
@@ -90,25 +90,25 @@ func TestTermWriter(t *testing.T) {
 	l := New(nil)
 	e := newRecord(a, l, LevelWarn)
 	e.Created = time.Now()
-	w := NewTermWriter(MilliLayout, colors.Blue, os.Stdout)
-	w.WriteRecord(e)
+	w := NewTermHandler(MilliLayout, colors.Blue, os.Stdout)
+	w.Handle(e)
 
 	l = New(nil, Caller, Created)
 	e = newRecord(a, l, LevelError)
 	e.Message = "error message"
-	w = NewTermWriter(MicroLayout, colors.Red, os.Stdout)
-	w.WriteRecord(e)
+	w = NewTermHandler(MicroLayout, colors.Red, os.Stdout)
+	w.Handle(e)
 }
 
-func TestDispatchWriter(t *testing.T) {
+func TestDispatchHandler(t *testing.T) {
 	a := assert.New(t, false)
 
 	txtBuf := new(bytes.Buffer)
 	jsonBuf := new(bytes.Buffer)
 
-	w := NewDispatchWriter(map[Level]Writer{
-		LevelInfo: NewTextWriter(NanoLayout, txtBuf),
-		LevelWarn: NewJSONWriter(MicroLayout, jsonBuf),
+	w := NewDispatchHandler(map[Level]Handler{
+		LevelInfo: NewTextHandler(NanoLayout, txtBuf),
+		LevelWarn: NewJSONHandler(MicroLayout, jsonBuf),
 	})
 	l := New(w)
 

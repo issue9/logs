@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"strconv"
+	"sync"
 
 	"github.com/issue9/errwrap"
 	"github.com/issue9/term/v3/colors"
@@ -44,6 +45,7 @@ type (
 	}
 
 	termHandler struct {
+		mux        sync.Mutex
 		timeLayout string
 		fore       colors.Color
 		w          *colors.Colorize
@@ -102,6 +104,7 @@ func (w *textHandler) Handle(e *Record) {
 	b.WByte('\n')
 
 	// 一次性写入，性能更好一些。
+	// NOTE: 单次写入整条记录，否则需要用锁确保写入数据的完整性。
 	if _, err := w.w.Write([]byte(b.String())); err != nil {
 		log.Println("JSONHandler.Handle:", err)
 	}
@@ -158,6 +161,7 @@ func (w *jsonHandler) Handle(e *Record) {
 
 	b.WByte('}')
 
+	// NOTE: 单次写入整条记录，否则需要用锁确保写入数据的完整性。
 	if _, err := w.w.Write([]byte(b.String())); err != nil {
 		log.Println("JSONHandler.Handle:", err)
 	}
@@ -179,6 +183,9 @@ func NewTermHandler(timeLayout string, fore colors.Color, w io.Writer) Handler {
 }
 
 func (w *termHandler) Handle(e *Record) {
+	w.mux.Lock()
+	defer w.mux.Unlock()
+
 	w.w.WByte('[').Color(colors.Normal, w.fore, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
 
 	var indent byte = ' '

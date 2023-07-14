@@ -53,6 +53,8 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 	e.Message = ""
 	if logs.HasCreated() {
 		e.Created = time.Now()
+	} else {
+		e.Created = time.Time{} // 从 poll 中获取的值，必须要初始化。
 	}
 	e.Level = lv
 
@@ -97,7 +99,7 @@ func (e *Record) DepthError(depth int, err error) {
 		e.Message = err.Error()
 	}
 	e.setLocation(depth + 1)
-	e.logs.output(e)
+	e.output()
 }
 
 func (e *Record) String(s string) { e.DepthString(2, s) }
@@ -110,7 +112,7 @@ func (e *Record) String(s string) { e.DepthString(2, s) }
 func (e *Record) DepthString(depth int, s string) {
 	e.Message = s
 	e.setLocation(depth + 1)
-	e.logs.output(e)
+	e.output()
 }
 
 func (e *Record) Print(v ...any) { e.DepthPrint(2, v...) }
@@ -125,7 +127,7 @@ func (e *Record) DepthPrint(depth int, v ...any) {
 		e.Message = fmt.Sprint(v...)
 	}
 	e.setLocation(depth + 1)
-	e.logs.output(e)
+	e.output()
 }
 
 func (e *Record) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...) }
@@ -138,7 +140,7 @@ func (e *Record) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...
 func (e *Record) DepthPrintf(depth int, format string, v ...any) {
 	e.Message = fmt.Sprintf(format, v...)
 	e.setLocation(depth + 1)
-	e.logs.output(e)
+	e.output()
 }
 
 func (e *Record) Println(v ...any) { e.DepthPrintln(2, v...) }
@@ -153,5 +155,12 @@ func (e *Record) DepthPrintln(depth int, v ...any) {
 		e.Message = fmt.Sprintln(v...)
 	}
 	e.setLocation(depth + 1)
-	e.logs.output(e)
+	e.output()
+}
+
+func (e *Record) output() {
+	e.logs.handler.Handle(e)
+	if len(e.Params) < poolMaxParams {
+		recordPool.Put(e)
+	}
 }

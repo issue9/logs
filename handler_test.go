@@ -43,14 +43,14 @@ func TestTextHandler(t *testing.T) {
 
 	buf := new(bytes.Buffer)
 	l.SetHandler(NewTextHandler(layout, buf))
-	l.output(e)
+	e.output()
 	a.Equal(buf.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")
 
 	b1 := new(bytes.Buffer)
 	b2 := new(bytes.Buffer)
 	b3 := new(bytes.Buffer)
 	l.SetHandler(NewTextHandler(layout, b1, b2, b3))
-	l.output(e)
+	e.output()
 	a.Equal(b1.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")
 	a.Equal(b2.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")
 	a.Equal(b3.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2\n")

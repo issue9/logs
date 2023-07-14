@@ -17,10 +17,7 @@
 //   - [Logs.With] 返回的是带固定参数的日志对象；
 package logs
 
-import "sync"
-
 type Logs struct {
-	mu      sync.Mutex
 	handler Handler
 	loggers map[Level]*logger
 
@@ -136,18 +133,7 @@ func (logs *Logs) level(lv Level) *logger {
 	return logs.loggers[lv]
 }
 
-func (logs *Logs) SetHandler(w Handler) { logs.handler = w }
-
-func (logs *Logs) output(e *Record) {
-	logs.mu.Lock()
-	defer logs.mu.Unlock()
-
-	logs.handler.Handle(e)
-
-	if len(e.Params) < poolMaxParams {
-		recordPool.Put(e)
-	}
-}
+func (logs *Logs) SetHandler(h Handler) { logs.handler = h }
 
 // Caller 是否显示记录的定位信息
 func Caller(l *Logs) { l.caller = true }

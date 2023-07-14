@@ -13,8 +13,8 @@ import (
 	"github.com/issue9/term/v3/colors"
 )
 
-func newEntry(a *assert.Assertion, logs *Logs, lv Level) *Entry {
-	e := logs.NewEntry(lv)
+func newRecord(a *assert.Assertion, logs *Logs, lv Level) *Record {
+	e := logs.NewRecord(lv)
 	a.NotNil(e)
 
 	e.Message = "msg"
@@ -34,7 +34,7 @@ func TestTextWriter(t *testing.T) {
 	now := time.Now()
 	l := New(nil, Created, Caller)
 
-	e := newEntry(a, l, LevelWarn)
+	e := newRecord(a, l, LevelWarn)
 	e.Created = now
 
 	a.PanicString(func() {
@@ -60,7 +60,7 @@ func TestJSONFormat(t *testing.T) {
 	a := assert.New(t, false)
 	now := time.Now()
 
-	e := newEntry(a, New(nil), LevelWarn)
+	e := newRecord(a, New(nil), LevelWarn)
 	e.Created = now
 
 	a.PanicString(func() {
@@ -68,14 +68,14 @@ func TestJSONFormat(t *testing.T) {
 	}, "参数 w 不能为空")
 
 	buf := new(bytes.Buffer)
-	NewJSONWriter(MicroLayout, buf).WriteEntry(e)
+	NewJSONWriter(MicroLayout, buf).WriteRecord(e)
 	a.True(json.Valid(buf.Bytes())).
 		Contains(buf.String(), LevelWarn.String()).
 		Contains(buf.String(), "k1")
 
 	b1 := new(bytes.Buffer)
 	b2 := new(bytes.Buffer)
-	NewJSONWriter(MicroLayout, b1, b2).WriteEntry(e)
+	NewJSONWriter(MicroLayout, b1, b2).WriteRecord(e)
 	a.True(json.Valid(b1.Bytes())).
 		Contains(b1.String(), LevelWarn.String()).
 		Contains(b1.String(), "k1")
@@ -88,16 +88,16 @@ func TestTermWriter(t *testing.T) {
 	t.Log("此测试将在终端输出一段带颜色的日志记录")
 
 	l := New(nil)
-	e := newEntry(a, l, LevelWarn)
+	e := newRecord(a, l, LevelWarn)
 	e.Created = time.Now()
 	w := NewTermWriter(MilliLayout, colors.Blue, os.Stdout)
-	w.WriteEntry(e)
+	w.WriteRecord(e)
 
 	l = New(nil, Caller, Created)
-	e = newEntry(a, l, LevelError)
+	e = newRecord(a, l, LevelError)
 	e.Message = "error message"
 	w = NewTermWriter(MicroLayout, colors.Red, os.Stdout)
-	w.WriteEntry(e)
+	w.WriteRecord(e)
 }
 
 func TestDispatchWriter(t *testing.T) {
@@ -112,7 +112,7 @@ func TestDispatchWriter(t *testing.T) {
 	})
 	l := New(w)
 
-	e := l.NewEntry(LevelWarn)
+	e := l.NewRecord(LevelWarn)
 	e.Created = time.Now()
 	l.Warnf("warnf test")
 	a.Zero(txtBuf.Len()).Contains(jsonBuf.String(), "warnf test").True(json.Valid(jsonBuf.Bytes()))

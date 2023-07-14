@@ -22,15 +22,15 @@ const (
 var nop = &nopWriter{}
 
 type (
-	// Writer 将 [Entry] 转换成文本并输出的功能
+	// Writer 将 [Record] 转换成文本并输出的功能
 	Writer interface {
-		// WriteEntry 将 [Entry] 写入日志通道
+		// WriteRecord 将 [Record] 写入日志通道
 		//
 		// NOTE: 此方法应该保证以换行符结尾。
-		WriteEntry(*Entry)
+		WriteRecord(*Record)
 	}
 
-	WriteEntry func(*Entry)
+	WriteRecord func(*Record)
 
 	textWriter struct {
 		timeLayout string
@@ -53,7 +53,7 @@ type (
 	ws []io.Writer
 )
 
-func (w WriteEntry) WriteEntry(e *Entry) { w(e) }
+func (w WriteRecord) WriteRecord(e *Record) { w(e) }
 
 func NewTextWriter(timeLayout string, w ...io.Writer) Writer {
 	var ww io.Writer
@@ -68,7 +68,7 @@ func NewTextWriter(timeLayout string, w ...io.Writer) Writer {
 	return &textWriter{timeLayout: timeLayout, w: ww}
 }
 
-func (w *textWriter) WriteEntry(e *Entry) {
+func (w *textWriter) WriteRecord(e *Record) {
 	b := errwrap.StringBuilder{}
 	b.WByte('[').WString(e.Level.String()).WByte(']')
 
@@ -112,7 +112,7 @@ func NewJSONWriter(timeLayout string, w ...io.Writer) Writer {
 	return &jsonWriter{timeLayout: timeLayout, w: ww}
 }
 
-func (w *jsonWriter) WriteEntry(e *Entry) {
+func (w *jsonWriter) WriteRecord(e *Record) {
 	b := errwrap.StringBuilder{}
 	b.WByte('{')
 
@@ -168,7 +168,7 @@ func NewTermWriter(timeLayout string, fore colors.Color, w io.Writer) Writer {
 	}
 }
 
-func (w *termWriter) WriteEntry(e *Entry) {
+func (w *termWriter) WriteRecord(e *Record) {
 	w.w.WByte('[').Color(colors.Normal, w.fore, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
 
 	var indent byte = ' '
@@ -193,19 +193,19 @@ func (w *termWriter) WriteEntry(e *Entry) {
 
 // NewDispatchWriter 根据 Level 派发到不同的 Writer 对象
 func NewDispatchWriter(d map[Level]Writer) Writer {
-	return WriteEntry(func(e *Entry) { d[e.Level].WriteEntry(e) })
+	return WriteRecord(func(e *Record) { d[e.Level].WriteRecord(e) })
 }
 
 // NewNopWriter 空的 Writer 接口实现
 func NewNopWriter() Writer { return nop }
 
-func (w *nopWriter) WriteEntry(_ *Entry) {}
+func (w *nopWriter) WriteRecord(_ *Record) {}
 
 // MergeWriter 将多个 Writer 合并成一个 Writer 接口对象
 func MergeWriter(w ...Writer) Writer {
-	return WriteEntry(func(e *Entry) {
+	return WriteRecord(func(e *Record) {
 		for _, ww := range w {
-			ww.WriteEntry(e)
+			ww.WriteRecord(e)
 		}
 	})
 }

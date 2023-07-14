@@ -2,19 +2,42 @@
 
 package logs
 
-import "log"
+import (
+	"io"
+	"log"
+)
 
 var emptyLLoggerInst = &emptyLogger{}
 
 type (
 	// Logger 日志接口
 	Logger interface {
-		Input
+		// With 为日志提供额外的参数
+		//
+		// 返回值是当前对象。
+		With(name string, val any) Logger
+
+		// Error 将一条错误信息作为一条日志输出
+		//
+		// 这是 Print 的特化版本，在已知类型为 error 时，
+		// 采用此方法会比 Print(err) 有更好的性能。
+		Error(err error)
+
+		// String 将字符串作为一条日志输出
+		//
+		// 这是 Print 的特化版本，在已知类型为字符串时，
+		// 采用此方法会比 Print(s) 有更好的性能。
+		String(s string)
+
+		// 输出一条日志信息
+		Print(v ...any)
+		Println(v ...any)
+		Printf(format string, v ...any)
 
 		// StdLogger 将当前对象转换成标准库的日志对象
 		//
 		// NOTE: 不要设置返回对象的 Prefix 和 Flag，这些配置项与当前模块的功能有重叠。
-		// [log.Logger] 应该仅作为向 [Logger] 输入 [Entry.Message] 内容使用。
+		// [log.Logger] 应该仅作为向 [Logger] 输入 [Record.Message] 内容使用。
 		StdLogger() *log.Logger
 	}
 
@@ -22,49 +45,40 @@ type (
 		lv     Level
 		logs   *Logs
 		enable bool
-		std    *log.Logger
 	}
 
 	withLogger struct {
 		l     *logger
-		std   *log.Logger
 		pairs []Pair
 	}
 
 	emptyLogger struct{}
 )
 
-// 实现 io.Writer 供 [Logger.StdLogger] 使用
-func (l *logger) Write(data []byte) (int, error) {
-	if l.enable {
-		l.logs.NewEntry(l.lv).DepthString(4, string(data))
-	}
-	return len(data), nil
-}
-
 func (l *logger) StdLogger() *log.Logger {
-	if l.std == nil {
-		l.std = log.New(l, "", 0)
+	var w = io.Discard
+	if l.enable {
+		w = l.logs.NewRecord(l.lv)
 	}
-	return l.std
+	return log.New(w, "", 0)
 }
 
-func (l *logger) With(name string, val any) Input {
+func (l *logger) With(name string, val any) Logger {
 	if l.enable {
-		return l.logs.NewEntry(l.lv).With(name, val)
+		return l.logs.NewRecord(l.lv).With(name, val)
 	}
 	return emptyLLoggerInst
 }
 
 func (l *logger) Error(err error) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).DepthError(3, err)
+		l.logs.NewRecord(l.lv).DepthError(3, err)
 	}
 }
 
 func (l *logger) String(s string) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).DepthString(2, s)
+		l.logs.NewRecord(l.lv).DepthString(2, s)
 	}
 }
 
@@ -76,19 +90,19 @@ func (l *logger) Printf(format string, v ...any) { l.printf(3, format, v...) }
 
 func (l *logger) print(depth int, v ...any) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).DepthPrint(depth, v...)
+		l.logs.NewRecord(l.lv).DepthPrint(depth, v...)
 	}
 }
 
 func (l *logger) println(depth int, v ...any) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).DepthPrintln(depth, v...)
+		l.logs.NewRecord(l.lv).DepthPrintln(depth, v...)
 	}
 }
 
 func (l *logger) printf(depth int, format string, v ...any) {
 	if l.enable {
-		l.logs.NewEntry(l.lv).DepthPrintf(depth, format, v...)
+		l.logs.NewRecord(l.lv).DepthPrintf(depth, format, v...)
 	}
 }
 
@@ -112,22 +126,17 @@ func (logs *Logs) With(lv Level, params map[string]any) Logger {
 	}
 }
 
-func (l *withLogger) with() *Entry {
-	e := l.l.logs.NewEntry(l.l.lv)
+func (l *withLogger) with() *Record {
+	e := l.l.logs.NewRecord(l.l.lv)
 	for _, pair := range l.pairs {
 		e.With(pair.K, pair.V)
 	}
 	return e
 }
 
-func (l *withLogger) StdLogger() *log.Logger {
-	if l.std == nil {
-		l.std = log.New(l, "", 0)
-	}
-	return l.std
-}
+func (l *withLogger) StdLogger() *log.Logger { return log.New(l.with(), "", 0) }
 
-func (l *withLogger) With(k string, v any) Input {
+func (l *withLogger) With(k string, v any) Logger {
 	return l.with().With(k, v)
 }
 
@@ -143,13 +152,7 @@ func (l *withLogger) Printf(format string, v ...any) {
 	l.with().DepthPrintf(2, format, v...)
 }
 
-// 实现 io.Writer 供 [Logger.StdLogger] 使用
-func (l *withLogger) Write(data []byte) (int, error) {
-	l.with().DepthString(4, string(data))
-	return len(data), nil
-}
-
-func (l *emptyLogger) With(_ string, _ any) Input { return l }
+func (l *emptyLogger) With(_ string, _ any) Logger { return l }
 
 func (l *emptyLogger) Error(_ error) {}
 
@@ -161,4 +164,5 @@ func (l *emptyLogger) Printf(_ string, _ ...any) {}
 
 func (l *emptyLogger) Println(_ ...any) {}
 
-func (l *emptyLogger) StdLogger() *log.Logger { return nil }
+// 空对象构建一个不输出任何内容的实例
+func (l *emptyLogger) StdLogger() *log.Logger { return log.New(io.Discard, "", 0) }

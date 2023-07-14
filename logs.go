@@ -142,13 +142,13 @@ func (logs *Logs) level(lv Level) *logger {
 
 func (logs *Logs) SetOutput(w Writer) { logs.w = w }
 
-func (logs *Logs) output(e *Entry) {
+func (logs *Logs) output(e *Record) {
 	logs.mu.Lock()
 	defer logs.mu.Unlock()
 
-	logs.w.WriteEntry(e)
+	logs.w.WriteRecord(e)
 
 	if len(e.Params) < poolMaxParams {
-		entryPool.Put(e)
+		recordPool.Put(e)
 	}
 }

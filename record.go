@@ -3,6 +3,7 @@
 package logs
 
 import (
+	"log"
 	"runtime"
 	"sync"
 	"time"
@@ -10,36 +11,11 @@ import (
 
 const poolMaxParams = 100
 
-var entryPool = &sync.Pool{New: func() any { return &Entry{} }}
+var recordPool = &sync.Pool{New: func() any { return &Record{} }}
 
 type (
-	// Input 日志输入提供的接口
-	Input interface {
-		// With 为日志提供额外的参数
-		//
-		// 返回值是当前对象。
-		With(name string, val any) Input
-
-		// Error 将一条错误信息作为一条日志输出
-		//
-		// 这是 Print 的特化版本，在已知类型为 error 时，
-		// 采用此方法会比 Print(err) 有更好的性能。
-		Error(err error)
-
-		// String 将字符串作为一条日志输出
-		//
-		// 这是 Print 的特化版本，在已知类型为字符串时，
-		// 采用此方法会比 Print(s) 有更好的性能。
-		String(s string)
-
-		// 输出一条日志信息
-		Print(v ...any)
-		Println(v ...any)
-		Printf(format string, v ...any)
-	}
-
-	// Entry 每一条日志的表示对象
-	Entry struct {
+	// Record 每一条日志的表示对象
+	Record struct {
 		logs *Logs
 
 		Level   Level
@@ -64,8 +40,8 @@ type (
 	}
 )
 
-func (logs *Logs) NewEntry(lv Level) *Entry {
-	e := entryPool.Get().(*Entry)
+func (logs *Logs) NewRecord(lv Level) *Record {
+	e := recordPool.Get().(*Record)
 
 	e.logs = logs
 	if e.Params != nil {
@@ -84,31 +60,40 @@ func (logs *Logs) NewEntry(lv Level) *Entry {
 	return e
 }
 
-func (e *Entry) Logs() *Logs { return e.logs }
+func (e *Record) Write(data []byte) (int, error) {
+	e.DepthString(4, string(data))
+	return len(data), nil
+}
+
+func (e *Record) Logs() *Logs { return e.logs }
 
 // depth 表示调用，1 表示调用 Location 的位置；
 //
 // 如果 [Logs.HasCaller] 为 false，那么此调用将不产生任何内容。
-func (e *Entry) setLocation(depth int) *Entry {
+func (e *Record) setLocation(depth int) *Record {
 	if e.Logs().HasCaller() {
 		_, e.Path, e.Line, _ = runtime.Caller(depth)
 	}
 	return e
 }
 
-func (e *Entry) With(name string, val any) Input {
+func (e *Record) With(name string, val any) Logger {
 	e.Params = append(e.Params, Pair{K: name, V: val})
 	return e
 }
 
-func (e *Entry) Error(err error) { e.DepthError(2, err) }
+func (e *Record) StdLogger() *log.Logger {
+	return log.New(e, "", 0)
+}
+
+func (e *Record) Error(err error) { e.DepthError(2, err) }
 
 // DepthError 输出 error 类型的内容到日志
 //
 // depth 表示调用，1 表示调用此方法的位置；
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
-func (e *Entry) DepthError(depth int, err error) {
+func (e *Record) DepthError(depth int, err error) {
 	if err != nil {
 		e.Message = e.logs.printer.Error(err)
 	}
@@ -116,27 +101,27 @@ func (e *Entry) DepthError(depth int, err error) {
 	e.logs.output(e)
 }
 
-func (e *Entry) String(s string) { e.DepthString(2, s) }
+func (e *Record) String(s string) { e.DepthString(2, s) }
 
 // DepthString 输出字符串类型的内容到日志
 //
 // depth 表示调用，1 表示调用此方法的位置；
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
-func (e *Entry) DepthString(depth int, s string) {
+func (e *Record) DepthString(depth int, s string) {
 	e.Message = e.logs.printer.String(s)
 	e.setLocation(depth + 1)
 	e.logs.output(e)
 }
 
-func (e *Entry) Print(v ...any) { e.DepthPrint(2, v...) }
+func (e *Record) Print(v ...any) { e.DepthPrint(2, v...) }
 
 // DepthPrint 输出任意类型的内容到日志
 //
 // depth 表示调用，1 表示调用此方法的位置；
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
-func (e *Entry) DepthPrint(depth int, v ...any) {
+func (e *Record) DepthPrint(depth int, v ...any) {
 	if len(v) > 0 {
 		e.Message = e.logs.printer.Print(v...)
 	}
@@ -144,27 +129,27 @@ func (e *Entry) DepthPrint(depth int, v ...any) {
 	e.logs.output(e)
 }
 
-func (e *Entry) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...) }
+func (e *Record) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...) }
 
 // DepthPrintf 输出任意类型的内容到日志
 //
 // depth 表示调用，1 表示调用此方法的位置；
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
-func (e *Entry) DepthPrintf(depth int, format string, v ...any) {
+func (e *Record) DepthPrintf(depth int, format string, v ...any) {
 	e.Message = e.logs.printer.Printf(format, v...)
 	e.setLocation(depth + 1)
 	e.logs.output(e)
 }
 
-func (e *Entry) Println(v ...any) { e.DepthPrintln(2, v...) }
+func (e *Record) Println(v ...any) { e.DepthPrintln(2, v...) }
 
 // DepthPrintln 输出任意类型的内容到日志
 //
 // depth 表示调用，1 表示调用此方法的位置；
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
-func (e *Entry) DepthPrintln(depth int, v ...any) {
+func (e *Record) DepthPrintln(depth int, v ...any) {
 	if len(v) > 0 {
 		e.Message = e.logs.printer.Println(v...)
 	}

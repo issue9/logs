@@ -17,10 +17,10 @@ func BenchmarkTextWriter(b *testing.B) {
 	buf := new(bytes.Buffer)
 	w := NewTextWriter(MilliLayout, buf)
 	l := New(w, Caller, Created)
-	e := newEntry(a, l, LevelWarn)
+	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
-		w.WriteEntry(e)
+		w.WriteRecord(e)
 	}
 }
 
@@ -30,10 +30,10 @@ func BenchmarkJSONWriter(b *testing.B) {
 	buf := new(bytes.Buffer)
 	w := NewJSONWriter(MicroLayout, buf)
 	l := New(w, Caller, Created)
-	e := newEntry(a, l, LevelWarn)
+	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
-		w.WriteEntry(e)
+		w.WriteRecord(e)
 	}
 }
 
@@ -43,14 +43,14 @@ func BenchmarkTermWriter(b *testing.B) {
 	buf := new(bytes.Buffer)
 	w := NewTermWriter(MilliLayout, colors.Red, buf)
 	l := New(w, Caller, Created)
-	e := newEntry(a, l, LevelWarn)
+	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
-		w.WriteEntry(e)
+		w.WriteRecord(e)
 	}
 }
 
-func BenchmarkEntry_Printf(b *testing.B) {
+func BenchmarkRecord_Printf(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextWriter(MilliLayout, buf), Created, Caller)

@@ -9,19 +9,16 @@ import (
 	"github.com/issue9/assert/v3"
 )
 
-var (
-	_ Input = &emptyLogger{}
-	_ Input = &Entry{}
-)
+var _ Logger = &Record{}
 
-func TestEntry_location(t *testing.T) {
+func TestRecord_location(t *testing.T) {
 	a := assert.New(t, false)
 	l := New(nil, Caller, Created)
 
-	e := l.NewEntry(LevelWarn)
+	e := l.NewRecord(LevelWarn)
 	a.NotNil(e)
 	a.Empty(e.Path).Zero(e.Line)
 
 	e.setLocation(1)
-	a.True(strings.HasSuffix(e.Path, "input_test.go")).Equal(e.Line, 25)
+	a.True(strings.HasSuffix(e.Path, "record_test.go")).Equal(e.Line, 22)
 }

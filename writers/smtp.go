@@ -9,7 +9,7 @@ import (
 	"github.com/issue9/errwrap"
 )
 
-// SMTP 实现 io.Writer 接口的邮件发送
+// SMTP 实现 [io.Writer] 接口的邮件发送
 type SMTP struct {
 	username string   // smtp 账号
 	password string   // smtp 密码

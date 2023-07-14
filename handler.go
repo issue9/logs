@@ -13,6 +13,8 @@ import (
 
 	"github.com/issue9/errwrap"
 	"github.com/issue9/term/v3/colors"
+
+	"github.com/issue9/logs/v5/writers"
 )
 
 const (
@@ -24,9 +26,11 @@ const (
 var nop = &nopHandler{}
 
 type (
-	// Handler 将 [Record] 转换成文本并输出的功能
+	// Handler [Record] 的处理接口
 	Handler interface {
-		// Handle 将 [Record] 写入日志通道
+		// Handle 将 [Record] 写入日志
+		//
+		// [Record] 中各个字段的名称，由处理器自行决定。
 		//
 		// NOTE: 此方法应该保证以换行符结尾。
 		Handle(*Record)
@@ -52,23 +56,12 @@ type (
 	}
 
 	nopHandler struct{}
-
-	ws []io.Writer
 )
 
 func (w HandleFunc) Handle(e *Record) { w(e) }
 
 func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
-	var ww io.Writer
-	switch len(w) {
-	case 0:
-		panic("参数 w 不能为空")
-	case 1:
-		ww = w[0]
-	default:
-		ww = ws(w)
-	}
-	return &textHandler{timeLayout: timeLayout, w: ww}
+	return &textHandler{timeLayout: timeLayout, w: writers.New(w...)}
 }
 
 func (w *textHandler) Handle(e *Record) {
@@ -112,17 +105,7 @@ func (w *textHandler) Handle(e *Record) {
 
 // NewJSONHandler 声明 JSON 格式的输出
 func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
-	var ww io.Writer
-	switch len(w) {
-	case 0:
-		panic("参数 w 不能为空")
-	case 1:
-		ww = w[0]
-	default:
-		ww = ws(w)
-	}
-
-	return &jsonHandler{timeLayout: timeLayout, w: ww}
+	return &jsonHandler{timeLayout: timeLayout, w: writers.New(w...)}
 }
 
 func (w *jsonHandler) Handle(e *Record) {
@@ -208,7 +191,7 @@ func (w *termHandler) Handle(e *Record) {
 	w.w.WByte('\n')
 }
 
-// NewDispatchHandler 根据 Level 派发到不同的 Writer 对象
+// NewDispatchHandler 根据 [Level] 派发到不同的 [Handler] 对象
 func NewDispatchHandler(d map[Level]Handler) Handler {
 	return HandleFunc(func(e *Record) { d[e.Level].Handle(e) })
 }
@@ -225,13 +208,4 @@ func MergeHandler(w ...Handler) Handler {
 			ww.Handle(e)
 		}
 	})
-}
-
-func (w ws) Write(data []byte) (n int, err error) {
-	for _, writer := range w {
-		if n, err = writer.Write(data); err != nil {
-			return n, err
-		}
-	}
-	return n, err
 }

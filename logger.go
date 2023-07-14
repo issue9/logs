@@ -58,7 +58,7 @@ type (
 func (l *logger) StdLogger() *log.Logger {
 	var w = io.Discard
 	if l.enable {
-		w = l.logs.NewRecord(l.lv)
+		w = l.logs.NewRecord(l.lv).asWriter()
 	}
 	return log.New(w, "", 0)
 }
@@ -134,7 +134,9 @@ func (l *withLogger) with() *Record {
 	return e
 }
 
-func (l *withLogger) StdLogger() *log.Logger { return log.New(l.with(), "", 0) }
+func (l *withLogger) StdLogger() *log.Logger {
+	return log.New(l.with().asWriter(), "", 0)
+}
 
 func (l *withLogger) With(k string, v any) Logger {
 	return l.with().With(k, v)

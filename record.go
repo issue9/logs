@@ -4,10 +4,13 @@ package logs
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"runtime"
 	"sync"
 	"time"
+
+	"github.com/issue9/logs/v5/writers"
 )
 
 const poolMaxParams = 100
@@ -15,7 +18,7 @@ const poolMaxParams = 100
 var recordPool = &sync.Pool{New: func() any { return &Record{} }}
 
 type (
-	// Record 每一条日志的表示对象
+	// Record 每一条日志的表示
 	Record struct {
 		logs *Logs
 
@@ -61,9 +64,14 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 	return e
 }
 
-func (e *Record) Write(data []byte) (int, error) {
-	e.DepthString(4, string(data))
-	return len(data), nil
+// 转换成 io.Writer
+//
+// 仅供内部使用，因为 depth 值的关系，只有固定的调用层级关系才能正常显示行号。
+func (e *Record) asWriter() io.Writer {
+	return writers.WriteFunc(func(data []byte) (int, error) {
+		e.DepthString(5, string(data))
+		return len(data), nil
+	})
 }
 
 func (e *Record) Logs() *Logs { return e.logs }
@@ -84,7 +92,7 @@ func (e *Record) With(name string, val any) Logger {
 }
 
 func (e *Record) StdLogger() *log.Logger {
-	return log.New(e, "", 0)
+	return log.New(e.asWriter(), "", 0)
 }
 
 func (e *Record) Error(err error) { e.DepthError(2, err) }

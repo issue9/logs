@@ -15,16 +15,16 @@ const indexPlaceholder = "%i"
 // ErrIndexNotExists 格式化字符串 %i 不存在
 var ErrIndexNotExists = errors.New("必须存在 %i")
 
-// TODO(go1.18): 可以采用 strings.Cut 代替
 func cutString(format string) (prefix, suffix string, err error) {
 	if strings.ContainsAny(format, "/\\") {
 		return "", "", errors.New("不能包含路径分隔符 / 或 \\")
 	}
 
-	if index := strings.Index(format, indexPlaceholder); index >= 0 {
-		return format[:index], format[index+len(indexPlaceholder):], nil
+	prefix, suffix, ok := strings.Cut(format, indexPlaceholder)
+	if !ok {
+		return "", "", ErrIndexNotExists
 	}
-	return "", "", ErrIndexNotExists
+	return prefix, suffix, nil
 }
 
 // 获取指定目录下，去掉前后缀之后，最大的索引值。

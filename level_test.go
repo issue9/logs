@@ -19,6 +19,14 @@ var (
 	_ fmt.Stringer             = LevelError
 )
 
+func TestIsValidLevel(t *testing.T) {
+	a := assert.New(t, false)
+
+	a.False(IsValidLevel(levelDisable)).
+		False(IsValidLevel(LevelFatal + 1)).
+		True(IsValidLevel(LevelError))
+}
+
 func TestParseLevel(t *testing.T) {
 	a := assert.New(t, false)
 
@@ -37,12 +45,6 @@ func TestParseLevel(t *testing.T) {
 
 func TestLevel_UnmarshalText(t *testing.T) {
 	a := assert.New(t, false)
-
-	/*data :=&struct{
-		L Level `json:"l"`
-	}{}
-
-	*/
 
 	l := LevelWarn
 	a.NotError(json.Unmarshal([]byte(`"inFo"`), &l))

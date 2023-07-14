@@ -1,6 +1,6 @@
 logs
 [![Go](https://github.com/issue9/logs/workflows/Go/badge.svg)](https://github.com/issue9/logs/actions?query=workflow%3AGo)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/logs/v4)](https://pkg.go.dev/github.com/issue9/logs/v4)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/logs/v5)](https://pkg.go.dev/github.com/issue9/logs/v5)
 ![Go version](https://img.shields.io/github/go-mod/go-version/issue9/logs)
 [![codecov](https://codecov.io/gh/issue9/logs/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/logs)
 ======
@@ -9,7 +9,7 @@ logs
 新版本不再追求与标准库的绝对兼容，仅提供了 StdLogger 用于转换成标准库对象的方法。
 
 ```go
-import "github.com/issue9/logs/v4"
+import "github.com/issue9/logs/v5"
 
 l := logs.New(nil)
 l.Debug("debug start...")
@@ -24,7 +24,7 @@ err.Printf("带默认参数 k1=v1") // 不用 With 指定 k1，err 全都自动�
 ---
 
 ```shell
-go get github.com/issue9/logs/v4
+go get github.com/issue9/logs/v5
 ```
 
 版权

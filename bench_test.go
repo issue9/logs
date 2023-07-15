@@ -41,7 +41,7 @@ func BenchmarkTermHandler(b *testing.B) {
 	a := assert.New(b, false)
 
 	buf := new(bytes.Buffer)
-	w := NewTermHandler(MilliLayout, colors.Red, buf)
+	w := NewTermHandler(MilliLayout, buf, map[Level]colors.Color{LevelWarn: colors.Blue})
 	l := New(w, Caller, Created)
 	e := newRecord(a, l, LevelWarn)
 

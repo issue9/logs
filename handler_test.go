@@ -90,13 +90,13 @@ func TestTermHandler(t *testing.T) {
 	l := New(nil)
 	e := newRecord(a, l, LevelWarn)
 	e.Created = time.Now()
-	w := NewTermHandler(MilliLayout, colors.Blue, os.Stdout)
+	w := NewTermHandler(MilliLayout, os.Stdout, map[Level]colors.Color{LevelError: colors.Green})
 	w.Handle(e)
 
 	l = New(nil, Caller, Created)
 	e = newRecord(a, l, LevelError)
 	e.Message = "error message"
-	w = NewTermHandler(MicroLayout, colors.Red, os.Stdout)
+	w = NewTermHandler(MicroLayout, os.Stdout, map[Level]colors.Color{LevelError: colors.Green})
 	w.Handle(e)
 }
 

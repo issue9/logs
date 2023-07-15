@@ -25,6 +25,8 @@ const (
 
 var nop = &nopHandler{}
 
+var buffersPool = &sync.Pool{New: func() any { return &errwrap.Buffer{} }}
+
 type (
 	// Handler [Record] 的处理接口
 	Handler interface {
@@ -38,157 +40,167 @@ type (
 
 	HandleFunc func(*Record)
 
-	textHandler struct {
-		timeLayout string
-		w          io.Writer
-	}
-
-	jsonHandler struct {
-		timeLayout string
-		w          io.Writer
-	}
-
-	termHandler struct {
-		mux        sync.Mutex
-		timeLayout string
-		fore       colors.Color
-		w          *colors.Colorize
-	}
-
 	nopHandler struct{}
 )
 
 func (w HandleFunc) Handle(e *Record) { w(e) }
 
+// NewTextHandler 返回将 [Record] 以普通文本的形式写入 w 的对象
 func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
-	return &textHandler{timeLayout: timeLayout, w: writers.New(w...)}
-}
+	ww := writers.New(w...)
+	mux := &sync.Mutex{} // 防止多个函数同时调用 HandleFunc 方法。
 
-func (w *textHandler) Handle(e *Record) {
-	b := errwrap.StringBuilder{}
-	b.WByte('[').WString(e.Level.String()).WByte(']')
+	return HandleFunc(func(e *Record) {
+		b := buffersPool.Get().(*errwrap.Buffer)
+		b.Reset()
 
-	var indent byte = ' '
-	if e.Logs().HasCreated() {
-		b.WByte(' ').WString(e.Created.Format(w.timeLayout))
-		indent = '\t'
-	}
+		b.WByte('[').WString(e.Level.String()).WByte(']')
 
-	if e.Logs().HasCaller() {
-		b.WByte(' ').WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
-		indent = '\t'
-	}
-
-	b.WByte(indent).WString(e.Message)
-
-	for _, p := range e.Params {
-		b.WByte(' ').WString(p.K).WByte('=')
-		if m, ok := p.V.(encoding.TextMarshaler); ok {
-			bs, err := m.MarshalText()
-			if err != nil {
-				log.Panicln("TextHandler.Handle:", err)
-			} else {
-				b.WBytes(bs)
-			}
+		var indent byte = ' '
+		if e.Logs().HasCreated() {
+			b.WByte(' ').WString(e.Created.Format(timeLayout))
+			indent = '\t'
 		}
-		b.Print(p.V)
-	}
 
-	b.WByte('\n')
+		if e.Logs().HasCaller() {
+			b.WByte(' ').WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+			indent = '\t'
+		}
 
-	// 一次性写入，性能更好一些。
-	// NOTE: 单次写入整条记录，否则需要用锁确保写入数据的完整性。
-	if _, err := w.w.Write([]byte(b.String())); err != nil {
-		log.Println("JSONHandler.Handle:", err)
-	}
+		b.WByte(indent).WString(e.Message)
+
+		for _, p := range e.Params {
+			b.WByte(' ').WString(p.K).WByte('=')
+			if m, ok := p.V.(encoding.TextMarshaler); ok {
+				bs, err := m.MarshalText()
+				if err != nil {
+					log.Panicln("NewTextHandler.Handle:", err)
+				} else {
+					b.WBytes(bs)
+				}
+			}
+			b.Print(p.V)
+		}
+
+		b.WByte('\n')
+
+		mux.Lock()
+		defer mux.Unlock()
+		// 一次性写入，性能更好一些。
+		// NOTE: 单次写入整条记录，否则需要用锁确保写入数据的完整性。
+		if _, err := ww.Write(b.Bytes()); err != nil {
+			log.Println("NewTextHandler.Handle:", err)
+		}
+		buffersPool.Put(b)
+	})
 }
 
-// NewJSONHandler 声明 JSON 格式的输出
+// NewJSONHandler 返回将 [Record] 以 JSON 的形式写入 w 的对象
 func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
-	return &jsonHandler{timeLayout: timeLayout, w: writers.New(w...)}
-}
+	ww := writers.New(w...)
+	mux := &sync.Mutex{}
 
-func (w *jsonHandler) Handle(e *Record) {
-	b := errwrap.StringBuilder{}
-	b.WByte('{')
+	return HandleFunc(func(e *Record) {
+		b := buffersPool.Get().(*errwrap.Buffer)
+		b.Reset()
 
-	b.WString(`"level":"`).WString(e.Level.String()).WString(`",`).
-		WString(`"message":"`).WString(e.Message).WByte('"')
+		b.WByte('{')
 
-	if e.Logs().HasCreated() {
-		b.WString(`,"created":"`).WString(e.Created.Format(w.timeLayout)).WByte('"')
-	}
+		b.WString(`"level":"`).WString(e.Level.String()).WString(`",`).
+			WString(`"message":"`).WString(e.Message).WByte('"')
 
-	if e.Logs().HasCaller() {
-		b.WString(`,"path":"`).WString(e.Path).WString(`",`).
-			WString(`"line":`).WString(strconv.Itoa(e.Line))
-	}
-
-	if len(e.Params) > 0 {
-		b.WString(`,"params":[`)
-
-		for i, p := range e.Params {
-			val, err := json.Marshal(p.V)
-			if err != nil {
-				log.Println("JSONHandler.Handle:", err)
-			}
-
-			if i > 0 {
-				b.WByte(',')
-			}
-			b.WString(`{"`).WString(p.K).WString(`":`).WBytes(val).WByte('}')
+		if e.Logs().HasCreated() {
+			b.WString(`,"created":"`).WString(e.Created.Format(timeLayout)).WByte('"')
 		}
 
-		b.WByte(']')
-	}
+		if e.Logs().HasCaller() {
+			b.WString(`,"path":"`).WString(e.Path).WString(`",`).
+				WString(`"line":`).WString(strconv.Itoa(e.Line))
+		}
 
-	b.WByte('}')
+		if len(e.Params) > 0 {
+			b.WString(`,"params":[`)
 
-	// NOTE: 单次写入整条记录，否则需要用锁确保写入数据的完整性。
-	if _, err := w.w.Write([]byte(b.String())); err != nil {
-		log.Println("JSONHandler.Handle:", err)
-	}
+			for i, p := range e.Params {
+				val, err := json.Marshal(p.V)
+				if err != nil {
+					log.Println("NewJSONHandler.Handle:", err)
+				}
+
+				if i > 0 {
+					b.WByte(',')
+				}
+				b.WString(`{"`).WString(p.K).WString(`":`).WBytes(val).WByte('}')
+			}
+
+			b.WByte(']')
+		}
+
+		b.WByte('}')
+
+		mux.Lock()
+		defer mux.Unlock()
+		// NOTE: 单次写入整条记录，否则需要用锁确保写入数据的完整性。
+		if _, err := ww.Write(b.Bytes()); err != nil {
+			log.Println("NewJSONHandler.Handle:", err)
+		}
+		buffersPool.Put(b)
+	})
 }
 
-// NewTermHandler 带颜色的终端输出通道
+// NewTermHandler 返回将 [Record] 写入终端的对象
 //
-// timeLayout 表示输出的时间格式，遵守 time.Format 的参数要求，
-// 如果为空，则不输出时间信息；
-// fore 表示终端信息的字符颜色，背景始终是默认色；
+// timeLayout 表示输出的时间格式，遵守 time.Format 的参数要求；
 // w 表示终端的接口，可以是 [os.Stderr] 或是 [os.Stdout]，
 // 如果是其它的实现者则会带控制字符一起输出；
-func NewTermHandler(timeLayout string, fore colors.Color, w io.Writer) Handler {
-	return &termHandler{
-		timeLayout: timeLayout,
-		fore:       fore,
-		w:          colors.New(w),
-	}
-}
-
-func (w *termHandler) Handle(e *Record) {
-	w.mux.Lock()
-	defer w.mux.Unlock()
-
-	w.w.WByte('[').Color(colors.Normal, w.fore, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
-
-	var indent byte = ' '
-	if e.Logs().HasCreated() {
-		w.w.WByte(' ').WString(e.Created.Format(w.timeLayout))
-		indent = '\t'
+// foreColors 表示各类别信息的字符颜色，背景始终是默认色，如果未指定则采用 [colors.Default]；
+func NewTermHandler(timeLayout string, w io.Writer, foreColors map[Level]colors.Color) Handler {
+	cs := make(map[Level]colors.Color, len(levelStrings))
+	for l := range levelStrings {
+		if c, found := foreColors[l]; found {
+			cs[l] = c
+		} else {
+			cs[l] = colors.Default
+		}
 	}
 
-	if e.Logs().HasCaller() {
-		w.w.WByte(' ').WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
-		indent = '\t'
-	}
+	mux := &sync.Mutex{}
 
-	w.w.WByte(indent).WString(e.Message)
+	return HandleFunc(func(e *Record) {
+		b := buffersPool.Get().(*errwrap.Buffer)
+		b.Reset()
+		ww := colors.New(b)
 
-	for _, p := range e.Params {
-		w.w.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
-	}
+		c := cs[e.Level]
+		ww.WByte('[').Color(colors.Normal, c, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
 
-	w.w.WByte('\n')
+		var indent byte = ' '
+		if e.Logs().HasCreated() {
+			ww.WByte(' ').WString(e.Created.Format(timeLayout))
+			indent = '\t'
+		}
+
+		if e.Logs().HasCaller() {
+			ww.WByte(' ').WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+			indent = '\t'
+		}
+
+		ww.WByte(indent).WString(e.Message)
+
+		for _, p := range e.Params {
+			ww.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
+		}
+
+		ww.WByte('\n')
+
+		mux.Lock()
+		defer mux.Unlock()
+		// NOTE: 单次写入整条记录，否则需要用锁确保写入数据的完整性。
+		if _, err := w.Write(b.Bytes()); err != nil {
+			log.Println("NewTermHandler.Handle:", err)
+		}
+		buffersPool.Put(b)
+	})
 }
 
 // NewDispatchHandler 根据 [Level] 派发到不同的 [Handler] 对象

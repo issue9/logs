@@ -162,21 +162,14 @@ func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 // timeLayout 表示输出的时间格式，遵守 time.Format 的参数要求；
 // w 表示终端的接口，可以是 [os.Stderr] 或是 [os.Stdout]，
 // 如果是其它的实现者则会带控制字符一起输出；
-// foreColors 表示各类别信息的字符颜色，背景始终是默认色，如果未指定则采用 [colors.Default]
-// 如果为 nil，则采用 defaultTermColors；
+// foreColors 表示各类别信息的字符颜色，背景始终是默认色，未指定的颜色会从 [defaultTermColors] 获取；
 func NewTermHandler(timeLayout string, w io.Writer, foreColors map[Level]colors.Color) Handler {
-	var cs map[Level]colors.Color
-
-	if foreColors == nil {
-		cs = defaultTermColors
-	} else {
-		cs = make(map[Level]colors.Color, len(levelStrings))
-		for l := range levelStrings {
-			if c, found := foreColors[l]; found {
-				cs[l] = c
-			} else {
-				cs[l] = colors.Default
-			}
+	cs := make(map[Level]colors.Color, len(defaultTermColors))
+	for l, cc := range defaultTermColors {
+		if c, found := foreColors[l]; found {
+			cs[l] = c
+		} else {
+			cs[l] = cc
 		}
 	}
 

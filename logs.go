@@ -7,12 +7,9 @@
 // 提供了 [Handler] 接口用于处理输出的日志格式，用户可以自己实现，
 // 系统也提供了几种常用的供用户选择。
 //
-// 同时还提供了 [Printer] 接口用于处理由 [Logger.Print] 等方法输入的数据。
-// [Printer] 一般用于对用户输入的数据进行二次处理，比如进行本地化翻译等。
-//
 // # Logger
 //
-// [Logger] 为实际的日志输出接口，提供多种 [Logger] 接口的实现。
+// [Logger] 为实际的日志输出接口，提供多种 [Logger] 的实现。
 //   - [Logs.ERROR] 等为普通的日志对象；
 //   - [Logs.With] 返回的是带固定参数的日志对象；
 package logs
@@ -77,51 +74,15 @@ func (logs *Logs) IsEnable(l Level) bool { return logs.loggers[l].enable }
 
 func (logs *Logs) INFO() Logger { return logs.Logger(LevelInfo) }
 
-func (logs *Logs) Info(v ...any) { logs.level(LevelInfo).print(3, v...) }
-
-func (logs *Logs) Infof(format string, v ...any) {
-	logs.level(LevelInfo).printf(3, format, v...)
-}
-
 func (logs *Logs) DEBUG() Logger { return logs.Logger(LevelDebug) }
-
-func (logs *Logs) Debug(v ...any) { logs.level(LevelDebug).print(3, v...) }
-
-func (logs *Logs) Debugf(format string, v ...any) {
-	logs.level(LevelDebug).printf(3, format, v...)
-}
 
 func (logs *Logs) TRACE() Logger { return logs.Logger(LevelTrace) }
 
-func (logs *Logs) Trace(v ...any) { logs.level(LevelTrace).print(3, v...) }
-
-func (logs *Logs) Tracef(format string, v ...any) {
-	logs.level(LevelTrace).printf(3, format, v...)
-}
-
 func (logs *Logs) WARN() Logger { return logs.Logger(LevelWarn) }
-
-func (logs *Logs) Warn(v ...any) { logs.level(LevelWarn).print(3, v...) }
-
-func (logs *Logs) Warnf(format string, v ...any) {
-	logs.level(LevelWarn).printf(3, format, v...)
-}
 
 func (logs *Logs) ERROR() Logger { return logs.Logger(LevelError) }
 
-func (logs *Logs) Error(v ...any) { logs.level(LevelError).print(3, v...) }
-
-func (logs *Logs) Errorf(format string, v ...any) {
-	logs.level(LevelError).printf(3, format, v...)
-}
-
 func (logs *Logs) FATAL() Logger { return logs.Logger(LevelFatal) }
-
-func (logs *Logs) Fatal(v ...any) { logs.level(LevelFatal).print(3, v...) }
-
-func (logs *Logs) Fatalf(format string, v ...any) {
-	logs.level(LevelFatal).printf(3, format, v...)
-}
 
 // Logger 返回指定级别的日志接口
 func (logs *Logs) Logger(lv Level) Logger { return logs.level(lv) }

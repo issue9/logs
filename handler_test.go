@@ -114,11 +114,11 @@ func TestDispatchHandler(t *testing.T) {
 
 	e := l.NewRecord(LevelWarn)
 	e.Created = time.Now()
-	l.Warnf("warnf test")
+	l.WARN().Printf("warnf test")
 	a.Zero(txtBuf.Len()).Contains(jsonBuf.String(), "warnf test").True(json.Valid(jsonBuf.Bytes()))
 
 	e.Level = LevelInfo
 	jsonBuf.Reset()
-	l.Info("info test")
+	l.INFO().Print("info test")
 	a.Zero(jsonBuf.Len()).Contains(txtBuf.String(), "info test")
 }

@@ -82,27 +82,21 @@ func (l *logger) String(s string) {
 	}
 }
 
-func (l *logger) Print(v ...any) { l.print(3, v...) }
-
-func (l *logger) Println(v ...any) { l.println(3, v...) }
-
-func (l *logger) Printf(format string, v ...any) { l.printf(3, format, v...) }
-
-func (l *logger) print(depth int, v ...any) {
+func (l *logger) Print(v ...any) {
 	if l.enable {
-		l.logs.NewRecord(l.lv).DepthPrint(depth, v...)
+		l.logs.NewRecord(l.lv).DepthPrint(2, v...)
 	}
 }
 
-func (l *logger) println(depth int, v ...any) {
+func (l *logger) Println(v ...any) {
 	if l.enable {
-		l.logs.NewRecord(l.lv).DepthPrintln(depth, v...)
+		l.logs.NewRecord(l.lv).DepthPrintln(2, v...)
 	}
 }
 
-func (l *logger) printf(depth int, format string, v ...any) {
+func (l *logger) Printf(format string, v ...any) {
 	if l.enable {
-		l.logs.NewRecord(l.lv).DepthPrintf(depth, format, v...)
+		l.logs.NewRecord(l.lv).DepthPrintf(2, format, v...)
 	}
 }
 

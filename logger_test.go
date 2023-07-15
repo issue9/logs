@@ -33,7 +33,7 @@ func TestLogger_location(t *testing.T) {
 
 	// Logs.Location
 	buf.Reset()
-	l.Errorf("Logs.%s", "Errorf")
+	l.ERROR().Printf("Logs.%s", "Errorf")
 	val = buf.String()
 	a.Contains(val, "logger_test.go:36").
 		Contains(val, "Logs.Errorf")

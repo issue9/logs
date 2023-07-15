@@ -30,12 +30,12 @@ func TestLogsLoggers(t *testing.T) {
 			Contains(val, "logs_test.go:27") // 行数是否正确
 	}
 
-	testLogger(a, l.Info, l.Infof, buf)
-	testLogger(a, l.Debug, l.Debugf, buf)
-	testLogger(a, l.Trace, l.Tracef, buf)
-	testLogger(a, l.Warn, l.Warnf, buf)
-	testLogger(a, l.Error, l.Errorf, buf)
-	testLogger(a, l.Fatal, l.Fatalf, buf)
+	testLogger(a, l.INFO().Print, l.INFO().Printf, buf)
+	testLogger(a, l.DEBUG().Print, l.DEBUG().Printf, buf)
+	testLogger(a, l.TRACE().Print, l.TRACE().Printf, buf)
+	testLogger(a, l.WARN().Print, l.WARN().Printf, buf)
+	testLogger(a, l.ERROR().Print, l.ERROR().Printf, buf)
+	testLogger(a, l.FATAL().Print, l.FATAL().Printf, buf)
 }
 
 func TestLogs_IsEnable(t *testing.T) {

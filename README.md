@@ -5,19 +5,31 @@ logs
 [![codecov](https://codecov.io/gh/issue9/logs/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/logs)
 ======
 
-全新的 v4 版本，对所有功能进行了重构，与之前的几个版本完全不同。
-新版本不再追求与标准库的绝对兼容，仅提供了 StdLogger 用于转换成标准库对象的方法。
+高性能日志库
+
+```
+BenchmarkLogsTextPositive     	19077283	       315.7 ns/op	      48 B/op	       1 allocs/op
+BenchmarkLogsTextPositive-2   	32050080	       196.7 ns/op	      48 B/op	       1 allocs/op
+BenchmarkLogsTextPositive-4   	31083766	       177.2 ns/op	      48 B/op	       1 allocs/op
+BenchmarkLogsTextNegative     	233248940	        24.56 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsTextNegative-2   	440099184	        13.00 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsTextNegative-4   	668924367	         9.313 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsJSONNegative     	80700519	        70.91 ns/op	      16 B/op	       1 allocs/op
+BenchmarkLogsJSONNegative-2   	159696355	        41.04 ns/op	      16 B/op	       1 allocs/op
+BenchmarkLogsJSONNegative-4   	114847047	        45.25 ns/op	      16 B/op	       1 allocs/op
+BenchmarkLogsJSONPositive     	 6550818	       886.1 ns/op	      64 B/op	       2 allocs/op
+BenchmarkLogsJSONPositive-2   	11191477	       517.9 ns/op	      64 B/op	       2 allocs/op
+BenchmarkLogsJSONPositive-4   	11880020	       515.5 ns/op	      64 B/op	       2 allocs/op
+```
 
 ```go
 import "github.com/issue9/logs/v5"
 
-l := logs.New(nil)
-l.Debug("debug start...")
-l.Debugf("%v start...", "debug")
+l := logs.New(logs.NewTextHandler(...))
 l.DEBUG().Print("debug start...")
 
-err := l.With(logs.LevelError, map[string]interface{}{"k1":"v1"})
-err.Printf("带默认参数 k1=v1") // 不用 With 指定 k1，err 全都自动带上此参数
+erro := l.With(logs.LevelError, map[string]interface{}{"k1":"v1"})
+erro.Printf("带默认参数 k1=v1") // 不用 With 指定 k1，err 全都自动带上此参数
 ```
 
 安装

@@ -13,7 +13,7 @@ import (
 var (
 	_ Logger = &logger{}
 	_ Logger = &withLogger{}
-	_ Logger = &emptyLogger{}
+	_ Logger = &disableLogger{}
 )
 
 func TestLogger_location(t *testing.T) {
@@ -109,7 +109,7 @@ func TestLogger_With(t *testing.T) {
 	l.Enable(LevelDebug)
 	err = l.With(LevelError, map[string]any{"k2": "v2"})
 	err.Println("err")
-	a.Equal(err, emptyLLoggerInst).
+	a.Equal(err, disabledLogger).
 		NotNil(err.StdLogger()).
 		Empty(buf.String())
 }

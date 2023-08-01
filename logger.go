@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-var emptyLLoggerInst = &emptyLogger{}
+var disabledLogger = &disableLogger{}
 
 type (
 	// Logger 日志接口
@@ -52,7 +52,7 @@ type (
 		pairs []Pair
 	}
 
-	emptyLogger struct{}
+	disableLogger struct{}
 )
 
 func (l *logger) StdLogger() *log.Logger {
@@ -67,7 +67,7 @@ func (l *logger) With(name string, val any) Logger {
 	if l.enable {
 		return l.logs.NewRecord(l.lv).With(name, val)
 	}
-	return emptyLLoggerInst
+	return disabledLogger
 }
 
 func (l *logger) Error(err error) {
@@ -106,7 +106,7 @@ func (l *logger) Printf(format string, v ...any) {
 func (logs *Logs) With(lv Level, params map[string]any) Logger {
 	l := logs.level(lv)
 	if !l.enable {
-		return emptyLLoggerInst
+		return disabledLogger
 	}
 
 	pairs := make([]Pair, 0, len(params))
@@ -148,17 +148,17 @@ func (l *withLogger) Printf(format string, v ...any) {
 	l.with().DepthPrintf(2, format, v...)
 }
 
-func (l *emptyLogger) With(_ string, _ any) Logger { return l }
+func (l *disableLogger) With(_ string, _ any) Logger { return l }
 
-func (l *emptyLogger) Error(_ error) {}
+func (l *disableLogger) Error(_ error) {}
 
-func (l *emptyLogger) String(_ string) {}
+func (l *disableLogger) String(_ string) {}
 
-func (l *emptyLogger) Print(_ ...any) {}
+func (l *disableLogger) Print(_ ...any) {}
 
-func (l *emptyLogger) Printf(_ string, _ ...any) {}
+func (l *disableLogger) Printf(_ string, _ ...any) {}
 
-func (l *emptyLogger) Println(_ ...any) {}
+func (l *disableLogger) Println(_ ...any) {}
 
 // 空对象构建一个不输出任何内容的实例
-func (l *emptyLogger) StdLogger() *log.Logger { return log.New(io.Discard, "", 0) }
+func (l *disableLogger) StdLogger() *log.Logger { return log.New(io.Discard, "", 0) }

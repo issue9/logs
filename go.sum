@@ -2,7 +2,7 @@ github.com/issue9/assert/v3 v3.0.5 h1:Mlz/4v2Ph6ZDm3Fk3A1jhitH4M/2dkHeHNKe7tTZdH
 github.com/issue9/assert/v3 v3.0.5/go.mod h1:yft/uaskRpwQTyBT3n1zRl91SR1wNlO4fLZHzOa4bdM=
 github.com/issue9/errwrap v0.3.1 h1:8g4lYJaGnoiXyZ1oZyH/7zPDGgw5RNiE9Q6ri9kE6Z8=
 github.com/issue9/errwrap v0.3.1/go.mod h1:HLR0e5iimd2aJXM9YrThOsRj3/6lMtk77lVp7zyvJ4E=
-github.com/issue9/term/v3 v3.2.0 h1:jH/juVoWYPI0yGK4/vKKtg3MPBEa/9mhzuqvoVR9LWg=
-github.com/issue9/term/v3 v3.2.0/go.mod h1:YYDjoUg3S1dTSWVjDgelUPD9jBXvx5AJy3J+LAY7ak4=
-golang.org/x/sys v0.10.0 h1:SqMFp9UcQJZa+pmYuAKjd9xq1f0j5rLcDIk0mj4qAsA=
-golang.org/x/sys v0.10.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+github.com/issue9/term/v3 v3.2.1 h1:ZpINlQx50hGbGkqSNfy5ZXAizCayeEUan0ymY/790ps=
+github.com/issue9/term/v3 v3.2.1/go.mod h1:/r8biPgdaWLKy/bful0S/I8nf/S8hjGoZ/NX5YmMcRw=
+golang.org/x/sys v0.11.0 h1:eG7RXZHdqOJ1i+0lgLgCpSXAp6M3LYlAo6osgSi0xOM=
+golang.org/x/sys v0.11.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

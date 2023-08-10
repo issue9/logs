@@ -57,7 +57,7 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 	if logs.HasCreated() {
 		e.Created = time.Now()
 	} else {
-		e.Created = time.Time{} // 从 poll 中获取的值，必须要初始化。
+		e.Created = time.Time{} // 从 pool 中获取的值，必须要初始化。
 	}
 	e.Level = lv
 

@@ -69,7 +69,7 @@ func TestLogs_IsEnable(t *testing.T) {
 	ll, ok = l.FATAL().(*logger)
 	a.True(ok).False(ll.enable)
 
-	// enable=false，emptyLoggerInst.With
+	// enable=false，disabledLogger.With
 	buf.Reset()
 	inst := l.FATAL()
 	a.Equal(inst.With("k1", "v1").With("k2", "v2"), disabledLogger)

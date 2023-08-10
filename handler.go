@@ -131,7 +131,7 @@ func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 			b.WString(`,"params":[`)
 
 			for i, p := range e.Params {
-				val, err := json.Marshal(p.V)
+				val, err := json.Marshal(p.V) // TODO 基本类型直接处理，是不是会更快一些？
 				if err != nil {
 					log.Println("NewJSONHandler.Handle:", err)
 				}

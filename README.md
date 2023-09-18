@@ -1,5 +1,5 @@
 logs
-[![Go](https://github.com/issue9/logs/workflows/Go/badge.svg)](https://github.com/issue9/logs/actions?query=workflow%3AGo)
+[![Go](https://github.com/issue9/logs/actions/workflows/go.yml/badge.svg)](https://github.com/issue9/logs/actions/workflows/go.yml)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/logs/v5)](https://pkg.go.dev/github.com/issue9/logs/v5)
 ![Go version](https://img.shields.io/github/go-mod/go-version/issue9/logs)
 [![codecov](https://codecov.io/gh/issue9/logs/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/logs)
@@ -7,7 +7,7 @@ logs
 
 高性能日志库
 
-```
+```text
 cpu: Intel(R) Core(TM) i5-5257U CPU @ 2.70GHz
 BenchmarkLogsTextPositive     	70519216	       178.9 ns/op	       0 B/op	       0 allocs/op
 BenchmarkLogsTextPositive-2   	100000000	       120.6 ns/op	       0 B/op	       0 allocs/op

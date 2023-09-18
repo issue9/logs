@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"os"
 	"strconv"
 	"sync"
 
@@ -88,7 +88,7 @@ func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
 			if m, ok := p.V.(encoding.TextMarshaler); ok {
 				bs, err := m.MarshalText()
 				if err != nil {
-					log.Panicln("NewTextHandler.Handle:", err)
+					b.WByte(' ').WString(p.K).WString("Err(").WString(err.Error()).WByte(')')
 				} else {
 					b.WBytes(bs)
 				}
@@ -100,10 +100,8 @@ func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
 
 		mux.Lock()
 		defer mux.Unlock()
-		// 一次性写入，性能更好一些。
-		// NOTE: 单次写入整条记录，否则需要用锁确保写入数据的完整性。
-		if _, err := ww.Write(b.Bytes()); err != nil {
-			log.Println("NewTextHandler.Handle:", err)
+		if _, err := ww.Write(b.Bytes()); err != nil { // 一次性写入，性能更好一些。
+			fmt.Fprintf(os.Stderr, "NewTextHandler.Handle:%v\n", err)
 		}
 		buffersPool.Put(b)
 	})
@@ -138,7 +136,7 @@ func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 			for i, p := range e.Params {
 				val, err := json.Marshal(p.V) // TODO 基本类型直接处理，是不是会更快一些？
 				if err != nil {
-					log.Println("NewJSONHandler.Handle:", err)
+					val = []byte("Err(" + err.Error() + ")")
 				}
 
 				if i > 0 {
@@ -154,9 +152,8 @@ func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 
 		mux.Lock()
 		defer mux.Unlock()
-		// NOTE: 单次写入整条记录，否则需要用锁确保写入数据的完整性。
 		if _, err := ww.Write(b.Bytes()); err != nil {
-			log.Println("NewJSONHandler.Handle:", err)
+			fmt.Fprintf(os.Stderr, "NewJSONHandler.Handle:%v\n", err)
 		}
 		buffersPool.Put(b)
 	})
@@ -168,6 +165,8 @@ func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 // w 表示终端的接口，可以是 [os.Stderr] 或是 [os.Stdout]，
 // 如果是其它的实现者则会带控制字符一起输出；
 // foreColors 表示各类别信息的字符颜色，背景始终是默认色，未指定的颜色会从 [defaultTermColors] 获取；
+//
+// NOTE: 如果向 w 输出内容时出错，将会导致 panic。
 func NewTermHandler(timeLayout string, w io.Writer, foreColors map[Level]colors.Color) Handler {
 	cs := make(map[Level]colors.Color, len(defaultTermColors))
 	for l, cc := range defaultTermColors {
@@ -209,9 +208,9 @@ func NewTermHandler(timeLayout string, w io.Writer, foreColors map[Level]colors.
 
 		mux.Lock()
 		defer mux.Unlock()
-		// NOTE: 单次写入整条记录，否则需要用锁确保写入数据的完整性。
 		if _, err := w.Write(b.Bytes()); err != nil {
-			log.Println("NewTermHandler.Handle:", err)
+			// 大概率是写入终端失败，直接 panic。
+			panic(fmt.Sprintf("NewTermHandler.Handle:%v\n", err))
 		}
 		buffersPool.Put(b)
 	})

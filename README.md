@@ -8,18 +8,19 @@ logs
 高性能日志库
 
 ```
-BenchmarkLogsTextPositive     	19077283	       315.7 ns/op	      48 B/op	       1 allocs/op
-BenchmarkLogsTextPositive-2   	32050080	       196.7 ns/op	      48 B/op	       1 allocs/op
-BenchmarkLogsTextPositive-4   	31083766	       177.2 ns/op	      48 B/op	       1 allocs/op
-BenchmarkLogsTextNegative     	233248940	        24.56 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsTextNegative-2   	440099184	        13.00 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsTextNegative-4   	668924367	         9.313 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsJSONNegative     	80700519	        70.91 ns/op	      16 B/op	       1 allocs/op
-BenchmarkLogsJSONNegative-2   	159696355	        41.04 ns/op	      16 B/op	       1 allocs/op
-BenchmarkLogsJSONNegative-4   	114847047	        45.25 ns/op	      16 B/op	       1 allocs/op
-BenchmarkLogsJSONPositive     	 6550818	       886.1 ns/op	      64 B/op	       2 allocs/op
-BenchmarkLogsJSONPositive-2   	11191477	       517.9 ns/op	      64 B/op	       2 allocs/op
-BenchmarkLogsJSONPositive-4   	11880020	       515.5 ns/op	      64 B/op	       2 allocs/op
+cpu: Intel(R) Core(TM) i5-5257U CPU @ 2.70GHz
+BenchmarkLogsTextPositive     	70519216	       178.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsTextPositive-2   	100000000	       120.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsTextPositive-4   	81085801	       141.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsTextNegative     	484125342	        24.35 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsTextNegative-2   	1000000000	        14.10 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsTextNegative-4   	1000000000	         9.033 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsJSONNegative     	461385842	        25.81 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsJSONNegative-2   	886811012	        13.65 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsJSONNegative-4   	1000000000	        10.70 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsJSONPositive     	20922458	       580.0 ns/op	      40 B/op	       2 allocs/op
+BenchmarkLogsJSONPositive-2   	37168568	       318.2 ns/op	      40 B/op	       2 allocs/op
+BenchmarkLogsJSONPositive-4   	36571064	       315.3 ns/op	      40 B/op	       2 allocs/op
 ```
 
 ```go

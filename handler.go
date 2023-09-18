@@ -87,14 +87,43 @@ func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
 
 		for _, p := range e.Params {
 			b.WByte(' ').WString(p.K).WByte('=')
-			if m, ok := p.V.(encoding.TextMarshaler); ok {
-				if bs, err := m.MarshalText(); err != nil {
-					b.WString("Err(").WString(err.Error()).WByte(')')
+			switch v := p.V.(type) {
+			case string:
+				b.WString(v)
+			case int:
+				b.WString(strconv.Itoa(v))
+			case int64:
+				b.WString(strconv.FormatInt(v, 10))
+			case int32:
+				b.WString(strconv.FormatInt(int64(v), 10))
+			case int16:
+				b.WString(strconv.FormatInt(int64(v), 10))
+			case int8:
+				b.WString(strconv.FormatInt(int64(v), 10))
+			case uint:
+				b.WString(strconv.FormatUint(uint64(v), 10))
+			case uint64:
+				b.WString(strconv.FormatUint(v, 10))
+			case uint32:
+				b.WString(strconv.FormatUint(uint64(v), 10))
+			case uint16:
+				b.WString(strconv.FormatUint(uint64(v), 10))
+			case uint8:
+				b.WString(strconv.FormatUint(uint64(v), 10))
+			case float32:
+				b.WString(strconv.FormatFloat(float64(v), 'f', 5, 32))
+			case float64:
+				b.WString(strconv.FormatFloat(float64(v), 'f', 5, 64))
+			default:
+				if m, ok := p.V.(encoding.TextMarshaler); ok {
+					if bs, err := m.MarshalText(); err != nil {
+						b.WString("Err(").WString(err.Error()).WByte(')')
+					} else {
+						b.WBytes(bs)
+					}
 				} else {
-					b.WBytes(bs)
+					b.Print(p.V)
 				}
-			} else {
-				b.Print(p.V)
 			}
 		}
 
@@ -138,15 +167,47 @@ func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 			b.WString(`,"params":[`)
 
 			for i, p := range e.Params {
-				val, err := json.Marshal(p.V) // TODO 基本类型直接处理，是不是会更快一些？
-				if err != nil {
-					val = []byte("\"Err(" + err.Error() + ")\"")
-				}
-
 				if i > 0 {
 					b.WByte(',')
 				}
-				b.WString(`{"`).WString(p.K).WString(`":`).WBytes(val).WByte('}')
+				b.WString(`{"`).WString(p.K).WString(`":`)
+
+				switch v := p.V.(type) {
+				case string:
+					b.WByte('"').WString(v).WByte('"')
+				case int:
+					b.WString(strconv.Itoa(v))
+				case int64:
+					b.WString(strconv.FormatInt(v, 10))
+				case int32:
+					b.WString(strconv.FormatInt(int64(v), 10))
+				case int16:
+					b.WString(strconv.FormatInt(int64(v), 10))
+				case int8:
+					b.WString(strconv.FormatInt(int64(v), 10))
+				case uint:
+					b.WString(strconv.FormatUint(uint64(v), 10))
+				case uint64:
+					b.WString(strconv.FormatUint(v, 10))
+				case uint32:
+					b.WString(strconv.FormatUint(uint64(v), 10))
+				case uint16:
+					b.WString(strconv.FormatUint(uint64(v), 10))
+				case uint8:
+					b.WString(strconv.FormatUint(uint64(v), 10))
+				case float32:
+					b.WString(strconv.FormatFloat(float64(v), 'e', 5, 32))
+				case float64:
+					b.WString(strconv.FormatFloat(float64(v), 'e', 5, 64))
+				default:
+					val, err := json.Marshal(p.V)
+					if err != nil {
+						val = []byte("\"Err(" + err.Error() + ")\"")
+					}
+					b.WBytes(val)
+				}
+
+				b.WByte('}')
 			}
 
 			b.WByte(']')

@@ -60,6 +60,8 @@ type (
 func (w HandleFunc) Handle(e *Record) { w(e) }
 
 // NewTextHandler 返回将 [Record] 以普通文本的形式写入 w 的对象
+//
+// NOTE: 如果向 w 输出内容时出错，会将错误信息输出到终端作为最后的处理方式。
 func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
 	ww := writers.New(w...)
 	mux := &sync.Mutex{} // 防止多个函数同时调用 HandleFunc 方法。
@@ -86,14 +88,14 @@ func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
 		for _, p := range e.Params {
 			b.WByte(' ').WString(p.K).WByte('=')
 			if m, ok := p.V.(encoding.TextMarshaler); ok {
-				bs, err := m.MarshalText()
-				if err != nil {
-					b.WByte(' ').WString(p.K).WString("Err(").WString(err.Error()).WByte(')')
+				if bs, err := m.MarshalText(); err != nil {
+					b.WString("Err(").WString(err.Error()).WByte(')')
 				} else {
 					b.WBytes(bs)
 				}
+			} else {
+				b.Print(p.V)
 			}
-			b.Print(p.V)
 		}
 
 		b.WByte('\n')
@@ -108,6 +110,8 @@ func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
 }
 
 // NewJSONHandler 返回将 [Record] 以 JSON 的形式写入 w 的对象
+//
+// NOTE: 如果向 w 输出内容时出错，会将错误信息输出到终端作为最后的处理方式。
 func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 	ww := writers.New(w...)
 	mux := &sync.Mutex{}
@@ -136,7 +140,7 @@ func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 			for i, p := range e.Params {
 				val, err := json.Marshal(p.V) // TODO 基本类型直接处理，是不是会更快一些？
 				if err != nil {
-					val = []byte("Err(" + err.Error() + ")")
+					val = []byte("\"Err(" + err.Error() + ")\"")
 				}
 
 				if i > 0 {

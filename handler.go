@@ -17,7 +17,12 @@ import (
 	"github.com/issue9/logs/v5/writers"
 )
 
+// 常用的日志时间格式
 const (
+	DateMilliLayout = "2006-01-02T15:04:05.000"
+	DateMicroLayout = "2006-01-02T15:04:05.000000"
+	DateNanoLayout  = "2006-01-02T15:04:05.000000000"
+
 	MilliLayout = "15:04:05.000"
 	MicroLayout = "15:04:05.000000"
 	NanoLayout  = "15:04:05.000000000"
@@ -41,9 +46,9 @@ type (
 	Handler interface {
 		// Handle 将 [Record] 写入日志
 		//
-		// [Record] 中各个字段的名称，由处理器自行决定。
+		// [Record] 中各个字段的名称由处理器自行决定。
 		//
-		// NOTE: 此方法应该保证以换行符结尾。
+		// NOTE: 此方法应该保证输出内容是以换行符作为结尾。
 		Handle(*Record)
 	}
 
@@ -180,8 +185,8 @@ func NewTermHandler(timeLayout string, w io.Writer, foreColors map[Level]colors.
 		b.Reset()
 		ww := colors.New(b)
 
-		c := cs[e.Level]
-		ww.WByte('[').Color(colors.Normal, c, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
+		fc := cs[e.Level]
+		ww.WByte('[').Color(colors.Normal, fc, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
 
 		var indent byte = ' '
 		if e.Logs().HasCreated() {

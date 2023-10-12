@@ -24,12 +24,10 @@ type (
 		logs *Logs
 
 		Level   Level
-		Created string // 日志的生成时间
+		Created time.Time // 日志的生成时间
 
-		// 日志的实际内容
-		//
-		// 如果要改变此值，请使用 Depth* 系列的方法。
-		Message string
+		// 向日志中添加日志消息
+		Message func([]byte) []byte
 
 		// 以下表示日志的定位信息
 		Path string
@@ -52,11 +50,11 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 		e.Params = e.Params[:0]
 	}
 	e.Path = ""
-	e.Message = ""
+	e.Message = nil
 	if logs.createdFormat != "" {
-		e.Created = time.Now().Format(logs.createdFormat)
+		e.Created = time.Now()
 	} else {
-		e.Created = "" // 从 pool 中获取的值，必须要初始化。
+		e.Created = time.Time{} // 从 pool 中获取的值，必须要初始化。
 	}
 	e.Level = lv
 
@@ -104,7 +102,7 @@ func (e *Record) Error(err error) { e.DepthError(2, err) }
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthError(depth int, err error) {
 	if err != nil {
-		e.Message = err.Error()
+		e.Message = func(bs []byte) []byte { return append(bs, []byte(err.Error())...) }
 	}
 	e.setLocation(depth + 1)
 	e.output()
@@ -118,7 +116,7 @@ func (e *Record) String(s string) { e.DepthString(2, s) }
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthString(depth int, s string) {
-	e.Message = s
+	e.Message = func(bs []byte) []byte { return append(bs, s...) }
 	e.setLocation(depth + 1)
 	e.output()
 }
@@ -132,7 +130,7 @@ func (e *Record) Print(v ...any) { e.DepthPrint(2, v...) }
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrint(depth int, v ...any) {
 	if len(v) > 0 {
-		e.Message = fmt.Sprint(v...)
+		e.Message = func(bs []byte) []byte { return fmt.Append(bs, v...) }
 	}
 	e.setLocation(depth + 1)
 	e.output()
@@ -146,7 +144,7 @@ func (e *Record) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintf(depth int, format string, v ...any) {
-	e.Message = fmt.Sprintf(format, v...)
+	e.Message = func(bs []byte) []byte { return fmt.Appendf(bs, format, v...) }
 	e.setLocation(depth + 1)
 	e.output()
 }
@@ -160,14 +158,14 @@ func (e *Record) Println(v ...any) { e.DepthPrintln(2, v...) }
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintln(depth int, v ...any) {
 	if len(v) > 0 {
-		e.Message = fmt.Sprintln(v...)
+		e.Message = func(bs []byte) []byte { return fmt.Appendln(bs, v...) }
 	}
 	e.setLocation(depth + 1)
 	e.output()
 }
 
 func (e *Record) output() {
-	e.logs.handler.Handle(e)
+	e.Logs().handler.Handle(e)
 	if len(e.Params) < poolMaxParams {
 		recordPool.Put(e)
 	}

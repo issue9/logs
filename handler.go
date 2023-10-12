@@ -3,6 +3,7 @@
 package logs
 
 import (
+	"bytes"
 	"encoding"
 	"encoding/json"
 	"fmt"
@@ -11,17 +12,12 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/issue9/errwrap"
 	"github.com/issue9/term/v3/colors"
 
 	"github.com/issue9/logs/v6/writers"
 )
 
-const buffersPoolMaxSize = 1 << 10
-
 var nop = &nopHandler{}
-
-var buffersPool = &sync.Pool{New: func() any { return &errwrap.Buffer{} }}
 
 var defaultTermColors = map[Level]colors.Color{
 	LevelInfo:  colors.Green,
@@ -48,8 +44,6 @@ type (
 	nopHandler struct{}
 )
 
-func (w HandlerFunc) Handle(e *Record) { w(e) }
-
 // NewTextHandler 返回将 [Record] 以普通文本的形式写入 w 的对象
 //
 // NOTE: 如果向 w 输出内容时出错，会将错误信息输出到终端作为最后的处理方式。
@@ -58,26 +52,27 @@ func NewTextHandler(w ...io.Writer) Handler {
 	mux := &sync.Mutex{} // 防止多个函数同时调用 HandlerFunc 方法。
 
 	return HandlerFunc(func(e *Record) {
-		b := buffersPool.Get().(*errwrap.Buffer)
+		b := newBuffer()
 		b.Reset()
 
-		b.WByte('[').WString(e.Level.String()).WByte(']')
+		b.WBytes('[').WString(e.Level.String()).WBytes(']')
 
 		var indent byte = ' '
-		if e.Created != "" {
-			b.WByte(' ').WString(e.Created)
+		if !e.Created.IsZero() {
+			b.WBytes(' ').WString(e.Created.Format(e.Logs().createdFormat))
 			indent = '\t'
 		}
 
 		if e.Path != "" {
-			b.WByte(' ').WString(e.Path)
+			b.WBytes(' ').WString(e.Path)
 			indent = '\t'
 		}
 
-		b.WByte(indent).WString(e.Message)
+		b.WBytes(indent)
+		*b = e.Message(b.Bytes())
 
 		for _, p := range e.Params {
-			b.WByte(' ').WString(p.K).WByte('=')
+			b.WBytes(' ').WString(p.K).WBytes('=')
 			switch v := p.V.(type) {
 			case string:
 				b.WString(v)
@@ -108,17 +103,17 @@ func NewTextHandler(w ...io.Writer) Handler {
 			default:
 				if m, ok := p.V.(encoding.TextMarshaler); ok {
 					if bs, err := m.MarshalText(); err != nil {
-						b.WString("Err(").WString(err.Error()).WByte(')')
+						b.WString("Err(").WString(err.Error()).WBytes(')')
 					} else {
-						b.WBytes(bs)
+						b.WBytes(bs...)
 					}
 				} else {
-					b.Print(p.V)
+					*b = fmt.Append(b.Bytes(), p.V)
 				}
 			}
 		}
 
-		b.WByte('\n')
+		b.WBytes('\n')
 
 		mux.Lock()
 		defer mux.Unlock()
@@ -126,7 +121,7 @@ func NewTextHandler(w ...io.Writer) Handler {
 			fmt.Fprintf(os.Stderr, "NewTextHandler.Handle:%v\n", err)
 		}
 
-		if b.Len() < buffersPoolMaxSize {
+		if len(*b) < buffersPoolMaxSize {
 			buffersPool.Put(b)
 		}
 	})
@@ -140,20 +135,22 @@ func NewJSONHandler(w ...io.Writer) Handler {
 	mux := &sync.Mutex{}
 
 	return HandlerFunc(func(e *Record) {
-		b := buffersPool.Get().(*errwrap.Buffer)
+		b := newBuffer()
 		b.Reset()
 
-		b.WByte('{')
+		b.WBytes('{')
 
 		b.WString(`"level":"`).WString(e.Level.String()).WString(`",`).
-			WString(`"message":"`).WString(e.Message).WByte('"')
+			WString(`"message":"`)
+		*b = e.Message(b.Bytes())
+		b.WBytes('"')
 
-		if e.Created != "" {
-			b.WString(`,"created":"`).WString(e.Created).WByte('"')
+		if !e.Created.IsZero() {
+			b.WString(`,"created":"`).WString(e.Created.Format(e.Logs().createdFormat)).WBytes('"')
 		}
 
 		if e.Path != "" {
-			b.WString(`,"path":"`).WString(e.Path).WByte('"')
+			b.WString(`,"path":"`).WString(e.Path).WBytes('"')
 		}
 
 		if len(e.Params) > 0 {
@@ -161,13 +158,13 @@ func NewJSONHandler(w ...io.Writer) Handler {
 
 			for i, p := range e.Params {
 				if i > 0 {
-					b.WByte(',')
+					b.WBytes(',')
 				}
 				b.WString(`{"`).WString(p.K).WString(`":`)
 
 				switch v := p.V.(type) {
 				case string:
-					b.WByte('"').WString(v).WByte('"')
+					b.WBytes('"').WString(v).WBytes('"')
 				case int:
 					b.WString(strconv.Itoa(v))
 				case int64:
@@ -197,16 +194,16 @@ func NewJSONHandler(w ...io.Writer) Handler {
 					if err != nil {
 						val = []byte("\"Err(" + err.Error() + ")\"")
 					}
-					b.WBytes(val)
+					b.WBytes(val...)
 				}
 
-				b.WByte('}')
+				b.WBytes('}')
 			}
 
-			b.WByte(']')
+			b.WBytes(']')
 		}
 
-		b.WByte('}')
+		b.WBytes('}')
 
 		mux.Lock()
 		defer mux.Unlock()
@@ -214,7 +211,7 @@ func NewJSONHandler(w ...io.Writer) Handler {
 			fmt.Fprintf(os.Stderr, "NewJSONHandler.Handle:%v\n", err)
 		}
 
-		if b.Len() < buffersPoolMaxSize {
+		if len(*b) < buffersPoolMaxSize {
 			buffersPool.Put(b)
 		}
 	})
@@ -240,16 +237,15 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 	mux := &sync.Mutex{}
 
 	return HandlerFunc(func(e *Record) {
-		b := buffersPool.Get().(*errwrap.Buffer)
-		b.Reset()
-		ww := colors.New(b)
+		buf := new(bytes.Buffer)
+		ww := colors.New(buf)
 
 		fc := cs[e.Level]
 		ww.WByte('[').Color(colors.Normal, fc, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
 
 		var indent byte = ' '
-		if e.Created != "" {
-			ww.WByte(' ').WString(e.Created)
+		if !e.Created.IsZero() {
+			ww.WByte(' ').WString(e.Created.Format(e.Logs().createdFormat))
 			indent = '\t'
 		}
 
@@ -258,7 +254,7 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 			indent = '\t'
 		}
 
-		ww.WByte(indent).WString(e.Message)
+		ww.WByte(indent).WBytes(e.Message([]byte{}))
 
 		for _, p := range e.Params {
 			ww.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
@@ -268,14 +264,14 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 
 		mux.Lock()
 		defer mux.Unlock()
-		if _, err := w.Write(b.Bytes()); err != nil {
+		if _, err := w.Write(buf.Bytes()); err != nil {
 			// 大概率是写入终端失败，直接 panic。
 			panic(fmt.Sprintf("NewTermHandler.Handle:%v\n", err))
 		}
 
-		if b.Len() < buffersPoolMaxSize {
-			buffersPool.Put(b)
-		}
+		//if b.Len() < buffersPoolMaxSize {
+		//buffersPool.Put(buf)
+		//}
 	})
 }
 

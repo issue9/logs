@@ -39,7 +39,7 @@ func newRecord(a *assert.Assertion, logs *Logs, lv Level) *Record {
 	e := logs.NewRecord(lv)
 	a.NotNil(e)
 
-	e.Message = "msg"
+	e.Message = func(bs []byte) []byte { return append(bs, "msg"...) }
 	e.Path = "path.go:20"
 	e.Params = []Pair{
 		{K: "k1", V: "v1"},
@@ -56,7 +56,7 @@ func TestTextHandler(t *testing.T) {
 	l := New(nil, WithCreated(layout), WithCaller())
 
 	e := newRecord(a, l, LevelWarn)
-	e.Created = now.Format(layout)
+	e.Created = now
 	e.With("m1", marshalObject("m1"))
 
 	a.PanicString(func() {
@@ -93,7 +93,7 @@ func TestJSONFormat(t *testing.T) {
 	l := New(nil, WithCreated(layout), WithCaller())
 
 	e := newRecord(a, l, LevelWarn)
-	e.Created = now.Format(layout)
+	e.Created = now
 	e.With("m1", marshalObject("m1"))
 
 	a.PanicString(func() {
@@ -128,13 +128,13 @@ func TestTermHandler(t *testing.T) {
 
 	l := New(nil)
 	e := newRecord(a, l, LevelWarn)
-	e.Created = time.Now().Format(MilliLayout)
+	e.Created = time.Now()
 	w := NewTermHandler(os.Stdout, map[Level]colors.Color{LevelError: colors.Green})
 	w.Handle(e)
 
 	l = New(nil, WithCaller(), WithCreated(MicroLayout))
 	e = newRecord(a, l, LevelError)
-	e.Message = "error message"
+	e.Message = func(bs []byte) []byte { return append(bs, "error message"...) }
 	w = NewTermHandler(os.Stdout, map[Level]colors.Color{LevelError: colors.Green})
 	w.Handle(e)
 }
@@ -152,7 +152,7 @@ func TestDispatchHandler(t *testing.T) {
 	l := New(w)
 
 	e := l.NewRecord(LevelWarn)
-	e.Created = time.Now().Format(MicroLayout)
+	e.Created = time.Now()
 	l.WARN().Printf("warnf test")
 	a.Zero(txtBuf.Len()).Contains(jsonBuf.String(), "warnf test").True(json.Valid(jsonBuf.Bytes()))
 

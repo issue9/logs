@@ -14,7 +14,7 @@ import (
 	"github.com/issue9/errwrap"
 	"github.com/issue9/term/v3/colors"
 
-	"github.com/issue9/logs/v5/writers"
+	"github.com/issue9/logs/v6/writers"
 )
 
 var nop = &nopHandler{}

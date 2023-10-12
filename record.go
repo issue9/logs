@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/issue9/logs/v5/writers"
+	"github.com/issue9/logs/v6/writers"
 )
 
 const poolMaxParams = 100

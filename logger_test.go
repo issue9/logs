@@ -19,7 +19,7 @@ var (
 func TestLogger_location(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(MicroLayout, buf), Caller, Created)
+	l := New(NewTextHandler(buf), WithCaller(), WithCreated(MicroLayout))
 	a.NotNil(l)
 	l.Enable(LevelError)
 
@@ -56,7 +56,7 @@ func TestLogger_location(t *testing.T) {
 func TestLogger_Error(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(MicroLayout, buf))
+	l := New(NewTextHandler(buf))
 	a.NotNil(l)
 
 	// Record.Error
@@ -75,7 +75,7 @@ func TestLogger_Error(t *testing.T) {
 func TestLogger_With(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(MicroLayout, buf), Caller)
+	l := New(NewTextHandler(buf), WithCaller())
 	a.NotNil(l)
 
 	err := l.With(LevelError, map[string]any{"k1": "v1"})
@@ -117,7 +117,7 @@ func TestLogger_With(t *testing.T) {
 func TestLogger_String(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(MicroLayout, buf))
+	l := New(NewTextHandler(buf))
 	a.NotNil(l)
 
 	// Record.String
@@ -136,8 +136,8 @@ func TestLogger_String(t *testing.T) {
 func TestLogger_StdLogger(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	w := NewTextHandler(MicroLayout, buf)
-	l := New(w, Created, Caller)
+	w := NewTextHandler(buf)
+	l := New(w, WithCreated(MicroLayout), WithCaller())
 	a.NotNil(l)
 	l.Enable(LevelInfo, LevelError)
 

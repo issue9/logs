@@ -23,7 +23,7 @@ type (
 		logs *Logs
 
 		Level   Level
-		Created time.Time // 日志的生成时间
+		Created string // 日志的生成时间
 
 		// 日志的实际内容
 		//
@@ -54,10 +54,10 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 	e.Path = ""
 	e.Line = 0
 	e.Message = ""
-	if logs.HasCreated() {
-		e.Created = time.Now()
+	if logs.createdFormat != "" {
+		e.Created = time.Now().Format(logs.createdFormat)
 	} else {
-		e.Created = time.Time{} // 从 pool 中获取的值，必须要初始化。
+		e.Created = "" // 从 pool 中获取的值，必须要初始化。
 	}
 	e.Level = lv
 

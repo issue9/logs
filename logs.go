@@ -18,10 +18,9 @@ type Logs struct {
 	handler Handler
 	loggers map[Level]*logger
 
-	caller, created bool // 是否需要生成调用位置信息和日志生成时间
+	caller        bool // 是否需要生成调用位置信息
+	createdFormat string
 }
-
-type Option func(*Logs)
 
 // New 声明 Logs 对象
 //
@@ -95,21 +94,3 @@ func (logs *Logs) level(lv Level) *logger {
 }
 
 func (logs *Logs) SetHandler(h Handler) { logs.handler = h }
-
-// Caller 是否显示记录的定位信息
-func Caller(l *Logs) { l.caller = true }
-
-// Created 是否显示记录的创建时间
-func Created(l *Logs) { l.created = true }
-
-// HasCaller 是否包含定位信息
-func (logs *Logs) HasCaller() bool { return logs.caller }
-
-// HasCreated 是否包含时间信息
-func (logs *Logs) HasCreated() bool { return logs.created }
-
-// SetCaller 是否显示位置信息
-func (logs *Logs) SetCaller(v bool) { logs.caller = v }
-
-// SetCreated 是否显示时间信息
-func (logs *Logs) SetCreated(v bool) { logs.created = v }

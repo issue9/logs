@@ -17,17 +17,6 @@ import (
 	"github.com/issue9/logs/v5/writers"
 )
 
-// 常用的日志时间格式
-const (
-	DateMilliLayout = "2006-01-02T15:04:05.000"
-	DateMicroLayout = "2006-01-02T15:04:05.000000"
-	DateNanoLayout  = "2006-01-02T15:04:05.000000000"
-
-	MilliLayout = "15:04:05.000"
-	MicroLayout = "15:04:05.000000"
-	NanoLayout  = "15:04:05.000000000"
-)
-
 var nop = &nopHandler{}
 
 var buffersPool = &sync.Pool{New: func() any { return &errwrap.Buffer{} }}
@@ -52,29 +41,29 @@ type (
 		Handle(*Record)
 	}
 
-	HandleFunc func(*Record)
+	HandlerFunc func(*Record)
 
 	nopHandler struct{}
 )
 
-func (w HandleFunc) Handle(e *Record) { w(e) }
+func (w HandlerFunc) Handle(e *Record) { w(e) }
 
 // NewTextHandler 返回将 [Record] 以普通文本的形式写入 w 的对象
 //
 // NOTE: 如果向 w 输出内容时出错，会将错误信息输出到终端作为最后的处理方式。
-func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
+func NewTextHandler(w ...io.Writer) Handler {
 	ww := writers.New(w...)
-	mux := &sync.Mutex{} // 防止多个函数同时调用 HandleFunc 方法。
+	mux := &sync.Mutex{} // 防止多个函数同时调用 HandlerFunc 方法。
 
-	return HandleFunc(func(e *Record) {
+	return HandlerFunc(func(e *Record) {
 		b := buffersPool.Get().(*errwrap.Buffer)
 		b.Reset()
 
 		b.WByte('[').WString(e.Level.String()).WByte(']')
 
 		var indent byte = ' '
-		if e.Logs().HasCreated() {
-			b.WByte(' ').WString(e.Created.Format(timeLayout))
+		if e.Created != "" {
+			b.WByte(' ').WString(e.Created)
 			indent = '\t'
 		}
 
@@ -141,11 +130,11 @@ func NewTextHandler(timeLayout string, w ...io.Writer) Handler {
 // NewJSONHandler 返回将 [Record] 以 JSON 的形式写入 w 的对象
 //
 // NOTE: 如果向 w 输出内容时出错，会将错误信息输出到终端作为最后的处理方式。
-func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
+func NewJSONHandler(w ...io.Writer) Handler {
 	ww := writers.New(w...)
 	mux := &sync.Mutex{}
 
-	return HandleFunc(func(e *Record) {
+	return HandlerFunc(func(e *Record) {
 		b := buffersPool.Get().(*errwrap.Buffer)
 		b.Reset()
 
@@ -154,8 +143,8 @@ func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 		b.WString(`"level":"`).WString(e.Level.String()).WString(`",`).
 			WString(`"message":"`).WString(e.Message).WByte('"')
 
-		if e.Logs().HasCreated() {
-			b.WString(`,"created":"`).WString(e.Created.Format(timeLayout)).WByte('"')
+		if e.Created != "" {
+			b.WString(`,"created":"`).WString(e.Created).WByte('"')
 		}
 
 		if e.Logs().HasCaller() {
@@ -226,13 +215,12 @@ func NewJSONHandler(timeLayout string, w ...io.Writer) Handler {
 
 // NewTermHandler 返回将 [Record] 写入终端的对象
 //
-// timeLayout 表示输出的时间格式，遵守 time.Format 的参数要求；
 // w 表示终端的接口，可以是 [os.Stderr] 或是 [os.Stdout]，
 // 如果是其它的实现者则会带控制字符一起输出；
 // foreColors 表示各类别信息的字符颜色，背景始终是默认色，未指定的颜色会从 [defaultTermColors] 获取；
 //
 // NOTE: 如果向 w 输出内容时出错，将会导致 panic。
-func NewTermHandler(timeLayout string, w io.Writer, foreColors map[Level]colors.Color) Handler {
+func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 	cs := make(map[Level]colors.Color, len(defaultTermColors))
 	for l, cc := range defaultTermColors {
 		if c, found := foreColors[l]; found {
@@ -244,7 +232,7 @@ func NewTermHandler(timeLayout string, w io.Writer, foreColors map[Level]colors.
 
 	mux := &sync.Mutex{}
 
-	return HandleFunc(func(e *Record) {
+	return HandlerFunc(func(e *Record) {
 		b := buffersPool.Get().(*errwrap.Buffer)
 		b.Reset()
 		ww := colors.New(b)
@@ -253,8 +241,8 @@ func NewTermHandler(timeLayout string, w io.Writer, foreColors map[Level]colors.
 		ww.WByte('[').Color(colors.Normal, fc, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
 
 		var indent byte = ' '
-		if e.Logs().HasCreated() {
-			ww.WByte(' ').WString(e.Created.Format(timeLayout))
+		if e.Created != "" {
+			ww.WByte(' ').WString(e.Created)
 			indent = '\t'
 		}
 
@@ -283,7 +271,7 @@ func NewTermHandler(timeLayout string, w io.Writer, foreColors map[Level]colors.
 
 // NewDispatchHandler 根据 [Level] 派发到不同的 [Handler] 对象
 func NewDispatchHandler(d map[Level]Handler) Handler {
-	return HandleFunc(func(e *Record) { d[e.Level].Handle(e) })
+	return HandlerFunc(func(e *Record) { d[e.Level].Handle(e) })
 }
 
 // NewNopHandler 空的 Handler 接口实现
@@ -293,7 +281,7 @@ func (w *nopHandler) Handle(_ *Record) {}
 
 // MergeHandler 将多个 Handler 合并成一个 Handler 接口对象
 func MergeHandler(w ...Handler) Handler {
-	return HandleFunc(func(e *Record) {
+	return HandlerFunc(func(e *Record) {
 		for _, ww := range w {
 			ww.Handle(e)
 		}

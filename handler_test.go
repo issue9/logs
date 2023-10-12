@@ -54,25 +54,25 @@ func TestTextHandler(t *testing.T) {
 	a := assert.New(t, false)
 	layout := MilliLayout
 	now := time.Now()
-	l := New(nil, Created, Caller)
+	l := New(nil, WithCreated(layout), WithCaller())
 
 	e := newRecord(a, l, LevelWarn)
-	e.Created = now
+	e.Created = now.Format(layout)
 	e.With("m1", marshalObject("m1"))
 
 	a.PanicString(func() {
-		NewTextHandler(layout)
+		NewTextHandler()
 	}, "参数 w 不能为空")
 
 	buf := new(bytes.Buffer)
-	l.SetHandler(NewTextHandler(layout, buf))
+	l.SetHandler(NewTextHandler(buf))
 	e.output()
 	a.Equal(buf.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1\n")
 
 	b1 := new(bytes.Buffer)
 	b2 := new(bytes.Buffer)
 	b3 := new(bytes.Buffer)
-	l.SetHandler(NewTextHandler(layout, b1, b2, b3))
+	l.SetHandler(NewTextHandler(b1, b2, b3))
 	e.output()
 	a.Equal(b1.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1\n")
 	a.Equal(b2.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1\n")
@@ -82,7 +82,7 @@ func TestTextHandler(t *testing.T) {
 
 	e.With("m2", marshalErrObject("m2"))
 	buf.Reset()
-	l.SetHandler(NewTextHandler(layout, buf))
+	l.SetHandler(NewTextHandler(buf))
 	e.output()
 	a.Equal(buf.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1 m2=Err(marshal text error)\n")
 }
@@ -91,24 +91,24 @@ func TestJSONFormat(t *testing.T) {
 	a := assert.New(t, false)
 	layout := MilliLayout
 	now := time.Now()
-	l := New(nil, Created, Caller)
+	l := New(nil, WithCreated(layout), WithCaller())
 
 	e := newRecord(a, l, LevelWarn)
-	e.Created = now
+	e.Created = now.Format(layout)
 	e.With("m1", marshalObject("m1"))
 
 	a.PanicString(func() {
-		NewJSONHandler(MicroLayout)
+		NewJSONHandler()
 	}, "参数 w 不能为空")
 
 	buf := new(bytes.Buffer)
-	l.SetHandler(NewJSONHandler(layout, buf))
+	l.SetHandler(NewJSONHandler(buf))
 	e.output()
 	a.Equal(buf.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go","line":20,"params":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"}]}`)
 
 	b1 := new(bytes.Buffer)
 	b2 := new(bytes.Buffer)
-	l.SetHandler(NewJSONHandler(layout, b1, b2))
+	l.SetHandler(NewJSONHandler(b1, b2))
 	e.output()
 	a.Equal(b1.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go","line":20,"params":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"}]}`).
 		Equal(b1.String(), b2.String())
@@ -117,7 +117,7 @@ func TestJSONFormat(t *testing.T) {
 
 	e.With("m2", marshalErrObject("m2"))
 	buf.Reset()
-	l.SetHandler(NewJSONHandler(layout, buf))
+	l.SetHandler(NewJSONHandler(buf))
 	e.output()
 	a.Equal(buf.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go","line":20,"params":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"},{"m2":"Err(json: error calling MarshalJSON for type logs.marshalErrObject: marshal json error)"}]}`)
 }
@@ -129,14 +129,14 @@ func TestTermHandler(t *testing.T) {
 
 	l := New(nil)
 	e := newRecord(a, l, LevelWarn)
-	e.Created = time.Now()
-	w := NewTermHandler(MilliLayout, os.Stdout, map[Level]colors.Color{LevelError: colors.Green})
+	e.Created = time.Now().Format(MilliLayout)
+	w := NewTermHandler(os.Stdout, map[Level]colors.Color{LevelError: colors.Green})
 	w.Handle(e)
 
-	l = New(nil, Caller, Created)
+	l = New(nil, WithCaller(), WithCreated(MicroLayout))
 	e = newRecord(a, l, LevelError)
 	e.Message = "error message"
-	w = NewTermHandler(MicroLayout, os.Stdout, map[Level]colors.Color{LevelError: colors.Green})
+	w = NewTermHandler(os.Stdout, map[Level]colors.Color{LevelError: colors.Green})
 	w.Handle(e)
 }
 
@@ -147,13 +147,13 @@ func TestDispatchHandler(t *testing.T) {
 	jsonBuf := new(bytes.Buffer)
 
 	w := NewDispatchHandler(map[Level]Handler{
-		LevelInfo: NewTextHandler(NanoLayout, txtBuf),
-		LevelWarn: NewJSONHandler(MicroLayout, jsonBuf),
+		LevelInfo: NewTextHandler(txtBuf),
+		LevelWarn: NewJSONHandler(jsonBuf),
 	})
 	l := New(w)
 
 	e := l.NewRecord(LevelWarn)
-	e.Created = time.Now()
+	e.Created = time.Now().Format(MicroLayout)
 	l.WARN().Printf("warnf test")
 	a.Zero(txtBuf.Len()).Contains(jsonBuf.String(), "warnf test").True(json.Valid(jsonBuf.Bytes()))
 

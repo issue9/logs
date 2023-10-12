@@ -15,8 +15,8 @@ func BenchmarkTextHandler(b *testing.B) {
 	a := assert.New(b, false)
 
 	buf := new(bytes.Buffer)
-	w := NewTextHandler(MilliLayout, buf)
-	l := New(w, Caller, Created)
+	w := NewTextHandler(buf)
+	l := New(w, WithCaller(), WithCreated(MilliLayout))
 	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
@@ -28,8 +28,8 @@ func BenchmarkJSONHandler(b *testing.B) {
 	a := assert.New(b, false)
 
 	buf := new(bytes.Buffer)
-	w := NewJSONHandler(MicroLayout, buf)
-	l := New(w, Caller, Created)
+	w := NewJSONHandler(buf)
+	l := New(w, WithCaller(), WithCreated(MicroLayout))
 	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
@@ -41,8 +41,8 @@ func BenchmarkTermHandler(b *testing.B) {
 	a := assert.New(b, false)
 
 	buf := new(bytes.Buffer)
-	w := NewTermHandler(MilliLayout, buf, map[Level]colors.Color{LevelWarn: colors.Blue})
-	l := New(w, Caller, Created)
+	w := NewTermHandler(buf, map[Level]colors.Color{LevelWarn: colors.Blue})
+	l := New(w, WithCaller(), WithCreated(MilliLayout))
 	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
@@ -53,7 +53,7 @@ func BenchmarkTermHandler(b *testing.B) {
 func BenchmarkRecord_Printf(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(MilliLayout, buf), Created, Caller)
+	l := New(NewTextHandler(buf), WithCreated(MilliLayout), WithCaller())
 	a.NotNil(l)
 	l.Enable(LevelError)
 
@@ -66,7 +66,7 @@ func BenchmarkRecord_Printf(b *testing.B) {
 func BenchmarkLogger_withoutCallerAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(MicroLayout, buf))
+	l := New(NewTextHandler(buf))
 	a.NotNil(l)
 	l.Enable(LevelError)
 
@@ -101,7 +101,7 @@ func BenchmarkLogger_withoutCallerAndCreated(b *testing.B) {
 func BenchmarkLogs_disableLogger(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	w := NewTextHandler(MicroLayout, buf)
+	w := NewTextHandler(buf)
 	l := New(w)
 	a.NotNil(l)
 	l.Enable(LevelInfo)
@@ -127,7 +127,7 @@ func BenchmarkLogs_nop(b *testing.B) {
 func BenchmarkLogs_StdLogger(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(MicroLayout, buf))
+	l := New(NewTextHandler(buf))
 	a.NotNil(l)
 	l.Enable(LevelError)
 	err := l.ERROR()
@@ -140,7 +140,7 @@ func BenchmarkLogs_StdLogger(b *testing.B) {
 func BenchmarkLogs_StdLogger_withDisable(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(MicroLayout, buf))
+	l := New(NewTextHandler(buf))
 	a.NotNil(l)
 	l.Enable(LevelInfo)
 	err := l.ERROR()

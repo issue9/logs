@@ -38,7 +38,7 @@ func (h *logsHandler) Enabled(ctx context.Context, lv slog.Level) bool {
 
 func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 	rr := h.l.NewRecord(slog2Logs[r.Level])
-	rr.Created = r.Time
+	rr.Created = r.Time.Format(h.l.createdFormat)
 	rr.Message = r.Message
 
 	for _, attr := range h.attrs {

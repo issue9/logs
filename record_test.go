@@ -13,7 +13,7 @@ var _ Logger = &Record{}
 
 func TestRecord_location(t *testing.T) {
 	a := assert.New(t, false)
-	l := New(nil, Caller, Created)
+	l := New(nil, WithCaller(), WithCreated(MicroLayout))
 
 	e := l.NewRecord(LevelWarn)
 	a.NotNil(e)

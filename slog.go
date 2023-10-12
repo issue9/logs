@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"runtime"
 	"slices"
+	"strconv"
 )
 
 var slog2Logs = map[slog.Level]Level{
@@ -51,8 +52,7 @@ func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 
 	if r.PC != 0 {
 		f, _ := runtime.CallersFrames([]uintptr{r.PC}).Next()
-		rr.Path = f.File
-		rr.Line = f.Line
+		rr.Path = f.File+":"+strconv.Itoa(f.Line)
 	}
 
 	rr.output()

@@ -17,6 +17,8 @@ import (
 	"github.com/issue9/logs/v6/writers"
 )
 
+const buffersPoolMaxSize = 1 << 10
+
 var nop = &nopHandler{}
 
 var buffersPool = &sync.Pool{New: func() any { return &errwrap.Buffer{} }}
@@ -67,8 +69,8 @@ func NewTextHandler(w ...io.Writer) Handler {
 			indent = '\t'
 		}
 
-		if e.Logs().HasCaller() {
-			b.WByte(' ').WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+		if e.Path != "" {
+			b.WByte(' ').WString(e.Path)
 			indent = '\t'
 		}
 
@@ -123,7 +125,10 @@ func NewTextHandler(w ...io.Writer) Handler {
 		if _, err := ww.Write(b.Bytes()); err != nil { // 一次性写入，性能更好一些。
 			fmt.Fprintf(os.Stderr, "NewTextHandler.Handle:%v\n", err)
 		}
-		buffersPool.Put(b)
+
+		if b.Len() < buffersPoolMaxSize {
+			buffersPool.Put(b)
+		}
 	})
 }
 
@@ -147,9 +152,8 @@ func NewJSONHandler(w ...io.Writer) Handler {
 			b.WString(`,"created":"`).WString(e.Created).WByte('"')
 		}
 
-		if e.Logs().HasCaller() {
-			b.WString(`,"path":"`).WString(e.Path).WString(`",`).
-				WString(`"line":`).WString(strconv.Itoa(e.Line))
+		if e.Path != "" {
+			b.WString(`,"path":"`).WString(e.Path).WByte('"')
 		}
 
 		if len(e.Params) > 0 {
@@ -209,7 +213,10 @@ func NewJSONHandler(w ...io.Writer) Handler {
 		if _, err := ww.Write(b.Bytes()); err != nil {
 			fmt.Fprintf(os.Stderr, "NewJSONHandler.Handle:%v\n", err)
 		}
-		buffersPool.Put(b)
+
+		if b.Len() < buffersPoolMaxSize {
+			buffersPool.Put(b)
+		}
 	})
 }
 
@@ -246,8 +253,8 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 			indent = '\t'
 		}
 
-		if e.Logs().HasCaller() {
-			ww.WByte(' ').WString(e.Path).WByte(':').WString(strconv.Itoa(e.Line))
+		if e.Path != "" {
+			ww.WByte(' ').WString(e.Path)
 			indent = '\t'
 		}
 
@@ -265,7 +272,10 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 			// 大概率是写入终端失败，直接 panic。
 			panic(fmt.Sprintf("NewTermHandler.Handle:%v\n", err))
 		}
-		buffersPool.Put(b)
+
+		if b.Len() < buffersPoolMaxSize {
+			buffersPool.Put(b)
+		}
 	})
 }
 

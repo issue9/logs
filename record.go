@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"runtime"
+	"strconv"
 	"sync"
 	"time"
 
@@ -32,7 +33,6 @@ type (
 
 		// 以下表示日志的定位信息
 		Path string
-		Line int
 
 		// 额外的数据保存在此，比如由 [Logger.With] 添加的数据。
 		Params []Pair
@@ -52,7 +52,6 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 		e.Params = e.Params[:0]
 	}
 	e.Path = ""
-	e.Line = 0
 	e.Message = ""
 	if logs.createdFormat != "" {
 		e.Created = time.Now().Format(logs.createdFormat)
@@ -81,7 +80,8 @@ func (e *Record) Logs() *Logs { return e.logs }
 // 如果 [Logs.HasCaller] 为 false，那么此调用将不产生任何内容。
 func (e *Record) setLocation(depth int) *Record {
 	if e.Logs().HasCaller() {
-		_, e.Path, e.Line, _ = runtime.Caller(depth)
+		_, p, l, _ := runtime.Caller(depth)
+		e.Path = p + ":" + strconv.Itoa(l)
 	}
 	return e
 }

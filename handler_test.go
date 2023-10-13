@@ -40,7 +40,7 @@ func newRecord(a *assert.Assertion, logs *Logs, lv Level) *Record {
 	a.NotNil(e)
 
 	e.AppendMessage = func(bs []byte) []byte { return append(bs, "msg"...) }
-	e.Path = "path.go:20"
+	e.AppendPath = func(bs []byte) []byte { return append(bs, "path.go:20"...) }
 	e.Params = []Pair{
 		{K: "k1", V: "v1"},
 		{K: "k2", V: "v2"},
@@ -56,7 +56,7 @@ func TestTextHandler(t *testing.T) {
 	l := New(nil, WithCreated(layout), WithCaller())
 
 	e := newRecord(a, l, LevelWarn)
-	e.Created = now
+	e.AppendCreated = func(bs []byte) []byte { return now.AppendFormat(bs, l.createdFormat) }
 	e.With("m1", marshalObject("m1"))
 
 	a.PanicString(func() {
@@ -93,7 +93,7 @@ func TestJSONFormat(t *testing.T) {
 	l := New(nil, WithCreated(layout), WithCaller())
 
 	e := newRecord(a, l, LevelWarn)
-	e.Created = now
+	e.AppendCreated = func(bs []byte) []byte { return now.AppendFormat(bs, l.createdFormat) }
 	e.With("m1", marshalObject("m1"))
 
 	a.PanicString(func() {
@@ -128,7 +128,7 @@ func TestTermHandler(t *testing.T) {
 
 	l := New(nil)
 	e := newRecord(a, l, LevelWarn)
-	e.Created = time.Now()
+	e.AppendCreated = func(bs []byte) []byte { return time.Now().AppendFormat(bs, l.createdFormat) }
 	w := NewTermHandler(os.Stdout, map[Level]colors.Color{LevelError: colors.Green})
 	w.Handle(e)
 
@@ -152,7 +152,7 @@ func TestDispatchHandler(t *testing.T) {
 	l := New(w)
 
 	e := l.NewRecord(LevelWarn)
-	e.Created = time.Now()
+	e.AppendCreated = func(bs []byte) []byte { return time.Now().AppendFormat(bs, l.createdFormat) }
 	l.WARN().Printf("warnf test")
 	a.Zero(txtBuf.Len()).Contains(jsonBuf.String(), "warnf test").True(json.Valid(jsonBuf.Bytes()))
 

@@ -36,6 +36,11 @@ func (w *Buffer) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
+func (w *Buffer) AppendFunc(f AppendFunc) *Buffer {
+	*w = f(*w)
+	return w
+}
+
 func (w *Buffer) Print(v ...any) { *w = fmt.Append(*w, v...) }
 
 func (w *Buffer) Printf(f string, v ...any) { *w = fmt.Appendf(*w, f, v...) }

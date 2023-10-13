@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/issue9/localeutil"
 	"golang.org/x/xerrors"
 
 	"github.com/issue9/logs/v6/writers"
@@ -25,14 +26,14 @@ type (
 	Record struct {
 		logs *Logs
 
-		Level   Level
-		Created time.Time // 日志的生成时间
+		Level Level
+
+		AppendCreated AppendFunc // 日志的生成时间
 
 		// 向日志中添加日志消息
-		AppendMessage func([]byte) []byte
+		AppendMessage AppendFunc
 
-		// 以下表示日志的定位信息
-		Path string
+		AppendPath AppendFunc // 定位信息
 
 		// 额外的数据保存在此，比如由 [Logger.With] 添加的数据。
 		Params []Pair
@@ -42,6 +43,8 @@ type (
 		K string
 		V any
 	}
+
+	AppendFunc = func([]byte) []byte
 )
 
 func (logs *Logs) NewRecord(lv Level) *Record {
@@ -51,13 +54,9 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 	if e.Params != nil {
 		e.Params = e.Params[:0]
 	}
-	e.Path = ""
+	e.AppendPath = nil
 	e.AppendMessage = nil
-	if logs.createdFormat != "" {
-		e.Created = time.Now()
-	} else {
-		e.Created = time.Time{} // 从 pool 中获取的值，必须要初始化。
-	}
+	e.AppendCreated = nil
 	e.Level = lv
 
 	return e
@@ -81,8 +80,17 @@ func (e *Record) Logs() *Logs { return e.logs }
 func (e *Record) setLocation(depth int) *Record {
 	if e.Logs().HasCaller() {
 		_, p, l, _ := runtime.Caller(depth)
-		e.Path = p + ":" + strconv.Itoa(l)
+		e.AppendPath = func(bs []byte) []byte {
+			bs = append(bs, p...)
+			bs = append(bs, ':')
+			return strconv.AppendInt(bs, int64(l), 10)
+		}
 	}
+
+	if e.Logs().createdFormat != "" {
+		e.AppendCreated = func(bs []byte) []byte { return time.Now().AppendFormat(bs, e.Logs().createdFormat) }
+	}
+
 	return e
 }
 
@@ -106,26 +114,38 @@ func (e *Record) DepthError(depth int, err error) {
 	if err != nil {
 		switch ee := err.(type) {
 		case xerrors.Formatter:
-			e.AppendMessage = func(bs []byte) []byte {
-				p := (*Buffer)(&bs)
-				err = ee.FormatError(p)
-				for err != nil {
-					switch e2 := err.(type) {
-					case xerrors.Formatter:
-						err = e2.FormatError(p)
-					default:
-						*p = append(*p, e2.Error()...)
-						err = nil
-					}
-				}
-				return p.Bytes()
+			e.AppendMessage = func(bs []byte) []byte { return e.appendError((*Buffer)(&bs), ee) }
+		case localeutil.Stringer:
+			if pp := e.Logs().printer; pp != nil {
+				e.AppendMessage = func(bs []byte) []byte { return append(bs, ee.LocaleString(pp)...) }
+			} else { // e2 必须是实现了 error 接口的
+				e.AppendMessage = func(bs []byte) []byte { return append(bs, ee.(error).Error()...) }
 			}
-		default: // 必然是实现了 error 的
+		default:
 			e.AppendMessage = func(bs []byte) []byte { return append(bs, []byte(err.Error())...) }
 		}
 	}
 	e.setLocation(depth + 1)
 	e.output()
+}
+
+func (e *Record) appendError(p *Buffer, ef xerrors.Formatter) []byte {
+	err := ef.FormatError(p)
+	for err != nil {
+		switch e2 := err.(type) {
+		case xerrors.Formatter:
+			err = e2.FormatError(p)
+		case localeutil.Stringer:
+			if pp := e.Logs().printer; pp != nil {
+				return append(*p, e2.LocaleString(pp)...)
+			} else { // e2 必须是实现了 error 接口的
+				return append(*p, e2.(error).Error()...)
+			}
+		default:
+			return append(*p, e2.Error()...)
+		}
+	}
+	return p.Bytes()
 }
 
 func (e *Record) String(s string) { e.DepthString(2, s) }

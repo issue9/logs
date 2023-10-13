@@ -60,18 +60,17 @@ func NewTextHandler(w ...io.Writer) Handler {
 		b.WBytes('[').WString(e.Level.String()).WBytes(']')
 
 		var indent byte = ' '
-		if !e.Created.IsZero() {
-			b.WBytes(' ').WString(e.Created.Format(e.Logs().createdFormat))
+		if e.AppendCreated != nil {
+			b.WBytes(' ').AppendFunc(e.AppendCreated)
 			indent = '\t'
 		}
 
-		if e.Path != "" {
-			b.WBytes(' ').WString(e.Path)
+		if e.AppendPath != nil {
+			b.WBytes(' ').AppendFunc(e.AppendPath)
 			indent = '\t'
 		}
 
-		b.WBytes(indent)
-		*b = e.AppendMessage(b.Bytes())
+		b.WBytes(indent).AppendFunc(e.AppendMessage)
 
 		for _, p := range e.Params {
 			b.WBytes(' ').WString(p.K).WBytes('=')
@@ -140,16 +139,14 @@ func NewJSONHandler(w ...io.Writer) Handler {
 		b.WBytes('{')
 
 		b.WString(`"level":"`).WString(e.Level.String()).WString(`",`).
-			WString(`"message":"`)
-		*b = e.AppendMessage(b.Bytes())
-		b.WBytes('"')
+			WString(`"message":"`).AppendFunc(e.AppendMessage).WBytes('"')
 
-		if !e.Created.IsZero() {
-			b.WString(`,"created":"`).WString(e.Created.Format(e.Logs().createdFormat)).WBytes('"')
+		if e.AppendCreated != nil {
+			b.WString(`,"created":"`).AppendFunc(e.AppendCreated).WBytes('"')
 		}
 
-		if e.Path != "" {
-			b.WString(`,"path":"`).WString(e.Path).WBytes('"')
+		if e.AppendPath != nil {
+			b.WString(`,"path":"`).AppendFunc(e.AppendPath).WBytes('"')
 		}
 
 		if len(e.Params) > 0 {
@@ -241,13 +238,13 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 		ww.WByte('[').Color(colors.Normal, fc, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
 
 		var indent byte = ' '
-		if !e.Created.IsZero() {
-			ww.WByte(' ').WString(e.Created.Format(e.Logs().createdFormat))
+		if e.AppendCreated != nil {
+			ww.WByte(' ').WBytes(e.AppendCreated([]byte{}))
 			indent = '\t'
 		}
 
-		if e.Path != "" {
-			ww.WByte(' ').WString(e.Path)
+		if e.AppendPath != nil {
+			ww.WByte(' ').WBytes(e.AppendPath([]byte{}))
 			indent = '\t'
 		}
 

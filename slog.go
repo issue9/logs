@@ -39,7 +39,7 @@ func (h *logsHandler) Enabled(ctx context.Context, lv slog.Level) bool {
 
 func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 	rr := h.l.NewRecord(slog2Logs[r.Level])
-	rr.Created = r.Time
+	rr.AppendCreated = func(bs []byte) []byte { return r.Time.AppendFormat(bs, h.l.createdFormat) }
 	rr.AppendMessage = func(bs []byte) []byte { return append(bs, r.Message...) }
 
 	for _, attr := range h.attrs {
@@ -52,7 +52,11 @@ func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 
 	if r.PC != 0 {
 		f, _ := runtime.CallersFrames([]uintptr{r.PC}).Next()
-		rr.Path = f.File + ":" + strconv.Itoa(f.Line)
+		rr.AppendPath = func(bs []byte) []byte {
+			bs = append(bs, f.File...)
+			bs = append(bs, ':')
+			return strconv.AppendInt(bs, int64(f.Line), 10)
+		}
 	}
 
 	rr.output()

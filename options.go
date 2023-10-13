@@ -2,6 +2,8 @@
 
 package logs
 
+import "github.com/issue9/localeutil"
+
 // 常用的日志时间格式
 const (
 	DateMilliLayout = "2006-01-02T15:04:05.000"
@@ -14,6 +16,14 @@ const (
 )
 
 type Option func(*Logs)
+
+// WithLocale 是否带本地化信息
+//
+// 设置了此值为影响以下几个方法中实现了 [localeutil.Stringer] 的参数：
+//   - Logger.Error
+func WithLocale(p *localeutil.Printer) Option {
+	return func(l *Logs) { l.printer = p }
+}
 
 // Created 是否显示记录的创建时间
 func WithCreated(layout string) Option {

@@ -21,6 +21,8 @@ type (
 		//
 		// 这是 Print 的特化版本，在已知类型为 error 时，
 		// 采用此方法会比 Print(err) 有更好的性能。
+		//
+		// 如果 err 实现了 [xerrors.FormatError] 接口，同时也会打印调用信息。
 		Error(err error)
 
 		// String 将字符串作为一条日志输出
@@ -56,7 +58,7 @@ type (
 )
 
 func (l *logger) StdLogger() *log.Logger {
-	var w = io.Discard
+	w := io.Discard
 	if l.enable {
 		w = l.logs.NewRecord(l.lv).asWriter()
 	}

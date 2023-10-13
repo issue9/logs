@@ -14,12 +14,15 @@
 //   - [Logs.With] 返回的是带固定参数的日志对象；
 package logs
 
+import "github.com/issue9/localeutil"
+
 type Logs struct {
 	handler Handler
 	loggers map[Level]*logger
 
 	caller        bool // 是否需要生成调用位置信息
 	createdFormat string
+	printer       *localeutil.Printer
 }
 
 // New 声明 Logs 对象

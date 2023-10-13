@@ -19,7 +19,7 @@ var (
 func TestLogger_location(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(buf), WithCaller(), WithCreated(MicroLayout))
+	l := New(NewTextHandler(buf), WithLocation(true), WithCreated(MicroLayout))
 	a.NotNil(l)
 	l.Enable(LevelError)
 
@@ -46,7 +46,7 @@ func TestLogger_location(t *testing.T) {
 		Contains(val, "logger.Print")
 
 	buf.Reset()
-	l.SetCaller(false)
+	l.SetLocation(false)
 	l.ERROR().Printf("caller=false")
 	val = buf.String()
 	a.NotContains(val, "logger_test.go").
@@ -75,7 +75,7 @@ func TestLogger_Error(t *testing.T) {
 func TestLogger_With(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(buf), WithCaller())
+	l := New(NewTextHandler(buf), WithLocation(true))
 	a.NotNil(l)
 
 	err := l.With(LevelError, map[string]any{"k1": "v1"})
@@ -137,7 +137,7 @@ func TestLogger_StdLogger(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
 	w := NewTextHandler(buf)
-	l := New(w, WithCreated(MicroLayout), WithCaller())
+	l := New(w, WithCreated(MicroLayout), WithLocation(true))
 	a.NotNil(l)
 	l.Enable(LevelInfo, LevelError)
 

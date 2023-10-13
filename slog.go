@@ -9,7 +9,6 @@ import (
 	"log/slog"
 	"runtime"
 	"slices"
-	"strconv"
 )
 
 var slog2Logs = map[slog.Level]Level{
@@ -39,8 +38,8 @@ func (h *logsHandler) Enabled(ctx context.Context, lv slog.Level) bool {
 
 func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 	rr := h.l.NewRecord(slog2Logs[r.Level])
-	rr.AppendCreated = func(bs []byte) []byte { return r.Time.AppendFormat(bs, h.l.createdFormat) }
-	rr.AppendMessage = func(bs []byte) []byte { return append(bs, r.Message...) }
+	rr.AppendCreated = func(b *Buffer) { b.AppendTime(r.Time, rr.Logs().createdFormat) }
+	rr.AppendMessage = func(b *Buffer) { b.AppendString(r.Message) }
 
 	for _, attr := range h.attrs {
 		rr.With(h.prefix+attr.Key, attr.Value)
@@ -52,10 +51,8 @@ func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 
 	if r.PC != 0 {
 		f, _ := runtime.CallersFrames([]uintptr{r.PC}).Next()
-		rr.AppendPath = func(bs []byte) []byte {
-			bs = append(bs, f.File...)
-			bs = append(bs, ':')
-			return strconv.AppendInt(bs, int64(f.Line), 10)
+		rr.AppendLocation = func(b *Buffer) {
+			b.AppendString(f.File).AppendBytes(':').AppendInt(int64(f.Line), 10)
 		}
 	}
 

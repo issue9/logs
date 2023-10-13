@@ -3,11 +3,9 @@
 package logs
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"runtime"
-	"strconv"
 	"sync"
 	"time"
 
@@ -28,12 +26,21 @@ type (
 
 		Level Level
 
-		AppendCreated AppendFunc // 日志的生成时间
+		// AppendCreated 添加日志的创建时间
+		//
+		// 可能为空，根据 [Logs.CreatedFormat] 是否为空决定。
+		AppendCreated AppendFunc
 
-		// 向日志中添加日志消息
+		// AppendMessage 向日志中添加日志消息
+		//
+		// 这是每一条日志的主消息，不会为空。
+		// 内容是根据 Depth* 系列方法生成的。
 		AppendMessage AppendFunc
 
-		AppendPath AppendFunc // 定位信息
+		// AppendCreated 添加日志的触发位置信息
+		//
+		// 可能为空，根据 [Logs.HasLocation] 决定。
+		AppendLocation AppendFunc
 
 		// 额外的数据保存在此，比如由 [Logger.With] 添加的数据。
 		Params []Pair
@@ -43,8 +50,6 @@ type (
 		K string
 		V any
 	}
-
-	AppendFunc = func([]byte) []byte
 )
 
 func (logs *Logs) NewRecord(lv Level) *Record {
@@ -54,7 +59,7 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 	if e.Params != nil {
 		e.Params = e.Params[:0]
 	}
-	e.AppendPath = nil
+	e.AppendLocation = nil
 	e.AppendMessage = nil
 	e.AppendCreated = nil
 	e.Level = lv
@@ -75,20 +80,16 @@ func (e *Record) asWriter() io.Writer {
 func (e *Record) Logs() *Logs { return e.logs }
 
 // depth 表示调用，1 表示调用 Location 的位置；
-//
-// 如果 [Logs.HasCaller] 为 false，那么此调用将不产生任何内容。
-func (e *Record) setLocation(depth int) *Record {
-	if e.Logs().HasCaller() {
+func (e *Record) initLocationCreated(depth int) *Record {
+	if e.Logs().HasLocation() {
 		_, p, l, _ := runtime.Caller(depth)
-		e.AppendPath = func(bs []byte) []byte {
-			bs = append(bs, p...)
-			bs = append(bs, ':')
-			return strconv.AppendInt(bs, int64(l), 10)
+		e.AppendLocation = func(b *Buffer) {
+			b.AppendString(p).AppendBytes(':').AppendInt(int64(l), 10)
 		}
 	}
 
 	if e.Logs().createdFormat != "" {
-		e.AppendCreated = func(bs []byte) []byte { return time.Now().AppendFormat(bs, e.Logs().createdFormat) }
+		e.AppendCreated = func(b *Buffer) { b.AppendTime(time.Now(), e.Logs().createdFormat) }
 	}
 
 	return e
@@ -109,27 +110,29 @@ func (e *Record) Error(err error) { e.DepthError(2, err) }
 //
 // depth 表示调用，1 表示调用此方法的位置；
 //
-// 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
+// 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthError(depth int, err error) {
-	if err != nil {
-		switch ee := err.(type) {
-		case xerrors.Formatter:
-			e.AppendMessage = func(bs []byte) []byte { return e.appendError((*Buffer)(&bs), ee) }
-		case localeutil.Stringer:
-			if pp := e.Logs().printer; pp != nil {
-				e.AppendMessage = func(bs []byte) []byte { return append(bs, ee.LocaleString(pp)...) }
-			} else { // e2 必须是实现了 error 接口的
-				e.AppendMessage = func(bs []byte) []byte { return append(bs, ee.(error).Error()...) }
-			}
-		default:
-			e.AppendMessage = func(bs []byte) []byte { return append(bs, []byte(err.Error())...) }
-		}
+	if err == nil {
+		panic("参数 err 不能为空")
 	}
-	e.setLocation(depth + 1)
-	e.output()
+
+	switch ee := err.(type) {
+	case xerrors.Formatter:
+		e.AppendMessage = func(b *Buffer) { e.appendError(b, ee) }
+	case localeutil.Stringer:
+		if pp := e.Logs().printer; pp != nil {
+			e.AppendMessage = func(b *Buffer) { b.AppendString(ee.LocaleString(pp)) }
+		} else { // e2 必然是实现了 error 接口的
+			e.AppendMessage = func(b *Buffer) { b.AppendString(ee.(error).Error()) }
+		}
+	default:
+		e.AppendMessage = func(b *Buffer) { b.AppendString(err.Error()) }
+	}
+
+	e.initLocationCreated(depth + 1).output()
 }
 
-func (e *Record) appendError(p *Buffer, ef xerrors.Formatter) []byte {
+func (e *Record) appendError(p *Buffer, ef xerrors.Formatter) {
 	err := ef.FormatError(p)
 	for err != nil {
 		switch e2 := err.(type) {
@@ -137,15 +140,16 @@ func (e *Record) appendError(p *Buffer, ef xerrors.Formatter) []byte {
 			err = e2.FormatError(p)
 		case localeutil.Stringer:
 			if pp := e.Logs().printer; pp != nil {
-				return append(*p, e2.LocaleString(pp)...)
-			} else { // e2 必须是实现了 error 接口的
-				return append(*p, e2.(error).Error()...)
+				p.AppendString(e2.LocaleString(pp))
+			} else { // e2 必然是实现了 error 接口的
+				p.AppendString(e2.(error).Error())
 			}
+			return
 		default:
-			return append(*p, e2.Error()...)
+			p.AppendString(e2.Error())
+			return
 		}
 	}
-	return p.Bytes()
 }
 
 func (e *Record) String(s string) { e.DepthString(2, s) }
@@ -154,11 +158,10 @@ func (e *Record) String(s string) { e.DepthString(2, s) }
 //
 // depth 表示调用，1 表示调用此方法的位置；
 //
-// 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
+// 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthString(depth int, s string) {
-	e.AppendMessage = func(bs []byte) []byte { return append(bs, s...) }
-	e.setLocation(depth + 1)
-	e.output()
+	e.AppendMessage = func(b *Buffer) { b.AppendString(s) }
+	e.initLocationCreated(depth + 1).output()
 }
 
 func (e *Record) Print(v ...any) { e.DepthPrint(2, v...) }
@@ -167,13 +170,10 @@ func (e *Record) Print(v ...any) { e.DepthPrint(2, v...) }
 //
 // depth 表示调用，1 表示调用此方法的位置；
 //
-// 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
+// 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrint(depth int, v ...any) {
-	if len(v) > 0 {
-		e.AppendMessage = func(bs []byte) []byte { return fmt.Append(bs, v...) }
-	}
-	e.setLocation(depth + 1)
-	e.output()
+	e.AppendMessage = func(b *Buffer) { b.Append(v...) }
+	e.initLocationCreated(depth + 1).output()
 }
 
 func (e *Record) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...) }
@@ -182,11 +182,10 @@ func (e *Record) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...
 //
 // depth 表示调用，1 表示调用此方法的位置；
 //
-// 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
+// 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintf(depth int, format string, v ...any) {
-	e.AppendMessage = func(bs []byte) []byte { return fmt.Appendf(bs, format, v...) }
-	e.setLocation(depth + 1)
-	e.output()
+	e.AppendMessage = func(b *Buffer) { b.Appendf(format, v...) }
+	e.initLocationCreated(depth + 1).output()
 }
 
 func (e *Record) Println(v ...any) { e.DepthPrintln(2, v...) }
@@ -195,13 +194,10 @@ func (e *Record) Println(v ...any) { e.DepthPrintln(2, v...) }
 //
 // depth 表示调用，1 表示调用此方法的位置；
 //
-// 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
+// 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintln(depth int, v ...any) {
-	if len(v) > 0 {
-		e.AppendMessage = func(bs []byte) []byte { return fmt.Appendln(bs, v...) }
-	}
-	e.setLocation(depth + 1)
-	e.output()
+	e.AppendMessage = func(b *Buffer) { b.Appendln(v...) }
+	e.initLocationCreated(depth + 1).output()
 }
 
 func (e *Record) output() {

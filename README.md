@@ -1,6 +1,6 @@
 logs
 [![Go](https://github.com/issue9/logs/actions/workflows/go.yml/badge.svg)](https://github.com/issue9/logs/actions/workflows/go.yml)
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/logs/v5)](https://pkg.go.dev/github.com/issue9/logs/v5)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/issue9/logs/v6)](https://pkg.go.dev/github.com/issue9/logs/v6)
 ![Go version](https://img.shields.io/github/go-mod/go-version/issue9/logs)
 [![codecov](https://codecov.io/gh/issue9/logs/branch/master/graph/badge.svg)](https://codecov.io/gh/issue9/logs)
 ======
@@ -24,7 +24,7 @@ BenchmarkLogsJSONPositive-4   	36571064	       315.3 ns/op	      40 B/op	       
 ```
 
 ```go
-import "github.com/issue9/logs/v5"
+import "github.com/issue9/logs/v6"
 
 l := logs.New(logs.NewTextHandler(...))
 l.DEBUG().Print("debug start...")
@@ -37,7 +37,7 @@ erro.Printf("带默认参数 k1=v1") // 不用 With 指定 k1，err 全都自动
 ---
 
 ```shell
-go get github.com/issue9/logs/v5
+go get github.com/issue9/logs/v6
 ```
 
 版权

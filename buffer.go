@@ -4,56 +4,106 @@ package logs
 
 import (
 	"fmt"
+	"strconv"
 	"sync"
+	"time"
 )
 
 var buffersPool = &sync.Pool{New: func() any {
-	b := make([]byte, 0, 1024)
-	return (*Buffer)(&b)
+	return &Buffer{data: make([]byte, 0, 1024)}
 }}
 
-type Buffer []byte
-
-func NewBuffer() *Buffer { return buffersPool.Get().(*Buffer) }
-
-func (w *Buffer) WString(s string) *Buffer {
-	*w = append(*w, s...)
-	return w
+type Buffer struct {
+	data   []byte
+	detail bool
 }
 
-func (w *Buffer) WBytes(b ...byte) *Buffer {
-	*w = append(*w, b...)
-	return w
-}
+type AppendFunc = func(*Buffer)
 
-func (w *Buffer) Reset() *Buffer {
-	*w = (*w)[:0]
+func NewBuffer(detail bool) *Buffer { return buffersPool.Get().(*Buffer).Reset(detail) }
+
+func (w *Buffer) Reset(detail bool) *Buffer {
+	w.data = w.data[:0]
+	w.detail = detail
 	return w
 }
 
 func (w *Buffer) Write(b []byte) (int, error) {
-	w.WBytes(b...)
+	w.AppendBytes(b...)
 	return len(b), nil
 }
 
 func (w *Buffer) AppendFunc(f AppendFunc) *Buffer {
-	*w = f(*w)
+	f(w)
 	return w
 }
 
-func (w *Buffer) Print(v ...any) { *w = fmt.Append(*w, v...) }
+func (w *Buffer) AppendString(s string) *Buffer {
+	w.data = append(w.data, s...)
+	return w
+}
 
-func (w *Buffer) Printf(f string, v ...any) { *w = fmt.Appendf(*w, f, v...) }
+func (w *Buffer) AppendBytes(b ...byte) *Buffer {
+	w.data = append(w.data, b...)
+	return w
+}
 
-func (w *Buffer) Println(v ...any) { *w = fmt.Appendln(*w, v...) }
+func (w *Buffer) AppendFloat(n float64, fmt byte, prec, bitSize int) *Buffer {
+	w.data = strconv.AppendFloat(w.data, n, fmt, prec, bitSize)
+	return w
+}
+
+func (w *Buffer) AppendInt(n int64, base int) *Buffer {
+	w.data = strconv.AppendInt(w.data, n, 10)
+	return w
+}
+
+func (w *Buffer) AppendUint(n uint64, base int) *Buffer {
+	w.data = strconv.AppendUint(w.data, n, 10)
+	return w
+}
+
+func (w *Buffer) AppendTime(t time.Time, layout string) *Buffer {
+	w.data = t.AppendFormat(w.data, layout)
+	return w
+}
+
+func (w *Buffer) Append(v ...any) *Buffer {
+	w.data = fmt.Append(w.data, v...)
+	return w
+}
+
+func (w *Buffer) Appendf(format string, v ...any) *Buffer {
+	w.data = fmt.Appendf(w.data, format, v...)
+	return w
+}
+
+func (w *Buffer) Appendln(v ...any) *Buffer {
+	w.data = fmt.Appendln(w.data, v...)
+	return w
+}
+
+func (w *Buffer) AppendBuffer(f func(b *Buffer)) *Buffer {
+	bb := NewBuffer(w.detail)
+	defer bb.Free()
+	f(bb)
+
+	return w.AppendBytes(bb.data...)
+}
+
+func (w *Buffer) Print(v ...any) { w.data = fmt.Append(w.data, v...) }
+
+func (w *Buffer) Printf(f string, v ...any) { w.data = fmt.Appendf(w.data, f, v...) }
+
+func (w *Buffer) Println(v ...any) { w.data = fmt.Appendln(w.data, v...) }
 
 func (w *Buffer) Detail() bool { return true }
 
-func (w *Buffer) Bytes() []byte { return []byte(*w) }
+func (w *Buffer) Bytes() []byte { return w.data }
 
 func (w *Buffer) Free() {
 	const buffersPoolMaxSize = 1 << 10
-	if len(*w) < buffersPoolMaxSize {
+	if len(w.data) < buffersPoolMaxSize {
 		buffersPool.Put(w)
 	}
 }

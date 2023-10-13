@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"sync"
 
 	"github.com/issue9/term/v3/colors"
@@ -53,68 +52,67 @@ func NewTextHandler(w ...io.Writer) Handler {
 	mux := &sync.Mutex{} // 防止多个函数同时调用 HandlerFunc 方法。
 
 	return HandlerFunc(func(e *Record) {
-		b := NewBuffer()
+		b := NewBuffer(e.Logs().detail)
 		defer b.Free()
-		b.Reset()
 
-		b.WBytes('[').WString(e.Level.String()).WBytes(']')
+		b.AppendBytes('[').AppendString(e.Level.String()).AppendBytes(']')
 
 		var indent byte = ' '
 		if e.AppendCreated != nil {
-			b.WBytes(' ').AppendFunc(e.AppendCreated)
+			b.AppendBytes(' ').AppendFunc(e.AppendCreated)
 			indent = '\t'
 		}
 
-		if e.AppendPath != nil {
-			b.WBytes(' ').AppendFunc(e.AppendPath)
+		if e.AppendLocation != nil {
+			b.AppendBytes(' ').AppendFunc(e.AppendLocation)
 			indent = '\t'
 		}
 
-		b.WBytes(indent).AppendFunc(e.AppendMessage)
+		b.AppendBytes(indent).AppendFunc(e.AppendMessage)
 
 		for _, p := range e.Params {
-			b.WBytes(' ').WString(p.K).WBytes('=')
+			b.AppendBytes(' ').AppendString(p.K).AppendBytes('=')
 			switch v := p.V.(type) {
 			case string:
-				b.WString(v)
+				b.AppendString(v)
 			case int:
-				*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
+				b.AppendInt(int64(v), 10)
 			case int64:
-				*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
+				b.AppendInt(v, 10)
 			case int32:
-				*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
+				b.AppendInt(int64(v), 10)
 			case int16:
-				*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
+				b.AppendInt(int64(v), 10)
 			case int8:
-				*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
+				b.AppendInt(int64(v), 10)
 			case uint:
-				*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
+				b.AppendUint(uint64(v), 10)
 			case uint64:
-				*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
+				b.AppendUint(v, 10)
 			case uint32:
-				*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
+				b.AppendUint(uint64(v), 10)
 			case uint16:
-				*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
+				b.AppendUint(uint64(v), 10)
 			case uint8:
-				*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
+				b.AppendUint(uint64(v), 10)
 			case float32:
-				*b = strconv.AppendFloat(b.Bytes(), float64(v), 'f', 5, 32)
+				b.AppendFloat(float64(v), 'f', 5, 32)
 			case float64:
-				*b = strconv.AppendFloat(b.Bytes(), float64(v), 'f', 5, 32)
+				b.AppendFloat(v, 'f', 5, 64)
 			default:
 				if m, ok := p.V.(encoding.TextMarshaler); ok {
 					if bs, err := m.MarshalText(); err != nil {
-						b.WString("Err(").WString(err.Error()).WBytes(')')
+						b.AppendString("Err(").AppendString(err.Error()).AppendBytes(')')
 					} else {
-						b.WBytes(bs...)
+						b.AppendBytes(bs...)
 					}
 				} else {
-					*b = fmt.Append(b.Bytes(), p.V)
+					b.Append(p.V)
 				}
 			}
 		}
 
-		b.WBytes('\n')
+		b.AppendBytes('\n')
 
 		mux.Lock()
 		defer mux.Unlock()
@@ -132,74 +130,73 @@ func NewJSONHandler(w ...io.Writer) Handler {
 	mux := &sync.Mutex{}
 
 	return HandlerFunc(func(e *Record) {
-		b := NewBuffer()
-		defer b.Reset()
-		b.Reset()
+		b := NewBuffer(e.Logs().detail)
+		defer b.Free()
 
-		b.WBytes('{')
+		b.AppendBytes('{')
 
-		b.WString(`"level":"`).WString(e.Level.String()).WString(`",`).
-			WString(`"message":"`).AppendFunc(e.AppendMessage).WBytes('"')
+		b.AppendString(`"level":"`).AppendString(e.Level.String()).AppendString(`",`).
+			AppendString(`"message":"`).AppendFunc(e.AppendMessage).AppendBytes('"')
 
 		if e.AppendCreated != nil {
-			b.WString(`,"created":"`).AppendFunc(e.AppendCreated).WBytes('"')
+			b.AppendString(`,"created":"`).AppendFunc(e.AppendCreated).AppendBytes('"')
 		}
 
-		if e.AppendPath != nil {
-			b.WString(`,"path":"`).AppendFunc(e.AppendPath).WBytes('"')
+		if e.AppendLocation != nil {
+			b.AppendString(`,"path":"`).AppendFunc(e.AppendLocation).AppendBytes('"')
 		}
 
 		if len(e.Params) > 0 {
-			b.WString(`,"params":[`)
+			b.AppendString(`,"params":[`)
 
 			for i, p := range e.Params {
 				if i > 0 {
-					b.WBytes(',')
+					b.AppendBytes(',')
 				}
-				b.WString(`{"`).WString(p.K).WString(`":`)
+				b.AppendString(`{"`).AppendString(p.K).AppendString(`":`)
 
 				switch v := p.V.(type) {
 				case string:
-					b.WBytes('"').WString(v).WBytes('"')
+					b.AppendBytes('"').AppendString(v).AppendBytes('"')
 				case int:
-					*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
+					b.AppendInt(int64(v), 10)
 				case int64:
-					*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
+					b.AppendInt(v, 10)
 				case int32:
-					*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
+					b.AppendInt(int64(v), 10)
 				case int16:
-					*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
+					b.AppendInt(int64(v), 10)
 				case int8:
-					*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
+					b.AppendInt(int64(v), 10)
 				case uint:
-					*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
+					b.AppendUint(uint64(v), 10)
 				case uint64:
-					*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
+					b.AppendUint(v, 10)
 				case uint32:
-					*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
+					b.AppendUint(uint64(v), 10)
 				case uint16:
-					*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
+					b.AppendUint(uint64(v), 10)
 				case uint8:
-					*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
+					b.AppendUint(uint64(v), 10)
 				case float32:
-					*b = strconv.AppendFloat(b.Bytes(), float64(v), 'f', 5, 32)
+					b.AppendFloat(float64(v), 'f', 5, 32)
 				case float64:
-					*b = strconv.AppendFloat(b.Bytes(), float64(v), 'f', 5, 32)
+					b.AppendFloat(v, 'f', 5, 64)
 				default:
 					val, err := json.Marshal(p.V)
 					if err != nil {
 						val = []byte("\"Err(" + err.Error() + ")\"")
 					}
-					b.WBytes(val...)
+					b.AppendBytes(val...)
 				}
 
-				b.WBytes('}')
+				b.AppendBytes('}')
 			}
 
-			b.WBytes(']')
+			b.AppendBytes(']')
 		}
 
-		b.WBytes('}')
+		b.AppendBytes('}')
 
 		mux.Lock()
 		defer mux.Unlock()
@@ -229,9 +226,8 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 	mux := &sync.Mutex{}
 
 	return HandlerFunc(func(e *Record) {
-		b := NewBuffer()
+		b := NewBuffer(e.Logs().detail)
 		defer b.Free()
-		b.Reset()
 
 		ww := colors.New(b)
 		fc := cs[e.Level]
@@ -239,16 +235,25 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 
 		var indent byte = ' '
 		if e.AppendCreated != nil {
-			ww.WByte(' ').WBytes(e.AppendCreated([]byte{}))
+			b := NewBuffer(e.Logs().detail)
+			defer b.Free()
+			e.AppendCreated(b)
+			ww.WByte(' ').WBytes(b.data)
 			indent = '\t'
 		}
 
-		if e.AppendPath != nil {
-			ww.WByte(' ').WBytes(e.AppendPath([]byte{}))
+		if e.AppendLocation != nil {
+			b := NewBuffer(e.Logs().detail)
+			defer b.Free()
+			e.AppendLocation(b)
+			ww.WByte(' ').WBytes(b.data)
 			indent = '\t'
 		}
 
-		ww.WByte(indent).WBytes(e.AppendMessage([]byte{}))
+		bb := NewBuffer(e.Logs().detail)
+		defer bb.Free()
+		e.AppendMessage(bb)
+		ww.WByte(indent).WBytes(bb.data)
 
 		for _, p := range e.Params {
 			ww.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))

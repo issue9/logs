@@ -9,6 +9,6 @@ import (
 )
 
 var (
-	_ xerrors.Printer = NewBuffer()
-	_ io.Writer       = NewBuffer()
+	_ xerrors.Printer = NewBuffer(false)
+	_ io.Writer       = NewBuffer(false)
 )

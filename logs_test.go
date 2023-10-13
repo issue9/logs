@@ -14,7 +14,7 @@ func TestLogsLoggers(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
 	w := NewTextHandler(buf)
-	l := New(w, WithCaller(), WithCreated(MicroLayout))
+	l := New(w, WithLocation(true), WithCreated(MicroLayout))
 	a.NotNil(l)
 	l.Enable(LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
 

@@ -16,7 +16,7 @@ func BenchmarkTextHandler(b *testing.B) {
 
 	buf := new(bytes.Buffer)
 	w := NewTextHandler(buf)
-	l := New(w, WithCaller(), WithCreated(MilliLayout))
+	l := New(w, WithLocation(true), WithCreated(MilliLayout))
 	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
@@ -29,7 +29,7 @@ func BenchmarkJSONHandler(b *testing.B) {
 
 	buf := new(bytes.Buffer)
 	w := NewJSONHandler(buf)
-	l := New(w, WithCaller(), WithCreated(MicroLayout))
+	l := New(w, WithLocation(true), WithCreated(MicroLayout))
 	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
@@ -42,7 +42,7 @@ func BenchmarkTermHandler(b *testing.B) {
 
 	buf := new(bytes.Buffer)
 	w := NewTermHandler(buf, map[Level]colors.Color{LevelWarn: colors.Blue})
-	l := New(w, WithCaller(), WithCreated(MilliLayout))
+	l := New(w, WithLocation(true), WithCreated(MilliLayout))
 	e := newRecord(a, l, LevelWarn)
 
 	for i := 0; i < b.N; i++ {
@@ -53,7 +53,7 @@ func BenchmarkTermHandler(b *testing.B) {
 func BenchmarkRecord_Printf(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(buf), WithCreated(MilliLayout), WithCaller())
+	l := New(NewTextHandler(buf), WithCreated(MilliLayout), WithLocation(true))
 	a.NotNil(l)
 	l.Enable(LevelError)
 

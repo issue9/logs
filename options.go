@@ -17,7 +17,9 @@ const (
 
 type Option func(*Logs)
 
-// WithLocale 是否带本地化信息
+// WithLocale 指定本地化信息
+//
+// 如果为 nil，那么将禁用本地化输出。
 //
 // 设置了此值为影响以下几个方法中实现了 [localeutil.Stringer] 的参数：
 //   - Logger.Error
@@ -25,22 +27,33 @@ func WithLocale(p *localeutil.Printer) Option {
 	return func(l *Logs) { l.printer = p }
 }
 
-// Created 是否显示记录的创建时间
+// WithDetail 错误信息的调用堆栈
+//
+// 如果向日志输出的是类型为 err 的信息，是否显示其调用堆栈。
+func WithDetail(v bool) Option { return func(l *Logs) { l.detail = v } }
+
+// WithCreated 指定日期的格式
+//
+// 如果 layout 为空将会禁用日期显示。
 func WithCreated(layout string) Option {
 	return func(l *Logs) { l.createdFormat = layout }
 }
 
-// Caller 是否显示记录的定位信息
-func WithCaller() Option { return func(l *Logs) { l.caller = true } }
+// WithLocation 是否显示定位信息
+func WithLocation(v bool) Option { return func(l *Logs) { l.location = v } }
 
-// HasCaller 是否包含定位信息
-func (logs *Logs) HasCaller() bool { return logs.caller }
+// HasLocation 是否包含定位信息
+func (logs *Logs) HasLocation() bool { return logs.location }
 
-// HasCreated 是否包含时间信息
-func (logs *Logs) HasCreated() bool { return logs.createdFormat != "" }
+// CreatedFormat created 的时间格式
+//
+// 如果返回空值，表示禁用在日志中显示时间信息。
+func (logs *Logs) CreatedFormat() string { return logs.createdFormat }
 
-// SetCaller 是否显示位置信息
-func (logs *Logs) SetCaller(v bool) { logs.caller = v }
+// SetLocation 设置是否输出位置信息
+func (logs *Logs) SetLocation(v bool) { logs.location = v }
 
-// SetCreated 是否显示时间信息
+// SetCreated 指定日期的格式
+//
+// 如果 v 为空将会禁用日期显示。
 func (logs *Logs) SetCreated(v string) { logs.createdFormat = v }

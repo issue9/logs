@@ -2,6 +2,13 @@
 
 package logs
 
-import "golang.org/x/xerrors"
+import (
+	"io"
 
-var _ xerrors.Printer = NewBuffer()
+	"golang.org/x/xerrors"
+)
+
+var (
+	_ xerrors.Printer = NewBuffer()
+	_ io.Writer       = NewBuffer()
+)

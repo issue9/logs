@@ -3,7 +3,6 @@
 package logs
 
 import (
-	"bytes"
 	"encoding"
 	"encoding/json"
 	"fmt"
@@ -55,6 +54,7 @@ func NewTextHandler(w ...io.Writer) Handler {
 
 	return HandlerFunc(func(e *Record) {
 		b := NewBuffer()
+		defer b.Free()
 		b.Reset()
 
 		b.WBytes('[').WString(e.Level.String()).WBytes(']')
@@ -79,29 +79,29 @@ func NewTextHandler(w ...io.Writer) Handler {
 			case string:
 				b.WString(v)
 			case int:
-				b.WString(strconv.Itoa(v))
+				*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
 			case int64:
-				b.WString(strconv.FormatInt(v, 10))
+				*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
 			case int32:
-				b.WString(strconv.FormatInt(int64(v), 10))
+				*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
 			case int16:
-				b.WString(strconv.FormatInt(int64(v), 10))
+				*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
 			case int8:
-				b.WString(strconv.FormatInt(int64(v), 10))
+				*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
 			case uint:
-				b.WString(strconv.FormatUint(uint64(v), 10))
+				*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
 			case uint64:
-				b.WString(strconv.FormatUint(v, 10))
+				*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
 			case uint32:
-				b.WString(strconv.FormatUint(uint64(v), 10))
+				*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
 			case uint16:
-				b.WString(strconv.FormatUint(uint64(v), 10))
+				*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
 			case uint8:
-				b.WString(strconv.FormatUint(uint64(v), 10))
+				*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
 			case float32:
-				b.WString(strconv.FormatFloat(float64(v), 'f', 5, 32))
+				*b = strconv.AppendFloat(b.Bytes(), float64(v), 'f', 5, 32)
 			case float64:
-				b.WString(strconv.FormatFloat(float64(v), 'f', 5, 64))
+				*b = strconv.AppendFloat(b.Bytes(), float64(v), 'f', 5, 32)
 			default:
 				if m, ok := p.V.(encoding.TextMarshaler); ok {
 					if bs, err := m.MarshalText(); err != nil {
@@ -122,10 +122,6 @@ func NewTextHandler(w ...io.Writer) Handler {
 		if _, err := ww.Write(b.Bytes()); err != nil { // 一次性写入，性能更好一些。
 			fmt.Fprintf(os.Stderr, "NewTextHandler.Handle:%v\n", err)
 		}
-
-		if len(*b) < buffersPoolMaxSize {
-			buffersPool.Put(b)
-		}
 	})
 }
 
@@ -138,6 +134,7 @@ func NewJSONHandler(w ...io.Writer) Handler {
 
 	return HandlerFunc(func(e *Record) {
 		b := NewBuffer()
+		defer b.Reset()
 		b.Reset()
 
 		b.WBytes('{')
@@ -168,29 +165,29 @@ func NewJSONHandler(w ...io.Writer) Handler {
 				case string:
 					b.WBytes('"').WString(v).WBytes('"')
 				case int:
-					b.WString(strconv.Itoa(v))
+					*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
 				case int64:
-					b.WString(strconv.FormatInt(v, 10))
+					*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
 				case int32:
-					b.WString(strconv.FormatInt(int64(v), 10))
+					*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
 				case int16:
-					b.WString(strconv.FormatInt(int64(v), 10))
+					*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
 				case int8:
-					b.WString(strconv.FormatInt(int64(v), 10))
+					*b = strconv.AppendInt(b.Bytes(), int64(v), 10)
 				case uint:
-					b.WString(strconv.FormatUint(uint64(v), 10))
+					*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
 				case uint64:
-					b.WString(strconv.FormatUint(v, 10))
+					*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
 				case uint32:
-					b.WString(strconv.FormatUint(uint64(v), 10))
+					*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
 				case uint16:
-					b.WString(strconv.FormatUint(uint64(v), 10))
+					*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
 				case uint8:
-					b.WString(strconv.FormatUint(uint64(v), 10))
+					*b = strconv.AppendUint(b.Bytes(), uint64(v), 10)
 				case float32:
-					b.WString(strconv.FormatFloat(float64(v), 'e', 5, 32))
+					*b = strconv.AppendFloat(b.Bytes(), float64(v), 'f', 5, 32)
 				case float64:
-					b.WString(strconv.FormatFloat(float64(v), 'e', 5, 64))
+					*b = strconv.AppendFloat(b.Bytes(), float64(v), 'f', 5, 32)
 				default:
 					val, err := json.Marshal(p.V)
 					if err != nil {
@@ -211,10 +208,6 @@ func NewJSONHandler(w ...io.Writer) Handler {
 		defer mux.Unlock()
 		if _, err := ww.Write(b.Bytes()); err != nil {
 			fmt.Fprintf(os.Stderr, "NewJSONHandler.Handle:%v\n", err)
-		}
-
-		if len(*b) < buffersPoolMaxSize {
-			buffersPool.Put(b)
 		}
 	})
 }
@@ -239,9 +232,11 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 	mux := &sync.Mutex{}
 
 	return HandlerFunc(func(e *Record) {
-		buf := new(bytes.Buffer)
-		ww := colors.New(buf)
+		b := NewBuffer()
+		defer b.Free()
+		b.Reset()
 
+		ww := colors.New(b)
 		fc := cs[e.Level]
 		ww.WByte('[').Color(colors.Normal, fc, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
 
@@ -266,14 +261,10 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 
 		mux.Lock()
 		defer mux.Unlock()
-		if _, err := w.Write(buf.Bytes()); err != nil {
+		if _, err := w.Write(b.Bytes()); err != nil {
 			// 大概率是写入终端失败，直接 panic。
 			panic(fmt.Sprintf("NewTermHandler.Handle:%v\n", err))
 		}
-
-		//if b.Len() < buffersPoolMaxSize {
-		//buffersPool.Put(buf)
-		//}
 	})
 }
 

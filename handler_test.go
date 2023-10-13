@@ -39,7 +39,7 @@ func newRecord(a *assert.Assertion, logs *Logs, lv Level) *Record {
 	e := logs.NewRecord(lv)
 	a.NotNil(e)
 
-	e.Message = func(bs []byte) []byte { return append(bs, "msg"...) }
+	e.AppendMessage = func(bs []byte) []byte { return append(bs, "msg"...) }
 	e.Path = "path.go:20"
 	e.Params = []Pair{
 		{K: "k1", V: "v1"},
@@ -134,7 +134,7 @@ func TestTermHandler(t *testing.T) {
 
 	l = New(nil, WithCaller(), WithCreated(MicroLayout))
 	e = newRecord(a, l, LevelError)
-	e.Message = func(bs []byte) []byte { return append(bs, "error message"...) }
+	e.AppendMessage = func(bs []byte) []byte { return append(bs, "error message"...) }
 	w = NewTermHandler(os.Stdout, map[Level]colors.Color{LevelError: colors.Green})
 	w.Handle(e)
 }

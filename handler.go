@@ -44,6 +44,8 @@ type (
 	nopHandler struct{}
 )
 
+func (w HandlerFunc) Handle(e *Record) { w(e) }
+
 // NewTextHandler 返回将 [Record] 以普通文本的形式写入 w 的对象
 //
 // NOTE: 如果向 w 输出内容时出错，会将错误信息输出到终端作为最后的处理方式。
@@ -52,7 +54,7 @@ func NewTextHandler(w ...io.Writer) Handler {
 	mux := &sync.Mutex{} // 防止多个函数同时调用 HandlerFunc 方法。
 
 	return HandlerFunc(func(e *Record) {
-		b := newBuffer()
+		b := NewBuffer()
 		b.Reset()
 
 		b.WBytes('[').WString(e.Level.String()).WBytes(']')
@@ -69,7 +71,7 @@ func NewTextHandler(w ...io.Writer) Handler {
 		}
 
 		b.WBytes(indent)
-		*b = e.Message(b.Bytes())
+		*b = e.AppendMessage(b.Bytes())
 
 		for _, p := range e.Params {
 			b.WBytes(' ').WString(p.K).WBytes('=')
@@ -135,14 +137,14 @@ func NewJSONHandler(w ...io.Writer) Handler {
 	mux := &sync.Mutex{}
 
 	return HandlerFunc(func(e *Record) {
-		b := newBuffer()
+		b := NewBuffer()
 		b.Reset()
 
 		b.WBytes('{')
 
 		b.WString(`"level":"`).WString(e.Level.String()).WString(`",`).
 			WString(`"message":"`)
-		*b = e.Message(b.Bytes())
+		*b = e.AppendMessage(b.Bytes())
 		b.WBytes('"')
 
 		if !e.Created.IsZero() {
@@ -254,7 +256,7 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 			indent = '\t'
 		}
 
-		ww.WByte(indent).WBytes(e.Message([]byte{}))
+		ww.WByte(indent).WBytes(e.AppendMessage([]byte{}))
 
 		for _, p := range e.Params {
 			ww.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))

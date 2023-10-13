@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/xerrors"
+
 	"github.com/issue9/logs/v6/writers"
 )
 
@@ -27,7 +29,7 @@ type (
 		Created time.Time // 日志的生成时间
 
 		// 向日志中添加日志消息
-		Message func([]byte) []byte
+		AppendMessage func([]byte) []byte
 
 		// 以下表示日志的定位信息
 		Path string
@@ -50,7 +52,7 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 		e.Params = e.Params[:0]
 	}
 	e.Path = ""
-	e.Message = nil
+	e.AppendMessage = nil
 	if logs.createdFormat != "" {
 		e.Created = time.Now()
 	} else {
@@ -102,7 +104,25 @@ func (e *Record) Error(err error) { e.DepthError(2, err) }
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthError(depth int, err error) {
 	if err != nil {
-		e.Message = func(bs []byte) []byte { return append(bs, []byte(err.Error())...) }
+		switch ee := err.(type) {
+		case xerrors.Formatter:
+			e.AppendMessage = func(bs []byte) []byte {
+				p := (*Buffer)(&bs)
+				err = ee.FormatError(p)
+				for err != nil {
+					switch e2 := err.(type) {
+					case xerrors.Formatter:
+						err = e2.FormatError(p)
+					default:
+						*p = append(*p, e2.Error()...)
+						err = nil
+					}
+				}
+				return p.Bytes()
+			}
+		default: // 必然是实现了 error 的
+			e.AppendMessage = func(bs []byte) []byte { return append(bs, []byte(err.Error())...) }
+		}
 	}
 	e.setLocation(depth + 1)
 	e.output()
@@ -116,7 +136,7 @@ func (e *Record) String(s string) { e.DepthString(2, s) }
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthString(depth int, s string) {
-	e.Message = func(bs []byte) []byte { return append(bs, s...) }
+	e.AppendMessage = func(bs []byte) []byte { return append(bs, s...) }
 	e.setLocation(depth + 1)
 	e.output()
 }
@@ -130,7 +150,7 @@ func (e *Record) Print(v ...any) { e.DepthPrint(2, v...) }
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrint(depth int, v ...any) {
 	if len(v) > 0 {
-		e.Message = func(bs []byte) []byte { return fmt.Append(bs, v...) }
+		e.AppendMessage = func(bs []byte) []byte { return fmt.Append(bs, v...) }
 	}
 	e.setLocation(depth + 1)
 	e.output()
@@ -144,7 +164,7 @@ func (e *Record) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...
 //
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintf(depth int, format string, v ...any) {
-	e.Message = func(bs []byte) []byte { return fmt.Appendf(bs, format, v...) }
+	e.AppendMessage = func(bs []byte) []byte { return fmt.Appendf(bs, format, v...) }
 	e.setLocation(depth + 1)
 	e.output()
 }
@@ -158,7 +178,7 @@ func (e *Record) Println(v ...any) { e.DepthPrintln(2, v...) }
 // 如果 [Logs.HasCaller] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintln(depth int, v ...any) {
 	if len(v) > 0 {
-		e.Message = func(bs []byte) []byte { return fmt.Appendln(bs, v...) }
+		e.AppendMessage = func(bs []byte) []byte { return fmt.Appendln(bs, v...) }
 	}
 	e.setLocation(depth + 1)
 	e.output()

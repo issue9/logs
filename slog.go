@@ -40,7 +40,7 @@ func (h *logsHandler) Enabled(ctx context.Context, lv slog.Level) bool {
 func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 	rr := h.l.NewRecord(slog2Logs[r.Level])
 	rr.Created = r.Time
-	rr.Message = func(bs []byte) []byte { return append(bs, r.Message...) }
+	rr.AppendMessage = func(bs []byte) []byte { return append(bs, r.Message...) }
 
 	for _, attr := range h.attrs {
 		rr.With(h.prefix+attr.Key, attr.Value)

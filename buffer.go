@@ -2,7 +2,10 @@
 
 package logs
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 const buffersPoolMaxSize = 1 << 10
 
@@ -13,9 +16,7 @@ var buffersPool = &sync.Pool{New: func() any {
 
 type Buffer []byte
 
-func newBuffer() *Buffer { return buffersPool.Get().(*Buffer) }
-
-func (w HandlerFunc) Handle(e *Record) { w(e) }
+func NewBuffer() *Buffer { return buffersPool.Get().(*Buffer) }
 
 func (w *Buffer) WString(s string) *Buffer {
 	*w = append(*w, s...)
@@ -31,5 +32,13 @@ func (w *Buffer) Reset() *Buffer {
 	*w = (*w)[:0]
 	return w
 }
+
+func (w *Buffer) Print(v ...any) { *w = fmt.Append(*w, v...) }
+
+func (w *Buffer) Printf(f string, v ...any) { *w = fmt.Appendf(*w, f, v...) }
+
+func (w *Buffer) Println(v ...any) { *w = fmt.Appendln(*w, v...) }
+
+func (w *Buffer) Detail() bool { return true }
 
 func (w *Buffer) Bytes() []byte { return []byte(*w) }

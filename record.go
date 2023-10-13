@@ -20,7 +20,7 @@ const poolMaxParams = 100
 var recordPool = &sync.Pool{New: func() any { return &Record{} }}
 
 type (
-	// Record 每一条日志的表示
+	// Record 单条日志产生的数据
 	Record struct {
 		logs *Logs
 
@@ -42,7 +42,7 @@ type (
 		// 可能为空，根据 [Logs.HasLocation] 决定。
 		AppendLocation AppendFunc
 
-		// 额外的数据保存在此，比如由 [Logger.With] 添加的数据。
+		// 额外的数据，比如由 [Logger.With] 添加的数据。
 		Params []Pair
 	}
 

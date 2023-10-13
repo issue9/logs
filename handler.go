@@ -27,7 +27,7 @@ var defaultTermColors = map[Level]colors.Color{
 }
 
 type (
-	// Handler [Record] 的处理接口
+	// Handler 日志后端的处理接口
 	Handler interface {
 		// Handle 将 [Record] 写入日志
 		//

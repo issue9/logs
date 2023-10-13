@@ -26,7 +26,10 @@ func (e *err) Error() string { return e.err.Error() }
 
 func (e *err) FormatError(p xerrors.Printer) error {
 	p.Print("root\n")
-	return e.err
+	if p.Detail() {
+		return e.err
+	}
+	return nil
 }
 
 func TestRecord_location(t *testing.T) {
@@ -41,7 +44,7 @@ func TestRecord_location(t *testing.T) {
 	b := NewBuffer(false)
 	defer b.Free()
 	e.AppendLocation(b)
-	a.True(strings.HasSuffix(string(b.data), "record_test.go:40"), string(b.data))
+	a.True(strings.HasSuffix(string(b.data), "record_test.go:43"), string(b.data))
 }
 
 func TestRecord_Error(t *testing.T) {
@@ -61,10 +64,20 @@ func TestRecord_Error(t *testing.T) {
 		b := NewBuffer(false)
 		defer b.Free()
 		e.AppendLocation(b)
-		a.True(strings.HasSuffix(string(b.data), "record_test.go:58"), string(b.data))
+		a.True(strings.HasSuffix(string(b.data), "record_test.go:61"), string(b.data))
 	})
 
 	err2 := &err{err: err1}
+	buf.Reset()
+	t.Run("xerrors>error", func(t *testing.T) {
+		a := assert.New(t, false)
+		e := l.NewRecord(LevelWarn)
+		a.Empty(e.AppendLocation)
+		e.Error(err2)
+		a.True(strings.HasSuffix(buf.String(), "root\n\n"), buf.String())
+	})
+
+	l.detail = true
 	buf.Reset()
 	t.Run("xerrors>error", func(t *testing.T) {
 		a := assert.New(t, false)

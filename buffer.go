@@ -13,6 +13,9 @@ var buffersPool = &sync.Pool{New: func() any {
 	return &Buffer{data: make([]byte, 0, 1024)}
 }}
 
+// Buffer []byte 复用对象池
+//
+// 同时实现了 [xerrors.Printer] 接口。
 type Buffer struct {
 	data   []byte
 	detail bool
@@ -20,6 +23,9 @@ type Buffer struct {
 
 type AppendFunc = func(*Buffer)
 
+// NewBuffer 声明 [Buffer] 对象
+//
+// detail 是否打印错误信息的调用堆栈；
 func NewBuffer(detail bool) *Buffer { return buffersPool.Get().(*Buffer).Reset(detail) }
 
 func (w *Buffer) Reset(detail bool) *Buffer {
@@ -97,7 +103,7 @@ func (w *Buffer) Printf(f string, v ...any) { w.data = fmt.Appendf(w.data, f, v.
 
 func (w *Buffer) Println(v ...any) { w.data = fmt.Appendln(w.data, v...) }
 
-func (w *Buffer) Detail() bool { return true }
+func (w *Buffer) Detail() bool { return w.detail }
 
 func (w *Buffer) Bytes() []byte { return w.data }
 

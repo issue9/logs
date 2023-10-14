@@ -8,19 +8,14 @@ logs
 高性能日志库
 
 ```text
+goos: darwin
+goarch: amd64
+pkg: github.com/imkira/go-loggers-bench
 cpu: Intel(R) Core(TM) i5-5257U CPU @ 2.70GHz
-BenchmarkLogsTextPositive     	70519216	       178.9 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsTextPositive-2   	100000000	       120.6 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsTextPositive-4   	81085801	       141.6 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsTextNegative     	484125342	        24.35 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsTextNegative-2   	1000000000	        14.10 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsTextNegative-4   	1000000000	         9.033 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsJSONNegative     	461385842	        25.81 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsJSONNegative-2   	886811012	        13.65 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsJSONNegative-4   	1000000000	        10.70 ns/op	       0 B/op	       0 allocs/op
-BenchmarkLogsJSONPositive     	20922458	       580.0 ns/op	      40 B/op	       2 allocs/op
-BenchmarkLogsJSONPositive-2   	37168568	       318.2 ns/op	      40 B/op	       2 allocs/op
-BenchmarkLogsJSONPositive-4   	36571064	       315.3 ns/op	      40 B/op	       2 allocs/op
+BenchmarkLogsTextPositive-4   	100000000	       320.9 ns/op	      40 B/op	       2 allocs/op
+BenchmarkLogsTextNegative-4   	1000000000	         9.407 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsJSONNegative-4   	1000000000	        11.42 ns/op	       0 B/op	       0 allocs/op
+BenchmarkLogsJSONPositive-4   	65887180	       578.6 ns/op	      40 B/op	       2 allocs/op
 ```
 
 ```go

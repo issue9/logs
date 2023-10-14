@@ -22,7 +22,9 @@ type Option func(*Logs)
 // 如果为 nil，那么将禁用本地化输出。
 //
 // 设置了此值为影响以下几个方法中实现了 [localeutil.Stringer] 的参数：
-//   - Logger.Error
+//   - Logger.Error 中的 error 类型参数；
+//   - Logger.Print/Printf/Println 中的 any 类型参数；
+//   - Logger.With 中的 any 类型参数
 func WithLocale(p *localeutil.Printer) Option {
 	return func(l *Logs) { l.printer = p }
 }
@@ -30,6 +32,9 @@ func WithLocale(p *localeutil.Printer) Option {
 // WithDetail 错误信息的调用堆栈
 //
 // 如果向日志输出的是类型为 err 的信息，是否显示其调用堆栈。
+//
+// NOTE: 该设置仅对 [Logger.Error] 方法有效果，
+// 如果将 err 传递给 [Logger.Printf] 等方法，则遵照 [fmt.Appendf] 进行处理。
 func WithDetail(v bool) Option { return func(l *Logs) { l.detail = v } }
 
 // WithCreated 指定日期的格式

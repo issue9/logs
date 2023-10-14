@@ -26,18 +26,18 @@ type (
 
 		Level Level
 
-		// AppendCreated 添加日志的创建时间
+		// AppendCreated 添加字符串类型的日志创建时间
 		//
 		// 可能为空，根据 [Logs.CreatedFormat] 是否为空决定。
 		AppendCreated AppendFunc
 
-		// AppendMessage 向日志中添加日志消息
+		// AppendMessage 向日志中添加字符串类型的日志消息
 		//
 		// 这是每一条日志的主消息，不会为空。
 		// 内容是根据 Depth* 系列方法生成的。
 		AppendMessage AppendFunc
 
-		// AppendCreated 添加日志的触发位置信息
+		// AppendLocation 添加字符串类型的日志触发位置信息
 		//
 		// 可能为空，根据 [Logs.HasLocation] 决定。
 		AppendLocation AppendFunc
@@ -89,13 +89,17 @@ func (e *Record) initLocationCreated(depth int) *Record {
 	}
 
 	if e.Logs().createdFormat != "" {
-		e.AppendCreated = func(b *Buffer) { b.AppendTime(time.Now(), e.Logs().createdFormat) }
+		t := time.Now() // 必须是当前时间，而不是放在 AppendCreated 中获取的时间。
+		e.AppendCreated = func(b *Buffer) { b.AppendTime(t, e.Logs().createdFormat) }
 	}
 
 	return e
 }
 
 func (e *Record) With(name string, val any) Logger {
+	if ls, ok := val.(localeutil.Stringer); ok {
+		val = ls.LocaleString(e.Logs().printer)
+	}
 	e.Params = append(e.Params, Pair{K: name, V: val})
 	return e
 }
@@ -118,7 +122,7 @@ func (e *Record) DepthError(depth int, err error) {
 
 	switch ee := err.(type) {
 	case xerrors.Formatter:
-		e.AppendMessage = func(b *Buffer) { e.appendError(b, ee) }
+		e.AppendMessage = func(b *Buffer) { appendError(e.Logs().printer, b, ee) }
 	case localeutil.Stringer:
 		if pp := e.Logs().printer; pp != nil {
 			e.AppendMessage = func(b *Buffer) { b.AppendString(ee.LocaleString(pp)) }
@@ -132,21 +136,21 @@ func (e *Record) DepthError(depth int, err error) {
 	e.initLocationCreated(depth + 1).output()
 }
 
-func (e *Record) appendError(p *Buffer, ef xerrors.Formatter) {
-	err := ef.FormatError(p)
+func appendError(p *localeutil.Printer, b *Buffer, ef xerrors.Formatter) {
+	err := ef.FormatError(b)
 	for err != nil {
 		switch e2 := err.(type) {
 		case xerrors.Formatter:
-			err = e2.FormatError(p)
+			err = e2.FormatError(b)
 		case localeutil.Stringer:
-			if pp := e.Logs().printer; pp != nil {
-				p.AppendString(e2.LocaleString(pp))
+			if p != nil {
+				b.AppendString(e2.LocaleString(p))
 			} else { // e2 必然是实现了 error 接口的
-				p.AppendString(e2.(error).Error())
+				b.AppendString(e2.(error).Error())
 			}
 			return
 		default:
-			p.AppendString(e2.Error())
+			b.AppendString(e2.Error())
 			return
 		}
 	}
@@ -172,6 +176,7 @@ func (e *Record) Print(v ...any) { e.DepthPrint(2, v...) }
 //
 // 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrint(depth int, v ...any) {
+	replaceLocaleString(e.Logs().printer, v)
 	e.AppendMessage = func(b *Buffer) { b.Append(v...) }
 	e.initLocationCreated(depth + 1).output()
 }
@@ -184,6 +189,7 @@ func (e *Record) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...
 //
 // 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintf(depth int, format string, v ...any) {
+	replaceLocaleString(e.Logs().printer, v)
 	e.AppendMessage = func(b *Buffer) { b.Appendf(format, v...) }
 	e.initLocationCreated(depth + 1).output()
 }
@@ -196,6 +202,7 @@ func (e *Record) Println(v ...any) { e.DepthPrintln(2, v...) }
 //
 // 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintln(depth int, v ...any) {
+	replaceLocaleString(e.Logs().printer, v)
 	e.AppendMessage = func(b *Buffer) { b.Appendln(v...) }
 	e.initLocationCreated(depth + 1).output()
 }
@@ -204,5 +211,13 @@ func (e *Record) output() {
 	e.Logs().handler.Handle(e)
 	if len(e.Params) < poolMaxParams {
 		recordPool.Put(e)
+	}
+}
+
+func replaceLocaleString(p *localeutil.Printer, v []any) {
+	for i, val := range v {
+		if ls, ok := val.(localeutil.Stringer); ok {
+			v[i] = ls.LocaleString(p)
+		}
 	}
 }

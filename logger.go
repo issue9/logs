@@ -5,6 +5,8 @@ package logs
 import (
 	"io"
 	"log"
+
+	"github.com/issue9/localeutil"
 )
 
 var disabledLogger = &disableLogger{}
@@ -113,6 +115,9 @@ func (logs *Logs) With(lv Level, params map[string]any) Logger {
 
 	pairs := make([]Pair, 0, len(params))
 	for k, v := range params {
+		if ls, ok := v.(localeutil.Stringer); ok {
+			v = ls.LocaleString(logs.printer)
+		}
 		pairs = append(pairs, Pair{K: k, V: v})
 	}
 

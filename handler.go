@@ -99,16 +99,14 @@ func NewTextHandler(w ...io.Writer) Handler {
 				b.AppendFloat(float64(v), 'f', 5, 32)
 			case float64:
 				b.AppendFloat(v, 'f', 5, 64)
-			default:
-				if m, ok := p.V.(encoding.TextMarshaler); ok {
-					if bs, err := m.MarshalText(); err != nil {
-						b.AppendString("Err(").AppendString(err.Error()).AppendBytes(')')
-					} else {
-						b.AppendBytes(bs...)
-					}
+			case encoding.TextMarshaler:
+				if bs, err := v.MarshalText(); err != nil {
+					b.AppendString("Err(").AppendString(err.Error()).AppendBytes(')')
 				} else {
-					b.Append(p.V)
+					b.AppendBytes(bs...)
 				}
+			default:
+				b.Append(p.V)
 			}
 		}
 

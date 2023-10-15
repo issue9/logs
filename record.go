@@ -104,9 +104,7 @@ func (e *Record) With(name string, val any) Logger {
 	return e
 }
 
-func (e *Record) StdLogger() *log.Logger {
-	return log.New(e.asWriter(), "", 0)
-}
+func (e *Record) StdLogger() *log.Logger { return log.New(e.asWriter(), "", 0) }
 
 func (e *Record) Error(err error) { e.DepthError(2, err) }
 
@@ -215,6 +213,10 @@ func (e *Record) output() {
 }
 
 func replaceLocaleString(p *localeutil.Printer, v []any) {
+	if p == nil {
+		return
+	}
+
 	for i, val := range v {
 		if ls, ok := val.(localeutil.Stringer); ok {
 			v[i] = ls.LocaleString(p)

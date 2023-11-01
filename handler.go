@@ -11,8 +11,6 @@ import (
 	"sync"
 
 	"github.com/issue9/term/v3/colors"
-
-	"github.com/issue9/logs/v6/writers"
 )
 
 var nop = &nopHandler{}
@@ -48,7 +46,11 @@ func (w HandlerFunc) Handle(e *Record) { w(e) }
 //
 // NOTE: 如果向 w 输出内容时出错，会将错误信息输出到终端作为最后的处理方式。
 func NewTextHandler(w ...io.Writer) Handler {
-	ww := writers.New(w...)
+	if len(w) == 0 {
+		return nop
+	}
+
+	ww := io.MultiWriter(w...)
 	mux := &sync.Mutex{} // 防止多个函数同时调用 HandlerFunc 方法。
 
 	return HandlerFunc(func(e *Record) {
@@ -124,7 +126,11 @@ func NewTextHandler(w ...io.Writer) Handler {
 //
 // NOTE: 如果向 w 输出内容时出错，会将错误信息输出到终端作为最后的处理方式。
 func NewJSONHandler(w ...io.Writer) Handler {
-	ww := writers.New(w...)
+	if len(w) == 0 {
+		return nop
+	}
+
+	ww := io.MultiWriter(w...)
 	mux := &sync.Mutex{}
 
 	return HandlerFunc(func(e *Record) {

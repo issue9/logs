@@ -59,9 +59,7 @@ func TestTextHandler(t *testing.T) {
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
 	e.With("m1", marshalObject("m1"))
 
-	a.PanicString(func() {
-		NewTextHandler()
-	}, "参数 w 不能为空")
+	a.Equal(NewTextHandler(), nop)
 
 	buf := new(bytes.Buffer)
 	l.SetHandler(NewTextHandler(buf))
@@ -96,9 +94,7 @@ func TestJSONFormat(t *testing.T) {
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
 	e.With("m1", marshalObject("m1"))
 
-	a.PanicString(func() {
-		NewJSONHandler()
-	}, "参数 w 不能为空")
+	a.Equal(NewJSONHandler(), nop)
 
 	buf := new(bytes.Buffer)
 	l.SetHandler(NewJSONHandler(buf))

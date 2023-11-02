@@ -97,7 +97,7 @@ func (e *Record) initLocationCreated(depth int) *Record {
 }
 
 func (e *Record) With(name string, val any) Logger {
-	if ls, ok := val.(localeutil.Stringer); ok {
+	if ls, ok := val.(localeutil.Stringer); ok && e.logs.printer != nil {
 		val = ls.LocaleString(e.Logs().printer)
 	}
 	e.Params = append(e.Params, Pair{K: name, V: val})

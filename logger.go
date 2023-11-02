@@ -114,11 +114,17 @@ func (logs *Logs) With(lv Level, params map[string]any) Logger {
 	}
 
 	pairs := make([]Pair, 0, len(params))
-	for k, v := range params {
-		if ls, ok := v.(localeutil.Stringer); ok {
-			v = ls.LocaleString(logs.printer)
+	if logs.printer == nil {
+		for k, v := range params {
+			pairs = append(pairs, Pair{K: k, V: v})
 		}
-		pairs = append(pairs, Pair{K: k, V: v})
+	} else {
+		for k, v := range params {
+			if ls, ok := v.(localeutil.Stringer); ok {
+				v = ls.LocaleString(logs.printer)
+			}
+			pairs = append(pairs, Pair{K: k, V: v})
+		}
 	}
 
 	return &withLogger{

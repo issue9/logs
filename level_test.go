@@ -22,7 +22,7 @@ var (
 func TestIsValidLevel(t *testing.T) {
 	a := assert.New(t, false)
 
-	a.False(IsValidLevel(levelDisable)).
+	a.False(IsValidLevel(0)).
 		False(IsValidLevel(LevelFatal + 1)).
 		True(IsValidLevel(LevelError))
 }
@@ -39,7 +39,7 @@ func TestParseLevel(t *testing.T) {
 	lv, err = ParseLevel("not-exists")
 	a.ErrorString(err, "无效的值").Equal(lv, -1)
 
-	lv, err = ParseLevel(levelStrings[levelDisable])
+	lv, err = ParseLevel(levelStrings[0])
 	a.ErrorString(err, "无效的值").Equal(lv, -1)
 }
 

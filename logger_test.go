@@ -12,7 +12,6 @@ import (
 
 var (
 	_ Logger = &logger{}
-	_ Logger = &withLogger{}
 	_ Logger = &disableLogger{}
 )
 
@@ -27,7 +26,7 @@ func TestLogger_location(t *testing.T) {
 	l.ERROR().With("k1", "v1").
 		Printf("Record.Printf") // 位置记录此行
 	val := buf.String()
-	a.Contains(val, "logger_test.go:28").
+	a.Contains(val, "logger_test.go:27").
 		Contains(val, "k1=v1").
 		Contains(val, "Record.Printf")
 
@@ -35,14 +34,14 @@ func TestLogger_location(t *testing.T) {
 	buf.Reset()
 	l.ERROR().Printf("Logs.%s", "Errorf")
 	val = buf.String()
-	a.Contains(val, "logger_test.go:36").
+	a.Contains(val, "logger_test.go:35").
 		Contains(val, "Logs.Errorf")
 
 	// logger.Location
 	buf.Reset()
 	l.ERROR().Print("logger.Print")
 	val = buf.String()
-	a.Contains(val, "logger_test.go:43").
+	a.Contains(val, "logger_test.go:42").
 		Contains(val, "logger.Print")
 
 	buf.Reset()
@@ -82,7 +81,7 @@ func TestLogger_With(t *testing.T) {
 	err.Printf("err1")
 	a.Contains(buf.String(), "err1").
 		Contains(buf.String(), "k1=v1").
-		Contains(buf.String(), "logger_test.go:82")
+		Contains(buf.String(), "logger_test.go:81")
 
 	buf.Reset()
 	err.With("k2", "v2").Printf("err2")
@@ -145,7 +144,7 @@ func TestLogger_StdLogger(t *testing.T) {
 
 	info := l.INFO().StdLogger()
 	info.Print("abc")
-	a.Contains(buf.String(), "logger_test.go:147") // 行数是否正确
+	a.Contains(buf.String(), "logger_test.go:146") // 行数是否正确
 
 	// Enable 未设置 LevelWarn
 	buf.Reset()
@@ -158,6 +157,6 @@ func TestLogger_StdLogger(t *testing.T) {
 	buf.Reset()
 	err := l.With(LevelError, map[string]any{"k1": "v1"}).StdLogger()
 	err.Print("abc")
-	a.Contains(buf.String(), "logger_test.go:160"). // 行数是否正确
+	a.Contains(buf.String(), "logger_test.go:159"). // 行数是否正确
 							Contains(buf.String(), "k1=v1")
 }

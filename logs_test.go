@@ -55,19 +55,16 @@ func TestLogs_IsEnable(t *testing.T) {
 		True(l.IsEnable(LevelError))
 
 	// WARN 属于 enable，但是 logs.w 为 nop
-	ll, ok := l.WARN().(*logger)
-	a.True(ok).False(ll.enable)
+	a.Equal(l.WARN(), disabledLogger)
 
 	buf := new(bytes.Buffer)
 	l = New(NewTextHandler(buf))
 	a.NotNil(l)
 	l.Enable(LevelWarn, LevelError)
 
-	ll, ok = l.WARN().(*logger)
-	a.True(ok).True(ll.enable)
+	a.NotEqual(l.WARN(), disabledLogger)
 
-	ll, ok = l.FATAL().(*logger)
-	a.True(ok).False(ll.enable)
+	a.Equal(l.FATAL(), disabledLogger)
 
 	// enable=false，disabledLogger.With
 	buf.Reset()

@@ -11,26 +11,26 @@ type Level int8
 
 // 目前支持的日志类型
 const (
-	levelDisable Level = iota
+	levelStart Level = iota
 	LevelInfo
 	LevelTrace
 	LevelDebug
 	LevelWarn
 	LevelError
 	LevelFatal
+	levelEnd
 )
 
 var levelStrings = map[Level]string{
-	levelDisable: "<DISABLE>",
-	LevelInfo:    "INFO",
-	LevelTrace:   "TRAC",
-	LevelDebug:   "DBUG",
-	LevelWarn:    "WARN",
-	LevelError:   "ERRO",
-	LevelFatal:   "FATL",
+	LevelInfo:  "INFO",
+	LevelTrace: "TRAC",
+	LevelDebug: "DBUG",
+	LevelWarn:  "WARN",
+	LevelError: "ERRO",
+	LevelFatal: "FATL",
 }
 
-func IsValidLevel(l Level) bool { return l > levelDisable && l <= LevelFatal }
+func IsValidLevel(l Level) bool { return l > levelStart && l < levelEnd }
 
 func (l Level) String() string { return levelStrings[l] }
 
@@ -47,10 +47,6 @@ func (l *Level) UnmarshalText(data []byte) error {
 
 func ParseLevel(s string) (Level, error) {
 	s = strings.ToUpper(s)
-
-	if s == levelStrings[levelDisable] {
-		return -1, fmt.Errorf("无效的值 %s", s)
-	}
 
 	for level, name := range levelStrings {
 		if s == name {

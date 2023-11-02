@@ -14,15 +14,38 @@
 //   - [Logs.With] 返回的是带固定参数的日志对象；
 package logs
 
-import "github.com/issue9/localeutil"
+import (
+	"github.com/issue9/localeutil"
+	"github.com/issue9/sliceutil"
+)
 
 type Logs struct {
 	handler Handler
-	loggers map[Level]*logger
+	loggers map[Level]Logger
+	attrs   map[string]any
 
 	location, detail bool
 	createdFormat    string
 	printer          *localeutil.Printer
+}
+
+func attrs2Pairs(p *localeutil.Printer, attrs map[string]any) []Pair {
+	pairs := make([]Pair, 0, len(attrs))
+
+	if p == nil {
+		for k, v := range attrs {
+			pairs = append(pairs, Pair{K: k, V: v})
+		}
+	} else {
+		for k, v := range attrs {
+			if ls, ok := v.(localeutil.Stringer); ok {
+				v = ls.LocaleString(p)
+			}
+			pairs = append(pairs, Pair{K: k, V: v})
+		}
+	}
+
+	return pairs
 }
 
 // New 声明 Logs 对象
@@ -32,19 +55,21 @@ func New(h Handler, o ...Option) *Logs {
 	if h == nil {
 		h = NewNopHandler()
 	}
-	l := &Logs{handler: h}
 
-	l.loggers = make(map[Level]*logger, len(levelStrings))
-	for lv := range levelStrings {
-		l.loggers[lv] = &logger{
-			logs:   l,
-			lv:     lv,
-			enable: lv != levelDisable,
-		}
+	l := &Logs{
+		handler: h,
+		loggers: make(map[Level]Logger, len(levelStrings)),
 	}
-
 	for _, opt := range o {
 		opt(l)
+	}
+
+	for lv := range levelStrings {
+		l.loggers[lv] = &logger{
+			logs:  l,
+			lv:    lv,
+			pairs: attrs2Pairs(l.printer, l.attrs),
+		}
 	}
 
 	return l
@@ -54,25 +79,25 @@ func New(h Handler, o ...Option) *Logs {
 //
 // 调用此函数之后，所有不在 level 参数的通道都将被关闭。
 func (logs *Logs) Enable(level ...Level) {
-	exists := func(lv Level) bool {
-		if lv == levelDisable {
-			return false
+	for lv, l := range logs.loggers {
+		if !sliceutil.Exists(level, func(ll Level, _ int) bool { return ll == lv }) { // 不存在于启用列表
+			logs.loggers[lv] = disabledLogger
+			continue
 		}
 
-		for _, l := range level {
-			if l == lv {
-				return true
-			}
+		if l != disabledLogger {
+			continue
 		}
-		return false
-	}
 
-	for _, l := range logs.loggers {
-		l.enable = exists(l.lv)
+		logs.loggers[lv] = &logger{
+			logs:  logs,
+			lv:    lv,
+			pairs: attrs2Pairs(logs.printer, logs.attrs),
+		}
 	}
 }
 
-func (logs *Logs) IsEnable(l Level) bool { return logs.loggers[l].enable }
+func (logs *Logs) IsEnable(l Level) bool { return logs.loggers[l] != disabledLogger }
 
 func (logs *Logs) INFO() Logger { return logs.Logger(LevelInfo) }
 
@@ -89,9 +114,9 @@ func (logs *Logs) FATAL() Logger { return logs.Logger(LevelFatal) }
 // Logger 返回指定级别的日志接口
 func (logs *Logs) Logger(lv Level) Logger { return logs.level(lv) }
 
-func (logs *Logs) level(lv Level) *logger {
+func (logs *Logs) level(lv Level) Logger {
 	if logs.handler == nop {
-		return logs.loggers[levelDisable]
+		return disabledLogger
 	}
 	return logs.loggers[lv]
 }

@@ -5,18 +5,15 @@ package logs
 import (
 	"io"
 	"log"
-
-	"github.com/issue9/localeutil"
 )
 
+// TODO 直接使用 nil?
 var disabledLogger = &disableLogger{}
 
 type (
 	// Logger 日志接口
 	Logger interface {
 		// With 为日志提供额外的参数
-		//
-		// 返回值是当前对象。
 		With(name string, val any) Logger
 
 		// Error 将一条错误信息作为一条日志输出
@@ -46,119 +43,53 @@ type (
 	}
 
 	logger struct {
-		lv     Level
-		logs   *Logs
-		enable bool
-	}
-
-	withLogger struct {
-		l     *logger
+		lv    Level
+		logs  *Logs
 		pairs []Pair
 	}
 
 	disableLogger struct{}
 )
 
-func (l *logger) StdLogger() *log.Logger {
-	w := io.Discard
-	if l.enable {
-		w = l.logs.NewRecord(l.lv).asWriter()
+func (l *logger) StdLogger() *log.Logger { return log.New(l.newRecord().asWriter(), "", 0) }
+
+func (l *logger) With(name string, val any) Logger { return l.newRecord().With(name, val) }
+
+func (l *logger) newRecord() *Record {
+	r := l.logs.NewRecord(l.lv)
+	for _, p := range l.pairs {
+		r.With(p.K, p.V)
 	}
-	return log.New(w, "", 0)
+	return r
 }
 
-func (l *logger) With(name string, val any) Logger {
-	if l.enable {
-		return l.logs.NewRecord(l.lv).With(name, val)
-	}
-	return disabledLogger
-}
+func (l *logger) Error(err error) { l.newRecord().DepthError(3, err) }
 
-func (l *logger) Error(err error) {
-	if l.enable {
-		l.logs.NewRecord(l.lv).DepthError(3, err)
-	}
-}
+func (l *logger) String(s string) { l.newRecord().DepthString(2, s) }
 
-func (l *logger) String(s string) {
-	if l.enable {
-		l.logs.NewRecord(l.lv).DepthString(2, s)
-	}
-}
+func (l *logger) Print(v ...any) { l.newRecord().DepthPrint(2, v...) }
 
-func (l *logger) Print(v ...any) {
-	if l.enable {
-		l.logs.NewRecord(l.lv).DepthPrint(2, v...)
-	}
-}
+func (l *logger) Println(v ...any) { l.newRecord().DepthPrintln(2, v...) }
 
-func (l *logger) Println(v ...any) {
-	if l.enable {
-		l.logs.NewRecord(l.lv).DepthPrintln(2, v...)
-	}
-}
-
-func (l *logger) Printf(format string, v ...any) {
-	if l.enable {
-		l.logs.NewRecord(l.lv).DepthPrintf(2, format, v...)
-	}
-}
+func (l *logger) Printf(format string, v ...any) { l.newRecord().DepthPrintf(2, format, v...) }
 
 // With 创建带有指定参数的日志对象
 //
-// params 自动添加的参数，每条日志都将自动带上这些参数；
-func (logs *Logs) With(lv Level, params map[string]any) Logger {
-	l := logs.level(lv)
-	if !l.enable {
-		return disabledLogger
+// attrs 自动添加的参数，每条日志都将自动带上这些参数；
+func (logs *Logs) With(lv Level, attrs map[string]any) Logger {
+	if l := logs.level(lv); l == disabledLogger {
+		return l
 	}
 
-	pairs := make([]Pair, 0, len(params))
-	if logs.printer == nil {
-		for k, v := range params {
-			pairs = append(pairs, Pair{K: k, V: v})
-		}
-	} else {
-		for k, v := range params {
-			if ls, ok := v.(localeutil.Stringer); ok {
-				v = ls.LocaleString(logs.printer)
-			}
-			pairs = append(pairs, Pair{K: k, V: v})
-		}
-	}
+	pairs := make([]Pair, 0, len(attrs)+len(logs.attrs))
+	pairs = append(pairs, attrs2Pairs(logs.printer, logs.attrs)...)
+	pairs = append(pairs, attrs2Pairs(logs.printer, attrs)...)
 
-	return &withLogger{
-		l:     logs.level(lv),
+	return &logger{
+		lv:    lv,
+		logs:  logs,
 		pairs: pairs,
 	}
-}
-
-func (l *withLogger) with() *Record {
-	e := l.l.logs.NewRecord(l.l.lv)
-	for _, pair := range l.pairs {
-		e.With(pair.K, pair.V)
-	}
-	return e
-}
-
-func (l *withLogger) StdLogger() *log.Logger {
-	return log.New(l.with().asWriter(), "", 0)
-}
-
-func (l *withLogger) With(k string, v any) Logger {
-	return l.with().With(k, v)
-}
-
-func (l *withLogger) Error(err error) { l.with().DepthError(2, err) }
-
-func (l *withLogger) String(s string) { l.with().DepthString(2, s) }
-
-func (l *withLogger) Print(v ...any) { l.with().DepthPrint(2, v...) }
-
-func (l *withLogger) Println(v ...any) { l.with().DepthPrintln(2, v...) }
-
-func (l *withLogger) Printf(format string, v ...any) {
-	l.with().DepthPrintf(2, format, v...)
 }
 
 func (l *disableLogger) With(_ string, _ any) Logger { return l }

@@ -63,7 +63,7 @@ func BenchmarkRecord_Printf(b *testing.B) {
 	}
 }
 
-func BenchmarkLogger_withoutCallerAndCreated(b *testing.B) {
+func BenchmarkLogger_withoutLocationAndCreated(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextHandler(buf))

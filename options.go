@@ -2,7 +2,11 @@
 
 package logs
 
-import "github.com/issue9/localeutil"
+import (
+	"fmt"
+
+	"github.com/issue9/localeutil"
+)
 
 // 常用的日志时间格式
 const (
@@ -27,6 +31,17 @@ type Option func(*Logs)
 //   - Logger.With 中的 any 类型参数
 func WithLocale(p *localeutil.Printer) Option {
 	return func(l *Logs) { l.printer = p }
+}
+
+func WithAttrs(attrs map[string]any) Option {
+	return func(l *Logs) {
+		for k, v := range attrs {
+			if _, found := l.attrs[k]; found {
+				panic(fmt.Sprintf("已经存在名称为 %s 的元素", k))
+			}
+			l.attrs[k] = v
+		}
+	}
 }
 
 // WithDetail 错误信息的调用堆栈

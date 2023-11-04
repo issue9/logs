@@ -5,57 +5,29 @@ package logs
 import (
 	"io"
 	"log"
+
+	"github.com/issue9/logs/v6/writers"
 )
 
-// TODO 直接使用 nil?
-var disabledLogger = &disableLogger{}
+// Logger 日志对象
+type Logger struct {
+	lv    Level
+	logs  *Logs
+	pairs []Pair
+}
 
-type (
-	// Logger 日志接口
-	Logger interface {
-		// With 为日志提供额外的参数
-		With(name string, val any) Logger
+func (l *Logger) isEnable() bool { return l.logs.IsEnable(l.Level()) }
 
-		// Error 将一条错误信息作为一条日志输出
-		//
-		// 这是 Print 的特化版本，在已知类型为 error 时，
-		// 采用此方法会比 Print(err) 有更好的性能。
-		//
-		// 如果 err 实现了 [xerrors.FormatError] 接口，同时也会打印调用信息。
-		Error(err error)
+func (l *Logger) Level() Level { return l.lv }
 
-		// String 将字符串作为一条日志输出
-		//
-		// 这是 Print 的特化版本，在已知类型为字符串时，
-		// 采用此方法会比 Print(s) 有更好的性能。
-		String(s string)
-
-		// 输出一条日志信息
-		Print(v ...any)
-		Println(v ...any)
-		Printf(format string, v ...any)
-
-		// StdLogger 将当前对象转换成标准库的日志对象
-		//
-		// NOTE: 不要设置返回对象的 Prefix 和 Flag，这些配置项与当前模块的功能有重叠。
-		// [log.Logger] 应该仅作为向 [Logger] 输入 [Record.Message] 内容使用。
-		StdLogger() *log.Logger
+func (l *Logger) With(name string, val any) Recorder {
+	if l.isEnable() {
+		return l.newRecord().With(name, val)
 	}
+	return disabledRecorder
+}
 
-	logger struct {
-		lv    Level
-		logs  *Logs
-		pairs []Pair
-	}
-
-	disableLogger struct{}
-)
-
-func (l *logger) StdLogger() *log.Logger { return log.New(l.newRecord().asWriter(), "", 0) }
-
-func (l *logger) With(name string, val any) Logger { return l.newRecord().With(name, val) }
-
-func (l *logger) newRecord() *Record {
+func (l *Logger) newRecord() *Record {
 	r := l.logs.NewRecord(l.lv)
 	for _, p := range l.pairs {
 		r.With(p.K, p.V)
@@ -63,46 +35,73 @@ func (l *logger) newRecord() *Record {
 	return r
 }
 
-func (l *logger) Error(err error) { l.newRecord().DepthError(3, err) }
+func (l *Logger) Error(err error) {
+	if l.isEnable() {
+		l.newRecord().DepthError(3, err)
+	}
+}
 
-func (l *logger) String(s string) { l.newRecord().DepthString(2, s) }
+func (l *Logger) String(s string) {
+	if l.isEnable() {
+		l.newRecord().DepthString(2, s)
+	}
+}
 
-func (l *logger) Print(v ...any) { l.newRecord().DepthPrint(2, v...) }
+func (l *Logger) Print(v ...any) {
+	if l.isEnable() {
+		l.newRecord().DepthPrint(2, v...)
+	}
+}
 
-func (l *logger) Println(v ...any) { l.newRecord().DepthPrintln(2, v...) }
+func (l *Logger) Println(v ...any) {
+	if l.isEnable() {
+		l.newRecord().DepthPrintln(2, v...)
+	}
+}
 
-func (l *logger) Printf(format string, v ...any) { l.newRecord().DepthPrintf(2, format, v...) }
+func (l *Logger) Printf(format string, v ...any) {
+	if l.isEnable() {
+		l.newRecord().DepthPrintf(2, format, v...)
+	}
+}
 
-// With 创建带有指定参数的日志对象
+// New 根据当前对象派生新的 [Logger]
 //
-// attrs 自动添加的参数，每条日志都将自动带上这些参数；
-func (logs *Logs) With(lv Level, attrs map[string]any) Logger {
-	if l := logs.level(lv); l == disabledLogger {
-		return l
+// 新对象会继承当前对象的 [Logger.attrs] 同时还拥有参数 attrs。
+func (l *Logger) New(attrs map[string]any) *Logger {
+	if len(attrs) == 0 {
+		panic("参数 attrs 不能为空")
 	}
 
-	pairs := make([]Pair, 0, len(attrs)+len(logs.attrs))
-	pairs = append(pairs, attrs2Pairs(logs.printer, logs.attrs)...)
-	pairs = append(pairs, attrs2Pairs(logs.printer, attrs)...)
+	pairs := make([]Pair, 0, len(l.pairs)+len(attrs))
+	pairs = append(pairs, l.pairs...)
+	pairs = append(pairs, attrs2Pairs(l.logs.printer, attrs)...)
 
-	return &logger{
-		lv:    lv,
-		logs:  logs,
+	return &Logger{
+		lv:    l.lv,
+		logs:  l.logs,
 		pairs: pairs,
 	}
 }
 
-func (l *disableLogger) With(_ string, _ any) Logger { return l }
+// StdLogger 将当前对象转换成标准库的日志对象
+//
+// NOTE: 不要设置返回对象的 Prefix 和 Flag，这些配置项与当前模块的功能有重叠。
+// [log.Logger] 应该仅作为向 [Logger] 输入 [Record.Message] 内容使用。
+func (l *Logger) StdLogger() *log.Logger {
+	w := io.Discard
+	if l.isEnable() {
+		w = l.asWriter()
+	}
+	return log.New(w, "", 0)
+}
 
-func (l *disableLogger) Error(_ error) {}
-
-func (l *disableLogger) String(_ string) {}
-
-func (l *disableLogger) Print(_ ...any) {}
-
-func (l *disableLogger) Printf(_ string, _ ...any) {}
-
-func (l *disableLogger) Println(_ ...any) {}
-
-// 空对象构建一个不输出任何内容的实例
-func (l *disableLogger) StdLogger() *log.Logger { return log.New(io.Discard, "", 0) }
+// 转换成 io.Writer
+//
+// 仅供内部使用，因为 depth 值的关系，只有固定的调用层级关系才能正常显示行号。
+func (l *Logger) asWriter() io.Writer {
+	return writers.WriteFunc(func(data []byte) (int, error) {
+		l.newRecord().DepthString(5, string(data))
+		return len(data), nil
+	})
+}

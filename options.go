@@ -33,6 +33,7 @@ func WithLocale(p *localeutil.Printer) Option {
 	return func(l *Logs) { l.printer = p }
 }
 
+// WithAttrs 为日志添加附加的固定字段
 func WithAttrs(attrs map[string]any) Option {
 	return func(l *Logs) {
 		for k, v := range attrs {
@@ -48,8 +49,8 @@ func WithAttrs(attrs map[string]any) Option {
 //
 // 如果向日志输出的是类型为 err 的信息，是否显示其调用堆栈。
 //
-// NOTE: 该设置仅对 [Logger.Error] 方法有效果，
-// 如果将 err 传递给 [Logger.Printf] 等方法，则遵照 [fmt.Appendf] 进行处理。
+// NOTE: 该设置仅对 [Recorder.Error] 方法有效果，
+// 如果将 err 传递给 [Recorder.Printf] 等方法，则遵照 [fmt.Appendf] 进行处理。
 func WithDetail(v bool) Option { return func(l *Logs) { l.detail = v } }
 
 // WithCreated 指定日期的格式

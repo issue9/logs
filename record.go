@@ -3,23 +3,46 @@
 package logs
 
 import (
-	"io"
-	"log"
 	"runtime"
 	"sync"
 	"time"
 
 	"github.com/issue9/localeutil"
 	"golang.org/x/xerrors"
-
-	"github.com/issue9/logs/v6/writers"
 )
 
 const poolMaxParams = 100
 
 var recordPool = &sync.Pool{New: func() any { return &Record{} }}
 
+var disabledRecorder = &disableRecorder{}
+
 type (
+	// Recorder 输出一条记录的接口
+	Recorder interface {
+		// With 为日志提供额外的参数
+		With(name string, val any) Recorder
+
+		// Error 将一条错误信息作为一条日志输出
+		//
+		// 这是 Print 的特化版本，在已知类型为 error 时，
+		// 采用此方法会比 Print(err) 有更好的性能。
+		//
+		// 如果 err 实现了 [xerrors.FormatError] 接口，同时也会打印调用信息。
+		Error(err error)
+
+		// String 将字符串作为一条日志输出
+		//
+		// 这是 Print 的特化版本，在已知类型为字符串时，
+		// 采用此方法会比 Print(s) 有更好的性能。
+		String(s string)
+
+		// 输出一条日志信息
+		Print(v ...any)
+		Println(v ...any)
+		Printf(format string, v ...any)
+	}
+
 	// Record 单条日志产生的数据
 	Record struct {
 		logs *Logs
@@ -50,6 +73,8 @@ type (
 		K string
 		V any
 	}
+
+	disableRecorder struct{}
 )
 
 func (logs *Logs) NewRecord(lv Level) *Record {
@@ -65,16 +90,6 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 	e.Level = lv
 
 	return e
-}
-
-// 转换成 io.Writer
-//
-// 仅供内部使用，因为 depth 值的关系，只有固定的调用层级关系才能正常显示行号。
-func (e *Record) asWriter() io.Writer {
-	return writers.WriteFunc(func(data []byte) (int, error) {
-		e.DepthString(5, string(data))
-		return len(data), nil
-	})
 }
 
 func (e *Record) Logs() *Logs { return e.logs }
@@ -96,15 +111,13 @@ func (e *Record) initLocationCreated(depth int) *Record {
 	return e
 }
 
-func (e *Record) With(name string, val any) Logger {
-	if ls, ok := val.(localeutil.Stringer); ok && e.logs.printer != nil {
+func (e *Record) With(name string, val any) Recorder {
+	if ls, ok := val.(localeutil.Stringer); ok && e.Logs().printer != nil {
 		val = ls.LocaleString(e.Logs().printer)
 	}
 	e.Params = append(e.Params, Pair{K: name, V: val})
 	return e
 }
-
-func (e *Record) StdLogger() *log.Logger { return log.New(e.asWriter(), "", 0) }
 
 func (e *Record) Error(err error) { e.DepthError(2, err) }
 
@@ -223,3 +236,15 @@ func replaceLocaleString(p *localeutil.Printer, v []any) {
 		}
 	}
 }
+
+func (l *disableRecorder) With(_ string, _ any) Recorder { return l }
+
+func (l *disableRecorder) Error(_ error) {}
+
+func (l *disableRecorder) String(_ string) {}
+
+func (l *disableRecorder) Print(_ ...any) {}
+
+func (l *disableRecorder) Printf(_ string, _ ...any) {}
+
+func (l *disableRecorder) Println(_ ...any) {}

@@ -16,7 +16,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-var _ Logger = &Record{}
+var _ Recorder = &Record{}
 
 type err struct {
 	err error

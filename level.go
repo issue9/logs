@@ -11,14 +11,12 @@ type Level int8
 
 // 目前支持的日志类型
 const (
-	levelStart Level = iota
-	LevelInfo
+	LevelInfo Level = iota
 	LevelTrace
 	LevelDebug
 	LevelWarn
 	LevelError
 	LevelFatal
-	levelEnd
 )
 
 var levelStrings = map[Level]string{
@@ -30,7 +28,7 @@ var levelStrings = map[Level]string{
 	LevelFatal: "FATL",
 }
 
-func IsValidLevel(l Level) bool { return l > levelStart && l < levelEnd }
+func IsValidLevel(l Level) bool { return l >= LevelInfo && l <= LevelFatal }
 
 func (l Level) String() string { return levelStrings[l] }
 

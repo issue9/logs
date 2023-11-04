@@ -5,12 +5,13 @@ package logs
 import (
 	"bytes"
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/issue9/assert/v3"
 )
 
-func TestLogsLoggers(t *testing.T) {
+func TestLogs(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
 	w := NewTextHandler(buf)
@@ -22,12 +23,12 @@ func TestLogsLoggers(t *testing.T) {
 		p("p1")
 		val := w.String()
 		a.Contains(val, "p1").
-			Contains(val, "logs_test.go:22") // 行数是否正确
+			Contains(val, "logs_test.go:23") // 行数是否正确
 
 		pf("p2")
 		val = w.String()
 		a.Contains(val, "p2").
-			Contains(val, "logs_test.go:27") // 行数是否正确
+			Contains(val, "logs_test.go:28") // 行数是否正确
 	}
 
 	testLogger(a, l.INFO().Print, l.INFO().Printf, buf)
@@ -41,7 +42,7 @@ func TestLogsLoggers(t *testing.T) {
 func TestLogs_IsEnable(t *testing.T) {
 	a := assert.New(t, false)
 
-	l := New(nil)
+	l := New(NewJSONHandler(os.Stdout))
 	a.NotNil(l)
 	l.Enable(LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
 	a.True(l.IsEnable(LevelInfo)).
@@ -55,28 +56,29 @@ func TestLogs_IsEnable(t *testing.T) {
 		True(l.IsEnable(LevelError))
 
 	// WARN 属于 enable，但是 logs.w 为 nop
-	a.Equal(l.WARN(), disabledLogger)
+	l.SetHandler(nil)
+	a.False(l.WARN().isEnable())
 
 	buf := new(bytes.Buffer)
 	l = New(NewTextHandler(buf))
 	a.NotNil(l)
 	l.Enable(LevelWarn, LevelError)
 
-	a.NotEqual(l.WARN(), disabledLogger)
+	a.NotEqual(l.WARN(), disabledRecorder)
 
-	a.Equal(l.FATAL(), disabledLogger)
+	a.False(l.FATAL().isEnable())
 
 	// enable=false，disabledLogger.With
 	buf.Reset()
 	inst := l.FATAL()
-	a.Equal(inst.With("k1", "v1").With("k2", "v2"), disabledLogger)
+	a.Equal(inst.With("k1", "v1").With("k2", "v2"), disabledRecorder)
 	inst.With("k2", "v2").Error(errors.New("err"))
 	a.Zero(buf.Len())
 
 	// 运行过程中调整了 Level 的值
 	l.Enable(LevelFatal)
 	inst = l.FATAL()
-	a.NotEqual(inst.With("k1", "v1"), disabledLogger) // k1=v1 并未保存
+	a.NotEqual(inst.With("k1", "v1"), disabledRecorder) // k1=v1 并未保存
 	inst.With("k2", "v2").Error(errors.New("err"))
 	a.NotContains(buf.String(), "k1=v1").
 		Contains(buf.String(), "k2=v2").

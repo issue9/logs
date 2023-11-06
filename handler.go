@@ -11,6 +11,8 @@ import (
 	"sync"
 
 	"github.com/issue9/term/v3/colors"
+
+	"github.com/issue9/logs/v6/writers"
 )
 
 var nop = &nopHandler{}
@@ -33,181 +35,244 @@ type (
 		//
 		// NOTE: 此方法应该保证输出内容是以换行符作为结尾。
 		Handle(*Record)
+
+		// WithAttrs 根据参数生成新的 [Handler] 对象
+		//
+		// 新对象继承旧对象的属性，并添加了参数中的新属性。
+		//
+		// 即便参数的长度为零，也应该返回新的对象。
+		WithAttrs([]Attr) Handler
 	}
 
-	HandlerFunc func(*Record)
+	textHandler struct {
+		w     io.Writer
+		mux   sync.Mutex
+		attrs []byte
+	}
+
+	jsonHandler struct {
+		w     io.Writer
+		mux   sync.Mutex
+		attrs []byte
+	}
+
+	termHandler struct {
+		w          io.Writer
+		foreColors map[Level]colors.Color
+		mux        sync.Mutex
+		attrs      []Attr
+	}
+
+	dispatchHandler struct {
+		handlers map[Level]Handler
+	}
+
+	mergeHandler struct {
+		handlers []Handler
+	}
 
 	nopHandler struct{}
 )
-
-func (w HandlerFunc) Handle(e *Record) { w(e) }
 
 // NewTextHandler 返回将 [Record] 以普通文本的形式写入 w 的对象
 //
 // NOTE: 如果向 w 输出内容时出错，会将错误信息输出到终端作为最后的处理方式。
 func NewTextHandler(w ...io.Writer) Handler {
-	if len(w) == 0 {
-		return nop
+	return &textHandler{w: writers.New(w...)}
+}
+
+func (h *textHandler) Handle(e *Record) {
+	b := NewBuffer(e.Logs().Detail())
+	defer b.Free()
+
+	b.AppendBytes('[').AppendString(e.Level.String()).AppendBytes(']')
+
+	var indent byte = ' '
+	if e.AppendCreated != nil {
+		b.AppendBytes(' ').AppendFunc(e.AppendCreated)
+		indent = '\t'
 	}
 
-	ww := io.MultiWriter(w...)
-	mux := &sync.Mutex{} // 防止多个函数同时调用 HandlerFunc 方法。
+	if e.AppendLocation != nil {
+		b.AppendBytes(' ').AppendFunc(e.AppendLocation)
+		indent = '\t'
+	}
 
-	return HandlerFunc(func(e *Record) {
-		b := NewBuffer(e.Logs().Detail())
-		defer b.Free()
+	b.AppendBytes(indent).AppendFunc(e.AppendMessage)
 
-		b.AppendBytes('[').AppendString(e.Level.String()).AppendBytes(']')
+	b.AppendBytes(h.attrs...)
 
-		var indent byte = ' '
-		if e.AppendCreated != nil {
-			b.AppendBytes(' ').AppendFunc(e.AppendCreated)
-			indent = '\t'
-		}
+	h.buildAttrs(b, e.Attrs)
 
-		if e.AppendLocation != nil {
-			b.AppendBytes(' ').AppendFunc(e.AppendLocation)
-			indent = '\t'
-		}
+	b.AppendBytes('\n')
 
-		b.AppendBytes(indent).AppendFunc(e.AppendMessage)
+	h.mux.Lock()
+	defer h.mux.Unlock()
+	if _, err := h.w.Write(b.Bytes()); err != nil { // 一次性写入，性能更好一些。
+		fmt.Fprintf(os.Stderr, "NewTextHandler.Handle:%v\n", err)
+	}
+}
 
-		for _, p := range e.Attrs {
-			b.AppendBytes(' ').AppendString(p.K).AppendBytes('=')
-			switch v := p.V.(type) {
-			case string:
-				b.AppendString(v)
-			case int:
-				b.AppendInt(int64(v), 10)
-			case int64:
-				b.AppendInt(v, 10)
-			case int32:
-				b.AppendInt(int64(v), 10)
-			case int16:
-				b.AppendInt(int64(v), 10)
-			case int8:
-				b.AppendInt(int64(v), 10)
-			case uint:
-				b.AppendUint(uint64(v), 10)
-			case uint64:
-				b.AppendUint(v, 10)
-			case uint32:
-				b.AppendUint(uint64(v), 10)
-			case uint16:
-				b.AppendUint(uint64(v), 10)
-			case uint8:
-				b.AppendUint(uint64(v), 10)
-			case float32:
-				b.AppendFloat(float64(v), 'f', 5, 32)
-			case float64:
-				b.AppendFloat(v, 'f', 5, 64)
-			case encoding.TextMarshaler:
-				if bs, err := v.MarshalText(); err != nil {
-					b.AppendString("Err(").AppendString(err.Error()).AppendBytes(')')
-				} else {
-					b.AppendBytes(bs...)
-				}
-			default:
-				b.Append(p.V)
+func (h *textHandler) WithAttrs(attrs []Attr) Handler {
+	b := NewBuffer(false)
+	defer b.Free()
+
+	h.buildAttrs(b, attrs)
+
+	data := make([]byte, len(h.attrs), b.Len()+len(h.attrs))
+	copy(data, h.attrs)
+
+	return &textHandler{
+		w:     h.w,
+		attrs: append(data, b.Bytes()...),
+	}
+}
+
+func (h *textHandler) buildAttrs(b *Buffer, attrs []Attr) {
+	for _, p := range attrs {
+		b.AppendBytes(' ').AppendString(p.K).AppendBytes('=')
+		switch v := p.V.(type) {
+		case string:
+			b.AppendString(v)
+		case int:
+			b.AppendInt(int64(v), 10)
+		case int64:
+			b.AppendInt(v, 10)
+		case int32:
+			b.AppendInt(int64(v), 10)
+		case int16:
+			b.AppendInt(int64(v), 10)
+		case int8:
+			b.AppendInt(int64(v), 10)
+		case uint:
+			b.AppendUint(uint64(v), 10)
+		case uint64:
+			b.AppendUint(v, 10)
+		case uint32:
+			b.AppendUint(uint64(v), 10)
+		case uint16:
+			b.AppendUint(uint64(v), 10)
+		case uint8:
+			b.AppendUint(uint64(v), 10)
+		case float32:
+			b.AppendFloat(float64(v), 'f', 5, 32)
+		case float64:
+			b.AppendFloat(v, 'f', 5, 64)
+		case encoding.TextMarshaler:
+			if bs, err := v.MarshalText(); err != nil {
+				b.AppendString("Err(").AppendString(err.Error()).AppendBytes(')')
+			} else {
+				b.AppendBytes(bs...)
 			}
+		default:
+			b.Append(p.V)
 		}
-
-		b.AppendBytes('\n')
-
-		mux.Lock()
-		defer mux.Unlock()
-		if _, err := ww.Write(b.Bytes()); err != nil { // 一次性写入，性能更好一些。
-			fmt.Fprintf(os.Stderr, "NewTextHandler.Handle:%v\n", err)
-		}
-	})
+	}
 }
 
 // NewJSONHandler 返回将 [Record] 以 JSON 的形式写入 w 的对象
 //
 // NOTE: 如果向 w 输出内容时出错，会将错误信息输出到终端作为最后的处理方式。
 func NewJSONHandler(w ...io.Writer) Handler {
-	if len(w) == 0 {
-		return nop
+	return &jsonHandler{w: writers.New(w...)}
+}
+
+func (h *jsonHandler) Handle(e *Record) {
+	b := NewBuffer(e.Logs().Detail())
+	defer b.Free()
+
+	b.AppendBytes('{')
+
+	b.AppendString(`"level":"`).AppendString(e.Level.String()).AppendString(`",`).
+		AppendString(`"message":"`).AppendFunc(e.AppendMessage).AppendBytes('"')
+
+	if e.AppendCreated != nil {
+		b.AppendString(`,"created":"`).AppendFunc(e.AppendCreated).AppendBytes('"')
 	}
 
-	ww := io.MultiWriter(w...)
-	mux := &sync.Mutex{}
+	if e.AppendLocation != nil {
+		b.AppendString(`,"path":"`).AppendFunc(e.AppendLocation).AppendBytes('"')
+	}
 
-	return HandlerFunc(func(e *Record) {
-		b := NewBuffer(e.Logs().Detail())
-		defer b.Free()
+	if len(e.Attrs) > 0 {
+		b.AppendString(`,"attrs":[`)
 
-		b.AppendBytes('{')
+		b.AppendBytes(h.attrs...)
 
-		b.AppendString(`"level":"`).AppendString(e.Level.String()).AppendString(`",`).
-			AppendString(`"message":"`).AppendFunc(e.AppendMessage).AppendBytes('"')
+		h.buildAttr(b, e.Attrs)
 
-		if e.AppendCreated != nil {
-			b.AppendString(`,"created":"`).AppendFunc(e.AppendCreated).AppendBytes('"')
+		b.AppendBytes(']')
+	}
+
+	b.AppendBytes('}')
+
+	h.mux.Lock()
+	defer h.mux.Unlock()
+	if _, err := h.w.Write(b.Bytes()); err != nil {
+		fmt.Fprintf(os.Stderr, "NewJSONHandler.Handle:%v\n", err)
+	}
+}
+
+func (h *jsonHandler) WithAttrs(attrs []Attr) Handler {
+	b := NewBuffer(false)
+	h.buildAttr(b, attrs)
+	data := make([]byte, len(h.attrs), b.Len()+len(h.attrs)+1)
+	copy(data, h.attrs)
+
+	if len(data) > 0 {
+		data = append(data, ',')
+	}
+
+	return &jsonHandler{
+		w:     h.w,
+		attrs: append(data, b.Bytes()...),
+	}
+}
+
+func (h *jsonHandler) buildAttr(b *Buffer, attrs []Attr) {
+	for i, p := range attrs {
+		if i > 0 {
+			b.AppendBytes(',')
 		}
+		b.AppendString(`{"`).AppendString(p.K).AppendString(`":`)
 
-		if e.AppendLocation != nil {
-			b.AppendString(`,"path":"`).AppendFunc(e.AppendLocation).AppendBytes('"')
-		}
-
-		if len(e.Attrs) > 0 {
-			b.AppendString(`,"attrs":[`)
-
-			for i, p := range e.Attrs {
-				if i > 0 {
-					b.AppendBytes(',')
-				}
-				b.AppendString(`{"`).AppendString(p.K).AppendString(`":`)
-
-				switch v := p.V.(type) {
-				case string:
-					b.AppendBytes('"').AppendString(v).AppendBytes('"')
-				case int:
-					b.AppendInt(int64(v), 10)
-				case int64:
-					b.AppendInt(v, 10)
-				case int32:
-					b.AppendInt(int64(v), 10)
-				case int16:
-					b.AppendInt(int64(v), 10)
-				case int8:
-					b.AppendInt(int64(v), 10)
-				case uint:
-					b.AppendUint(uint64(v), 10)
-				case uint64:
-					b.AppendUint(v, 10)
-				case uint32:
-					b.AppendUint(uint64(v), 10)
-				case uint16:
-					b.AppendUint(uint64(v), 10)
-				case uint8:
-					b.AppendUint(uint64(v), 10)
-				case float32:
-					b.AppendFloat(float64(v), 'f', 5, 32)
-				case float64:
-					b.AppendFloat(v, 'f', 5, 64)
-				default:
-					val, err := json.Marshal(p.V)
-					if err != nil {
-						val = []byte("\"Err(" + err.Error() + ")\"")
-					}
-					b.AppendBytes(val...)
-				}
-
-				b.AppendBytes('}')
+		switch v := p.V.(type) {
+		case string:
+			b.AppendBytes('"').AppendString(v).AppendBytes('"')
+		case int:
+			b.AppendInt(int64(v), 10)
+		case int64:
+			b.AppendInt(v, 10)
+		case int32:
+			b.AppendInt(int64(v), 10)
+		case int16:
+			b.AppendInt(int64(v), 10)
+		case int8:
+			b.AppendInt(int64(v), 10)
+		case uint:
+			b.AppendUint(uint64(v), 10)
+		case uint64:
+			b.AppendUint(v, 10)
+		case uint32:
+			b.AppendUint(uint64(v), 10)
+		case uint16:
+			b.AppendUint(uint64(v), 10)
+		case uint8:
+			b.AppendUint(uint64(v), 10)
+		case float32:
+			b.AppendFloat(float64(v), 'f', 5, 32)
+		case float64:
+			b.AppendFloat(v, 'f', 5, 64)
+		default:
+			val, err := json.Marshal(p.V)
+			if err != nil {
+				val = []byte("\"Err(" + err.Error() + ")\"")
 			}
-
-			b.AppendBytes(']')
+			b.AppendBytes(val...)
 		}
 
 		b.AppendBytes('}')
-
-		mux.Lock()
-		defer mux.Unlock()
-		if _, err := ww.Write(b.Bytes()); err != nil {
-			fmt.Fprintf(os.Stderr, "NewJSONHandler.Handle:%v\n", err)
-		}
-	})
+	}
 }
 
 // NewTermHandler 返回将 [Record] 写入终端的对象
@@ -227,68 +292,98 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 		}
 	}
 
-	mux := &sync.Mutex{}
+	return &termHandler{w: w, foreColors: cs}
+}
 
-	return HandlerFunc(func(e *Record) {
+func (h *termHandler) Handle(e *Record) {
+	b := NewBuffer(e.Logs().Detail())
+	defer b.Free()
+
+	ww := colors.New(b)
+	fc := h.foreColors[e.Level]
+	ww.WByte('[').Color(colors.Normal, fc, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
+
+	var indent byte = ' '
+	if e.AppendCreated != nil {
 		b := NewBuffer(e.Logs().Detail())
 		defer b.Free()
+		e.AppendCreated(b)
+		ww.WByte(' ').WBytes(b.data)
+		indent = '\t'
+	}
 
-		ww := colors.New(b)
-		fc := cs[e.Level]
-		ww.WByte('[').Color(colors.Normal, fc, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
+	if e.AppendLocation != nil {
+		b := NewBuffer(e.Logs().Detail())
+		defer b.Free()
+		e.AppendLocation(b)
+		ww.WByte(' ').WBytes(b.data)
+		indent = '\t'
+	}
 
-		var indent byte = ' '
-		if e.AppendCreated != nil {
-			b := NewBuffer(e.Logs().Detail())
-			defer b.Free()
-			e.AppendCreated(b)
-			ww.WByte(' ').WBytes(b.data)
-			indent = '\t'
-		}
+	bb := NewBuffer(e.Logs().Detail())
+	defer bb.Free()
+	e.AppendMessage(bb)
+	ww.WByte(indent).WBytes(bb.data)
 
-		if e.AppendLocation != nil {
-			b := NewBuffer(e.Logs().Detail())
-			defer b.Free()
-			e.AppendLocation(b)
-			ww.WByte(' ').WBytes(b.data)
-			indent = '\t'
-		}
+	for _, p := range e.Attrs {
+		ww.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
+	}
 
-		bb := NewBuffer(e.Logs().Detail())
-		defer bb.Free()
-		e.AppendMessage(bb)
-		ww.WByte(indent).WBytes(bb.data)
+	ww.WByte('\n')
 
-		for _, p := range e.Attrs {
-			ww.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
-		}
+	h.mux.Lock()
+	defer h.mux.Unlock()
+	if _, err := h.w.Write(b.Bytes()); err != nil {
+		// 大概率是写入终端失败，直接 panic。
+		panic(fmt.Sprintf("NewTermHandler.Handle:%v\n", err))
+	}
+}
 
-		ww.WByte('\n')
+func (h *termHandler) WithAttrs(attrs []Attr) Handler {
+	as := make([]Attr, len(h.attrs), len(h.attrs)+len(attrs))
+	copy(as, h.attrs)
 
-		mux.Lock()
-		defer mux.Unlock()
-		if _, err := w.Write(b.Bytes()); err != nil {
-			// 大概率是写入终端失败，直接 panic。
-			panic(fmt.Sprintf("NewTermHandler.Handle:%v\n", err))
-		}
-	})
+	return &termHandler{
+		w:     h.w,
+		attrs: append(as, attrs...),
+	}
 }
 
 // NewDispatchHandler 根据 [Level] 派发到不同的 [Handler] 对象
 func NewDispatchHandler(d map[Level]Handler) Handler {
-	return HandlerFunc(func(e *Record) { d[e.Level].Handle(e) })
+	return &dispatchHandler{handlers: d}
+}
+
+func (h *dispatchHandler) Handle(e *Record) { h.handlers[e.Level].Handle(e) }
+
+func (h *dispatchHandler) WithAttrs(attrs []Attr) Handler {
+	m := make(map[Level]Handler, len(h.handlers))
+	for l, hh := range h.handlers {
+		m[l] = hh.WithAttrs(attrs)
+	}
+	return NewDispatchHandler(m)
+}
+
+// MergeHandler 将多个 Handler 合并成一个 Handler 接口对象
+func MergeHandler(w ...Handler) Handler { return &mergeHandler{handlers: w} }
+
+func (h *mergeHandler) Handle(e *Record) {
+	for _, hh := range h.handlers {
+		hh.Handle(e)
+	}
+}
+
+func (h *mergeHandler) WithAttrs(attrs []Attr) Handler {
+	slices := make([]Handler, 0, len(h.handlers))
+	for _, hh := range h.handlers {
+		slices = append(slices, hh.WithAttrs(attrs))
+	}
+	return MergeHandler(slices...)
 }
 
 // NewNopHandler 空的 Handler 接口实现
 func NewNopHandler() Handler { return nop }
 
-func (w *nopHandler) Handle(_ *Record) {}
+func (h *nopHandler) Handle(_ *Record) {}
 
-// MergeHandler 将多个 Handler 合并成一个 Handler 接口对象
-func MergeHandler(w ...Handler) Handler {
-	return HandlerFunc(func(e *Record) {
-		for _, ww := range w {
-			ww.Handle(e)
-		}
-	})
-}
+func (h *nopHandler) WithAttrs([]Attr) Handler { return h }

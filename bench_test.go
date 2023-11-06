@@ -9,46 +9,38 @@ import (
 
 	"github.com/issue9/assert/v3"
 	"github.com/issue9/localeutil"
-	"github.com/issue9/term/v3/colors"
 )
 
 func BenchmarkTextHandler(b *testing.B) {
-	a := assert.New(b, false)
-
-	buf := new(bytes.Buffer)
-	w := NewTextHandler(buf)
-	l := New(w, WithLocation(true), WithCreated(MilliLayout))
-	e := newRecord(a, l, LevelWarn)
-
-	for i := 0; i < b.N; i++ {
-		w.Handle(e)
-	}
+	benchHandler(NewTextHandler(new(bytes.Buffer)), b)
 }
 
 func BenchmarkJSONHandler(b *testing.B) {
-	a := assert.New(b, false)
-
-	buf := new(bytes.Buffer)
-	w := NewJSONHandler(buf)
-	l := New(w, WithLocation(true), WithCreated(MicroLayout))
-	e := newRecord(a, l, LevelWarn)
-
-	for i := 0; i < b.N; i++ {
-		w.Handle(e)
-	}
+	benchHandler(NewJSONHandler(new(bytes.Buffer)), b)
 }
 
 func BenchmarkTermHandler(b *testing.B) {
-	a := assert.New(b, false)
+	benchHandler(NewTermHandler(new(bytes.Buffer), nil), b)
+}
 
-	buf := new(bytes.Buffer)
-	w := NewTermHandler(buf, map[Level]colors.Color{LevelWarn: colors.Blue})
-	l := New(w, WithLocation(true), WithCreated(MilliLayout))
-	e := newRecord(a, l, LevelWarn)
+func benchHandler(h Handler, b *testing.B) {
+	b.Run("default", func(b *testing.B) {
+		l := New(h)
+		e := l.ERROR().With("k1", "v1").With("k2", 2).With("k3", localeutil.Phrase("lang"))
 
-	for i := 0; i < b.N; i++ {
-		w.Handle(e)
-	}
+		for i := 0; i < b.N; i++ {
+			e.String("err")
+		}
+	})
+
+	b.Run("withAttr", func(b *testing.B) {
+		l := New(h)
+		err := l.ERROR().New(map[string]any{"k1": "v1", "k2": 2, "k3": localeutil.Phrase("lang")})
+
+		for i := 0; i < b.N; i++ {
+			err.String("err")
+		}
+	})
 }
 
 func BenchmarkRecord_Printf(b *testing.B) {
@@ -61,21 +53,6 @@ func BenchmarkRecord_Printf(b *testing.B) {
 	err := l.ERROR()
 	for i := 0; i < b.N; i++ {
 		err.With("k1", "v1").Printf("p1")
-	}
-}
-
-func BenchmarkLogger_withAttrs(b *testing.B) {
-	a := assert.New(b, false)
-	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(buf))
-	a.NotNil(l)
-	l.Enable(LevelError)
-
-	err := l.ERROR()
-	err.AppendAttrs(map[string]any{"k1": "v1", "k2": 2, "k3": localeutil.Phrase("lang")})
-
-	for i := 0; i < b.N; i++ {
-		err.String("err")
 	}
 }
 

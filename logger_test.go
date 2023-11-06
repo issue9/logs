@@ -68,7 +68,7 @@ func TestLogger_Error(t *testing.T) {
 	a.Contains(buf.String(), "info")
 }
 
-func TestLogger_With(t *testing.T) {
+func TestLogger_New(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextHandler(buf), WithLocation(true), WithAttrs(map[string]any{"a1": "v1"}))

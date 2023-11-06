@@ -82,11 +82,4 @@ func (logs *Logs) SetCreated(v string) { logs.createdFormat = v }
 
 func (logs *Logs) Handler() Handler { return logs.handler }
 
-func (logs *Logs) SetHandler(h Handler) {
-	if h == nil {
-		h = nop
-	}
-	logs.handler = h
-}
-
 func (logs *Logs) Detail() bool { return logs.detail }

@@ -36,7 +36,7 @@ func TestRecord_location(t *testing.T) {
 	a := assert.New(t, false)
 	l := New(nil, WithLocation(true), WithCreated(MicroLayout))
 
-	e := l.NewRecord(LevelWarn)
+	e := l.NewRecord(LevelWarn, l.handler)
 	a.NotNil(e)
 	a.Empty(e.AppendLocation)
 
@@ -56,7 +56,7 @@ func TestRecord_Error(t *testing.T) {
 
 	t.Run("error", func(t *testing.T) {
 		a := assert.New(t, false)
-		e := l.NewRecord(LevelWarn)
+		e := l.NewRecord(LevelWarn, l.handler)
 		a.Empty(e.AppendLocation)
 		e.Error(err1) // 输出定位
 		a.NotEmpty(e.AppendLocation)
@@ -71,7 +71,7 @@ func TestRecord_Error(t *testing.T) {
 	buf.Reset()
 	t.Run("xerrors>error", func(t *testing.T) {
 		a := assert.New(t, false)
-		e := l.NewRecord(LevelWarn)
+		e := l.NewRecord(LevelWarn, l.handler)
 		a.Empty(e.AppendLocation)
 		e.Error(err2)
 		a.True(strings.HasSuffix(buf.String(), "root\n\n"), buf.String())
@@ -81,7 +81,7 @@ func TestRecord_Error(t *testing.T) {
 	buf.Reset()
 	t.Run("xerrors>error", func(t *testing.T) {
 		a := assert.New(t, false)
-		e := l.NewRecord(LevelWarn)
+		e := l.NewRecord(LevelWarn, l.handler)
 		a.Empty(e.AppendLocation)
 		e.Error(err2)
 		a.True(strings.HasSuffix(buf.String(), "root\nerror\n"), buf.String())
@@ -90,7 +90,7 @@ func TestRecord_Error(t *testing.T) {
 	buf.Reset()
 	t.Run("2*xerrors>error", func(t *testing.T) {
 		a := assert.New(t, false)
-		e := l.NewRecord(LevelWarn)
+		e := l.NewRecord(LevelWarn, l.handler)
 		a.Empty(e.AppendLocation)
 		e.Error(&err{err: err2})
 		a.True(strings.HasSuffix(buf.String(), "root\nroot\nerror\n"), buf.String())
@@ -100,7 +100,7 @@ func TestRecord_Error(t *testing.T) {
 	buf.Reset()
 	t.Run("locale without catalog", func(t *testing.T) {
 		a := assert.New(t, false)
-		e := l.NewRecord(LevelWarn)
+		e := l.NewRecord(LevelWarn, l.handler)
 		a.Empty(e.AppendLocation)
 		e.Error(lerr1)
 		a.True(strings.HasSuffix(buf.String(), "loc err\n"), buf.String())
@@ -110,7 +110,7 @@ func TestRecord_Error(t *testing.T) {
 	buf.Reset()
 	t.Run("xerrors>locale without catalog", func(t *testing.T) {
 		a := assert.New(t, false)
-		e := l.NewRecord(LevelWarn)
+		e := l.NewRecord(LevelWarn, l.handler)
 		a.Empty(e.AppendLocation)
 		e.Error(lerr2)
 		a.True(strings.HasSuffix(buf.String(), "loc err\n"), buf.String())
@@ -123,7 +123,7 @@ func TestRecord_Error(t *testing.T) {
 	buf.Reset()
 	t.Run("locale with catalog", func(t *testing.T) {
 		a := assert.New(t, false)
-		e := l.NewRecord(LevelWarn)
+		e := l.NewRecord(LevelWarn, l.handler)
 		a.Empty(e.AppendLocation)
 		e.Error(lerr1)
 		a.True(strings.HasSuffix(buf.String(), "cn\n"), buf.String())
@@ -132,7 +132,7 @@ func TestRecord_Error(t *testing.T) {
 	buf.Reset()
 	t.Run("xerrors>locale with catalog", func(t *testing.T) {
 		a := assert.New(t, false)
-		e := l.NewRecord(LevelWarn)
+		e := l.NewRecord(LevelWarn, l.handler)
 		a.Empty(e.AppendLocation)
 		e.Error(lerr2)
 		a.True(strings.HasSuffix(buf.String(), "root\ncn\n"), buf.String())
@@ -141,7 +141,7 @@ func TestRecord_Error(t *testing.T) {
 	buf.Reset()
 	t.Run("2*xerrors>locale with catalog", func(t *testing.T) {
 		a := assert.New(t, false)
-		e := l.NewRecord(LevelWarn)
+		e := l.NewRecord(LevelWarn, l.handler)
 		a.Empty(e.AppendLocation)
 		e.Error(&err{err: lerr2})
 		a.True(strings.HasSuffix(buf.String(), "root\nroot\ncn\n"), buf.String())
@@ -159,7 +159,7 @@ func TestRecord_Println(t *testing.T) {
 	l := New(NewTextHandler(buf), WithLocation(true), WithCreated(MicroLayout), WithLocale(p))
 	a.NotNil(l)
 
-	e := l.NewRecord(LevelWarn)
+	e := l.NewRecord(LevelWarn, l.handler)
 	e.Println(localeutil.Phrase("abc"))
 	a.True(strings.HasSuffix(buf.String(), "cn\n\n"), buf.String()) // Println 本身包含了一个回车符
 }

@@ -56,7 +56,8 @@ func TestLogs_IsEnable(t *testing.T) {
 		True(l.IsEnable(LevelError))
 
 	// WARN 属于 enable，但是 logs.w 为 nop
-	l.SetHandler(nil)
+	l = New(nil)
+	l.Enable(LevelWarn, LevelError)
 	a.False(l.WARN().IsEnable())
 
 	buf := new(bytes.Buffer)

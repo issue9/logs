@@ -3,35 +3,17 @@
 package logs
 
 import (
-	"fmt"
 	"io"
 	"log"
-
-	"github.com/issue9/localeutil"
-	"github.com/issue9/sliceutil"
 
 	"github.com/issue9/logs/v6/writers"
 )
 
 // Logger 日志对象
 type Logger struct {
-	lv    Level
-	logs  *Logs
-	attrs []Attr
-}
-
-func appendAttrs(attrs []Attr, p *localeutil.Printer, m map[string]any) []Attr {
-	if len(m) == 0 {
-		panic("参数 attrs 不能为空")
-	}
-
-	for k := range m {
-		if sliceutil.Exists(attrs, func(v Attr, _ int) bool { return v.K == k }) {
-			panic(fmt.Sprintf("存在同名的元素 %s", k))
-		}
-	}
-
-	return append(attrs, map2Slice(p, m)...)
+	lv   Level
+	logs *Logs
+	h    Handler
 }
 
 // IsEnable 当前日志是否会真实输出内容
@@ -46,7 +28,7 @@ func (l *Logger) Level() Level { return l.lv }
 //
 // 不会影响之前调用 [Logger.New] 生成的对象。
 func (l *Logger) AppendAttrs(attrs map[string]any) {
-	l.attrs = appendAttrs(l.attrs, l.logs.printer, attrs)
+	l.h = l.h.WithAttrs(map2Slice(l.logs.printer, attrs))
 }
 
 func (l *Logger) With(name string, val any) Recorder {
@@ -56,13 +38,7 @@ func (l *Logger) With(name string, val any) Recorder {
 	return disabledRecorder
 }
 
-func (l *Logger) newRecord() *Record {
-	r := l.logs.NewRecord(l.lv)
-	for _, p := range l.attrs {
-		r.With(p.K, p.V)
-	}
-	return r
-}
+func (l *Logger) newRecord() *Record { return l.logs.NewRecord(l.lv, l.h) }
 
 func (l *Logger) Error(err error) {
 	if l.IsEnable() {
@@ -98,14 +74,10 @@ func (l *Logger) Printf(format string, v ...any) {
 //
 // 新对象会继承当前对象的 [Logger.attrs] 同时还拥有参数 attrs。
 func (l *Logger) New(attrs map[string]any) *Logger {
-	pairs := make([]Attr, 0, len(l.attrs)+len(attrs))
-	pairs = append(pairs, l.attrs...)
-	pairs = appendAttrs(pairs, l.logs.printer, attrs)
-
 	return &Logger{
-		lv:    l.lv,
-		logs:  l.logs,
-		attrs: pairs,
+		lv:   l.lv,
+		logs: l.logs,
+		h:    l.h.WithAttrs(map2Slice(l.logs.printer, attrs)),
 	}
 }
 

@@ -11,8 +11,6 @@ import (
 	"golang.org/x/xerrors"
 )
 
-const poolMaxParams = 100
-
 var recordPool = &sync.Pool{New: func() any { return &Record{} }}
 
 var disabledRecorder = &disableRecorder{}
@@ -46,6 +44,7 @@ type (
 	// Record 单条日志产生的数据
 	Record struct {
 		logs *Logs
+		h    Handler
 
 		Level Level
 
@@ -77,7 +76,7 @@ type (
 	disableRecorder struct{}
 )
 
-func (logs *Logs) NewRecord(lv Level) *Record {
+func (logs *Logs) NewRecord(lv Level, h Handler) *Record {
 	e := recordPool.Get().(*Record)
 
 	e.logs = logs
@@ -88,6 +87,7 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 	e.AppendMessage = nil
 	e.AppendCreated = nil
 	e.Level = lv
+	e.h = h
 
 	return e
 }
@@ -219,8 +219,9 @@ func (e *Record) DepthPrintln(depth int, v ...any) {
 }
 
 func (e *Record) output() {
-	e.Logs().handler.Handle(e)
-	if len(e.Attrs) < poolMaxParams {
+	const poolMaxAttrs = 100
+	e.h.Handle(e)
+	if len(e.Attrs) < poolMaxAttrs {
 		recordPool.Put(e)
 	}
 }

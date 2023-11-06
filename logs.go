@@ -18,7 +18,7 @@ type Logs struct {
 	loggers map[Level]*Logger
 	enables map[Level]bool
 
-	attrs            map[string]any
+	attrs            map[string]any // 仅用于被 Option 函数存取，没有其它用处。
 	location, detail bool
 	createdFormat    string
 	printer          *localeutil.Printer
@@ -62,11 +62,12 @@ func New(h Handler, o ...Option) *Logs {
 		opt(l)
 	}
 
+	attrs := map2Slice(l.printer, l.attrs)
 	for lv := range levelStrings {
 		l.loggers[lv] = &Logger{
-			logs:  l,
-			lv:    lv,
-			attrs: map2Slice(l.printer, l.attrs),
+			logs: l,
+			lv:   lv,
+			h:    h.WithAttrs(attrs),
 		}
 		l.enables[lv] = true
 	}

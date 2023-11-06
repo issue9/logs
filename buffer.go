@@ -108,6 +108,8 @@ func (w *Buffer) Detail() bool { return w.detail }
 
 func (w *Buffer) Bytes() []byte { return w.data }
 
+func (w *Buffer) Len() int { return len(w.data) }
+
 func (w *Buffer) Free() {
 	const buffersPoolMaxSize = 1 << 10
 	if len(w.data) < buffersPoolMaxSize {

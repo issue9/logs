@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/issue9/assert/v3"
+	"github.com/issue9/localeutil"
 	"github.com/issue9/term/v3/colors"
 )
 
@@ -63,7 +64,22 @@ func BenchmarkRecord_Printf(b *testing.B) {
 	}
 }
 
-func BenchmarkLogger_withoutLocationAndCreated(b *testing.B) {
+func BenchmarkLogger_withAttrs(b *testing.B) {
+	a := assert.New(b, false)
+	buf := new(bytes.Buffer)
+	l := New(NewTextHandler(buf))
+	a.NotNil(l)
+	l.Enable(LevelError)
+
+	err := l.ERROR()
+	err.AppendAttrs(map[string]any{"k1": "v1", "k2": 2, "k3": localeutil.Phrase("lang")})
+
+	for i := 0; i < b.N; i++ {
+		err.String("err")
+	}
+}
+
+func BenchmarkLogger(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextHandler(buf))
@@ -98,7 +114,7 @@ func BenchmarkLogger_withoutLocationAndCreated(b *testing.B) {
 	})
 }
 
-func BenchmarkLogs_disableLogger(b *testing.B) {
+func BenchmarkLogs_disableRecorder(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	w := NewTextHandler(buf)
@@ -124,7 +140,7 @@ func BenchmarkLogs_nop(b *testing.B) {
 	}
 }
 
-func BenchmarkLogs_StdLogger(b *testing.B) {
+func BenchmarkLogger_LogLogger(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextHandler(buf))
@@ -133,11 +149,11 @@ func BenchmarkLogs_StdLogger(b *testing.B) {
 	err := l.ERROR()
 
 	for i := 0; i < b.N; i++ {
-		err.StdLogger().Printf("std log")
+		err.LogLogger().Printf("std log")
 	}
 }
 
-func BenchmarkLogs_StdLogger_withDisable(b *testing.B) {
+func BenchmarkLogs_LogLogger_withDisable(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextHandler(buf))
@@ -146,6 +162,6 @@ func BenchmarkLogs_StdLogger_withDisable(b *testing.B) {
 	err := l.ERROR()
 
 	for i := 0; i < b.N; i++ {
-		err.StdLogger().Printf("std log")
+		err.LogLogger().Printf("std log")
 	}
 }

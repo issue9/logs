@@ -134,7 +134,7 @@ func TestLogger_String(t *testing.T) {
 	a.Contains(buf.String(), "info")
 }
 
-func TestLogger_StdLogger(t *testing.T) {
+func TestLogger_LogLogger(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
 	w := NewTextHandler(buf)
@@ -142,15 +142,15 @@ func TestLogger_StdLogger(t *testing.T) {
 	a.NotNil(l)
 	l.Enable(LevelInfo, LevelError)
 
-	// logger.StdLogger
+	// logger.LogLogger
 
-	info := l.INFO().StdLogger()
+	info := l.INFO().LogLogger()
 	info.Print("abc")
 	a.Contains(buf.String(), "logger_test.go:148") // 行数是否正确
 
 	// Enable 未设置 LevelWarn
 	buf.Reset()
-	warn := l.WARN().StdLogger()
+	warn := l.WARN().LogLogger()
 	warn.Print("abc")
 	a.Equal(buf.Len(), 0)
 }

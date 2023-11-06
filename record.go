@@ -66,10 +66,10 @@ type (
 		AppendLocation AppendFunc
 
 		// 额外的数据，比如由 [Logger.With] 添加的数据。
-		Params []Pair
+		Attrs []Attr
 	}
 
-	Pair struct {
+	Attr struct {
 		K string
 		V any
 	}
@@ -81,8 +81,8 @@ func (logs *Logs) NewRecord(lv Level) *Record {
 	e := recordPool.Get().(*Record)
 
 	e.logs = logs
-	if e.Params != nil {
-		e.Params = e.Params[:0]
+	if e.Attrs != nil {
+		e.Attrs = e.Attrs[:0]
 	}
 	e.AppendLocation = nil
 	e.AppendMessage = nil
@@ -115,7 +115,7 @@ func (e *Record) With(name string, val any) Recorder {
 	if ls, ok := val.(localeutil.Stringer); ok && e.Logs().printer != nil {
 		val = ls.LocaleString(e.Logs().printer)
 	}
-	e.Params = append(e.Params, Pair{K: name, V: val})
+	e.Attrs = append(e.Attrs, Attr{K: name, V: val})
 	return e
 }
 
@@ -220,7 +220,7 @@ func (e *Record) DepthPrintln(depth int, v ...any) {
 
 func (e *Record) output() {
 	e.Logs().handler.Handle(e)
-	if len(e.Params) < poolMaxParams {
+	if len(e.Attrs) < poolMaxParams {
 		recordPool.Put(e)
 	}
 }

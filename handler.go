@@ -54,7 +54,7 @@ func NewTextHandler(w ...io.Writer) Handler {
 	mux := &sync.Mutex{} // 防止多个函数同时调用 HandlerFunc 方法。
 
 	return HandlerFunc(func(e *Record) {
-		b := NewBuffer(e.Logs().detail)
+		b := NewBuffer(e.Logs().Detail())
 		defer b.Free()
 
 		b.AppendBytes('[').AppendString(e.Level.String()).AppendBytes(']')
@@ -72,7 +72,7 @@ func NewTextHandler(w ...io.Writer) Handler {
 
 		b.AppendBytes(indent).AppendFunc(e.AppendMessage)
 
-		for _, p := range e.Params {
+		for _, p := range e.Attrs {
 			b.AppendBytes(' ').AppendString(p.K).AppendBytes('=')
 			switch v := p.V.(type) {
 			case string:
@@ -134,7 +134,7 @@ func NewJSONHandler(w ...io.Writer) Handler {
 	mux := &sync.Mutex{}
 
 	return HandlerFunc(func(e *Record) {
-		b := NewBuffer(e.Logs().detail)
+		b := NewBuffer(e.Logs().Detail())
 		defer b.Free()
 
 		b.AppendBytes('{')
@@ -150,10 +150,10 @@ func NewJSONHandler(w ...io.Writer) Handler {
 			b.AppendString(`,"path":"`).AppendFunc(e.AppendLocation).AppendBytes('"')
 		}
 
-		if len(e.Params) > 0 {
-			b.AppendString(`,"params":[`)
+		if len(e.Attrs) > 0 {
+			b.AppendString(`,"attrs":[`)
 
-			for i, p := range e.Params {
+			for i, p := range e.Attrs {
 				if i > 0 {
 					b.AppendBytes(',')
 				}
@@ -230,7 +230,7 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 	mux := &sync.Mutex{}
 
 	return HandlerFunc(func(e *Record) {
-		b := NewBuffer(e.Logs().detail)
+		b := NewBuffer(e.Logs().Detail())
 		defer b.Free()
 
 		ww := colors.New(b)
@@ -239,7 +239,7 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 
 		var indent byte = ' '
 		if e.AppendCreated != nil {
-			b := NewBuffer(e.Logs().detail)
+			b := NewBuffer(e.Logs().Detail())
 			defer b.Free()
 			e.AppendCreated(b)
 			ww.WByte(' ').WBytes(b.data)
@@ -247,19 +247,19 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 		}
 
 		if e.AppendLocation != nil {
-			b := NewBuffer(e.Logs().detail)
+			b := NewBuffer(e.Logs().Detail())
 			defer b.Free()
 			e.AppendLocation(b)
 			ww.WByte(' ').WBytes(b.data)
 			indent = '\t'
 		}
 
-		bb := NewBuffer(e.Logs().detail)
+		bb := NewBuffer(e.Logs().Detail())
 		defer bb.Free()
 		e.AppendMessage(bb)
 		ww.WByte(indent).WBytes(bb.data)
 
-		for _, p := range e.Params {
+		for _, p := range e.Attrs {
 			ww.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
 		}
 

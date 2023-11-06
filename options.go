@@ -23,7 +23,7 @@ type Option func(*Logs)
 
 // WithLocale 指定本地化信息
 //
-// 如果为 nil，那么将禁用本地化输出。
+// 如果为 nil，那么将禁用本地化输出，如果多次调用，则以最后一次为准。
 //
 // 设置了此值为影响以下几个方法中实现了 [localeutil.Stringer] 的参数：
 //   - Recorder.Error 中的 error 类型参数；
@@ -33,9 +33,12 @@ func WithLocale(p *localeutil.Printer) Option { return func(l *Logs) { l.printer
 
 // WithAttrs 为日志添加附加的固定字段
 func WithAttrs(attrs map[string]any) Option {
+	// NOTE: 无法确保 WithLocale 在 WithAttrs 之前调用，
+	// 所以此处直接将 map 类型保存在 Logs，而不是处理后的 slice。
+
 	return func(l *Logs) {
 		for k, v := range attrs {
-			if _, found := l.attrs[k]; found {
+			if _, found := l.attrs[k]; found { // 可能多次调用 WithAttrs 造成重复元素
 				panic(fmt.Sprintf("已经存在名称为 %s 的元素", k))
 			}
 			l.attrs[k] = v
@@ -76,3 +79,14 @@ func (logs *Logs) SetLocation(v bool) { logs.location = v }
 //
 // 如果 v 为空将会禁用日期显示。
 func (logs *Logs) SetCreated(v string) { logs.createdFormat = v }
+
+func (logs *Logs) Handler() Handler { return logs.handler }
+
+func (logs *Logs) SetHandler(h Handler) {
+	if h == nil {
+		h = nop
+	}
+	logs.handler = h
+}
+
+func (logs *Logs) Detail() bool { return logs.detail }

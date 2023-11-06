@@ -41,7 +41,7 @@ func newRecord(a *assert.Assertion, logs *Logs, lv Level) *Record {
 
 	e.AppendMessage = func(b *Buffer) { b.AppendString("msg") }
 	e.AppendLocation = func(b *Buffer) { b.AppendString("path.go:20") }
-	e.Params = []Pair{
+	e.Attrs = []Attr{
 		{K: "k1", V: "v1"},
 		{K: "k2", V: "v2"},
 	}
@@ -99,13 +99,13 @@ func TestJSONFormat(t *testing.T) {
 	buf := new(bytes.Buffer)
 	l.SetHandler(NewJSONHandler(buf))
 	e.output()
-	a.Equal(buf.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","params":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"}]}`)
+	a.Equal(buf.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","attrs":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"}]}`)
 
 	b1 := new(bytes.Buffer)
 	b2 := new(bytes.Buffer)
 	l.SetHandler(NewJSONHandler(b1, b2))
 	e.output()
-	a.Equal(b1.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","params":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"}]}`).
+	a.Equal(b1.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","attrs":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"}]}`).
 		Equal(b1.String(), b2.String())
 
 	// error
@@ -114,7 +114,7 @@ func TestJSONFormat(t *testing.T) {
 	buf.Reset()
 	l.SetHandler(NewJSONHandler(buf))
 	e.output()
-	a.Equal(buf.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","params":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"},{"m2":"Err(json: error calling MarshalJSON for type logs.marshalErrObject: marshal json error)"}]}`)
+	a.Equal(buf.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","attrs":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"},{"m2":"Err(json: error calling MarshalJSON for type logs.marshalErrObject: marshal json error)"}]}`)
 }
 
 func TestTermHandler(t *testing.T) {

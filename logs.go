@@ -24,19 +24,19 @@ type Logs struct {
 	printer          *localeutil.Printer
 }
 
-func attrs2Pairs(p *localeutil.Printer, attrs map[string]any) []Pair {
-	pairs := make([]Pair, 0, len(attrs))
+func map2Slice(p *localeutil.Printer, attrs map[string]any) []Attr {
+	pairs := make([]Attr, 0, len(attrs))
 
 	if p == nil {
 		for k, v := range attrs {
-			pairs = append(pairs, Pair{K: k, V: v})
+			pairs = append(pairs, Attr{K: k, V: v})
 		}
 	} else {
 		for k, v := range attrs {
 			if ls, ok := v.(localeutil.Stringer); ok {
 				v = ls.LocaleString(p)
 			}
-			pairs = append(pairs, Pair{K: k, V: v})
+			pairs = append(pairs, Attr{K: k, V: v})
 		}
 	}
 
@@ -66,7 +66,7 @@ func New(h Handler, o ...Option) *Logs {
 		l.loggers[lv] = &Logger{
 			logs:  l,
 			lv:    lv,
-			pairs: attrs2Pairs(l.printer, l.attrs),
+			attrs: map2Slice(l.printer, l.attrs),
 		}
 		l.enables[lv] = true
 	}
@@ -102,10 +102,3 @@ func (logs *Logs) FATAL() *Logger { return logs.Logger(LevelFatal) }
 
 // Logger 返回指定级别的日志对象
 func (logs *Logs) Logger(lv Level) *Logger { return logs.loggers[lv] }
-
-func (logs *Logs) SetHandler(h Handler) {
-	if h == nil {
-		h = nop
-	}
-	logs.handler = h
-}

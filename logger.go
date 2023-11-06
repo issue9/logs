@@ -44,7 +44,7 @@ func (l *Logger) Level() Level { return l.lv }
 
 // AppendAttrs 添加新属性
 //
-// 仅对之后调用 [Logger.New] 生成的对象有影响。
+// 不会影响之前调用 [Logger.New] 生成的对象。
 func (l *Logger) AppendAttrs(attrs map[string]any) {
 	l.attrs = appendAttrs(l.attrs, l.logs.printer, attrs)
 }

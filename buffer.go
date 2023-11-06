@@ -16,6 +16,7 @@ var buffersPool = &sync.Pool{New: func() any {
 // Buffer []byte 复用对象池
 //
 // 同时实现了 [xerrors.Printer] 接口。
+// [Handler] 接口的实现中可能需要用到此对象。
 type Buffer struct {
 	data   []byte
 	detail bool

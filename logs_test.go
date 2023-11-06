@@ -57,7 +57,7 @@ func TestLogs_IsEnable(t *testing.T) {
 
 	// WARN 属于 enable，但是 logs.w 为 nop
 	l.SetHandler(nil)
-	a.False(l.WARN().isEnable())
+	a.False(l.WARN().IsEnable())
 
 	buf := new(bytes.Buffer)
 	l = New(NewTextHandler(buf))
@@ -66,7 +66,7 @@ func TestLogs_IsEnable(t *testing.T) {
 
 	a.NotEqual(l.WARN(), disabledRecorder)
 
-	a.False(l.FATAL().isEnable())
+	a.False(l.FATAL().IsEnable())
 
 	// enable=false，disabledLogger.With
 	buf.Reset()

@@ -26,12 +26,10 @@ type Option func(*Logs)
 // 如果为 nil，那么将禁用本地化输出。
 //
 // 设置了此值为影响以下几个方法中实现了 [localeutil.Stringer] 的参数：
-//   - Logger.Error 中的 error 类型参数；
-//   - Logger.Print/Printf/Println 中的 any 类型参数；
-//   - Logger.With 中的 any 类型参数
-func WithLocale(p *localeutil.Printer) Option {
-	return func(l *Logs) { l.printer = p }
-}
+//   - Recorder.Error 中的 error 类型参数；
+//   - Recorder.Print/Printf/Println 中的 any 类型参数；
+//   - Recorder.With 中的 any 类型参数
+func WithLocale(p *localeutil.Printer) Option { return func(l *Logs) { l.printer = p } }
 
 // WithAttrs 为日志添加附加的固定字段
 func WithAttrs(attrs map[string]any) Option {

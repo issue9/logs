@@ -109,8 +109,8 @@ func TestLogger_With(t *testing.T) {
 	l.Enable(LevelDebug)
 	err = l.ERROR().New(map[string]any{"k2": "v2"})
 	r := err.With("k", "v")
-	a.False(l.ERROR().isEnable()).
-		False(err.isEnable()).
+	a.False(l.ERROR().IsEnable()).
+		False(err.IsEnable()).
 		Equal(r, disabledRecorder).
 		Empty(buf.String())
 }

@@ -6,12 +6,6 @@
 //
 // 提供了 [Handler] 接口用于处理输出的日志格式，用户可以自己实现，
 // 系统也提供了几种常用的供用户选择。
-//
-// # Recorder
-//
-// [Recorder] 为实际的日志输出接口，提供多种 [Recorder] 的实现。
-//   - [Logs.ERROR] 等为普通的日志对象；
-//   - [Logs.With] 返回的是带固定参数的日志对象；
 package logs
 
 import (
@@ -89,6 +83,9 @@ func (logs *Logs) Enable(level ...Level) {
 	}
 }
 
+// IsEnable 指定级别日志是否会真实被启用
+//
+// 如果设置了 [Handler] 为空值或是未在 [Logs.Enable] 中指定都将返回 false。
 func (logs *Logs) IsEnable(l Level) bool { return logs.enables[l] && logs.handler != nop }
 
 func (logs *Logs) INFO() *Logger { return logs.Logger(LevelInfo) }

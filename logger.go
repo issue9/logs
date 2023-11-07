@@ -31,42 +31,48 @@ func (l *Logger) AppendAttrs(attrs map[string]any) {
 	l.h = l.h.WithAttrs(map2Slice(l.logs.printer, attrs))
 }
 
+// With 创建 [Recorder] 对象
 func (l *Logger) With(name string, val any) Recorder {
-	if l.IsEnable() {
-		return l.newRecord().With(name, val)
+	if !l.IsEnable() {
+		return disabledRecorder
 	}
-	return disabledRecorder
+
+	r := withRecordPool.Get().(*withRecorder)
+	r.logs = l.logs
+	r.r = l.newRecord().with(l.logs, name, val)
+	r.h = l.h
+	return r
 }
 
-func (l *Logger) newRecord() *Record { return l.logs.NewRecord(l.lv, l.h) }
+func (l *Logger) newRecord() *Record { return NewRecord(l.lv) }
 
 func (l *Logger) Error(err error) {
 	if l.IsEnable() {
-		l.newRecord().DepthError(3, err)
+		l.newRecord().depthError(l.logs, l.h, 3, err)
 	}
 }
 
 func (l *Logger) String(s string) {
 	if l.IsEnable() {
-		l.newRecord().DepthString(2, s)
+		l.newRecord().depthString(l.logs, l.h, 3, s)
 	}
 }
 
 func (l *Logger) Print(v ...any) {
 	if l.IsEnable() {
-		l.newRecord().DepthPrint(2, v...)
+		l.newRecord().depthPrint(l.logs, l.h, 3, v...)
 	}
 }
 
 func (l *Logger) Println(v ...any) {
 	if l.IsEnable() {
-		l.newRecord().DepthPrintln(2, v...)
+		l.newRecord().depthPrintln(l.logs, l.h, 3, v...)
 	}
 }
 
 func (l *Logger) Printf(format string, v ...any) {
 	if l.IsEnable() {
-		l.newRecord().DepthPrintf(2, format, v...)
+		l.newRecord().depthPrintf(l.logs, l.h, 3, format, v...)
 	}
 }
 
@@ -96,7 +102,7 @@ func (l *Logger) LogLogger() *log.Logger {
 // 仅供 [Logger.LogLogger] 使用，因为 depth 值的关系，只有固定的调用层级关系才能正常显示行号。
 func (l *Logger) asWriter() io.Writer {
 	return writers.WriteFunc(func(data []byte) (int, error) {
-		l.newRecord().DepthString(5, string(data))
+		l.newRecord().depthString(l.logs, l.h, 6, string(data))
 		return len(data), nil
 	})
 }

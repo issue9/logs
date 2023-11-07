@@ -11,12 +11,14 @@ import (
 	"golang.org/x/xerrors"
 )
 
-var recordPool = &sync.Pool{New: func() any { return &Record{} }}
-
-var disabledRecorder = &disableRecorder{}
+var (
+	recordPool       = &sync.Pool{New: func() any { return &Record{} }}
+	withRecordPool   = &sync.Pool{New: func() any { return &withRecorder{} }}
+	disabledRecorder = &disableRecorder{}
+)
 
 type (
-	// Recorder 输出一条记录的接口
+	// Recorder 日志的输出接口
 	Recorder interface {
 		// With 为日志提供额外的参数
 		With(name string, val any) Recorder
@@ -43,9 +45,6 @@ type (
 
 	// Record 单条日志产生的数据
 	Record struct {
-		logs *Logs
-		h    Handler
-
 		Level Level
 
 		// AppendCreated 添加字符串类型的日志创建时间
@@ -56,7 +55,6 @@ type (
 		// AppendMessage 向日志中添加字符串类型的日志消息
 		//
 		// 这是每一条日志的主消息，不会为空。
-		// 内容是根据 Depth* 系列方法生成的。
 		AppendMessage AppendFunc
 
 		// AppendLocation 添加字符串类型的日志触发位置信息
@@ -64,7 +62,7 @@ type (
 		// 可能为空，根据 [Logs.HasLocation] 决定。
 		AppendLocation AppendFunc
 
-		// 额外的数据，比如由 [Logger.With] 添加的数据。
+		// 额外的数据，比如由 [Recorder.With] 添加的数据。
 		Attrs []Attr
 	}
 
@@ -73,13 +71,18 @@ type (
 		V any
 	}
 
+	withRecorder struct {
+		h    Handler
+		logs *Logs
+		r    *Record
+	}
+
 	disableRecorder struct{}
 )
 
-func (logs *Logs) NewRecord(lv Level, h Handler) *Record {
+func NewRecord(lv Level) *Record {
 	e := recordPool.Get().(*Record)
 
-	e.logs = logs
 	if e.Attrs != nil {
 		e.Attrs = e.Attrs[:0]
 	}
@@ -87,55 +90,50 @@ func (logs *Logs) NewRecord(lv Level, h Handler) *Record {
 	e.AppendMessage = nil
 	e.AppendCreated = nil
 	e.Level = lv
-	e.h = h
 
 	return e
 }
 
-func (e *Record) Logs() *Logs { return e.logs }
-
-// depth 表示调用，1 表示调用 Location 的位置；
-func (e *Record) initLocationCreated(depth int) *Record {
-	if e.Logs().HasLocation() {
+// depth 表示调用，1 表示调用此方法的位置；
+func (e *Record) initLocationCreated(logs *Logs, depth int) *Record {
+	if logs.HasLocation() {
 		_, p, l, _ := runtime.Caller(depth)
 		e.AppendLocation = func(b *Buffer) {
 			b.AppendString(p).AppendBytes(':').AppendInt(int64(l), 10)
 		}
 	}
 
-	if e.Logs().createdFormat != "" {
+	if logs.createdFormat != "" {
 		t := time.Now() // 必须是当前时间，而不是放在 AppendCreated 中获取的时间。
-		e.AppendCreated = func(b *Buffer) { b.AppendTime(t, e.Logs().createdFormat) }
+		e.AppendCreated = func(b *Buffer) { b.AppendTime(t, logs.createdFormat) }
 	}
 
 	return e
 }
 
-func (e *Record) With(name string, val any) Recorder {
-	if ls, ok := val.(localeutil.Stringer); ok && e.Logs().printer != nil {
-		val = ls.LocaleString(e.Logs().printer)
+func (e *Record) with(logs *Logs, name string, val any) *Record {
+	if ls, ok := val.(localeutil.Stringer); ok && logs.printer != nil {
+		val = ls.LocaleString(logs.printer)
 	}
 	e.Attrs = append(e.Attrs, Attr{K: name, V: val})
 	return e
 }
 
-func (e *Record) Error(err error) { e.DepthError(2, err) }
-
-// DepthError 输出 error 类型的内容到日志
+// depthError 输出 error 类型的内容到日志
 //
-// depth 表示调用，1 表示调用此方法的位置；
+// depth 表示调用，2 表示调用此方法的位置；
 //
 // 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
-func (e *Record) DepthError(depth int, err error) {
+func (e *Record) depthError(logs *Logs, h Handler, depth int, err error) {
 	if err == nil {
 		panic("参数 err 不能为空")
 	}
 
 	switch ee := err.(type) {
 	case xerrors.Formatter:
-		e.AppendMessage = func(b *Buffer) { appendError(e.Logs().printer, b, ee) }
+		e.AppendMessage = func(b *Buffer) { appendError(logs.printer, b, ee) }
 	case localeutil.Stringer:
-		if pp := e.Logs().printer; pp != nil {
+		if pp := logs.printer; pp != nil {
 			e.AppendMessage = func(b *Buffer) { b.AppendString(ee.LocaleString(pp)) }
 		} else { // e2 必然是实现了 error 接口的
 			e.AppendMessage = func(b *Buffer) { b.AppendString(ee.(error).Error()) }
@@ -144,7 +142,7 @@ func (e *Record) DepthError(depth int, err error) {
 		e.AppendMessage = func(b *Buffer) { b.AppendString(err.Error()) }
 	}
 
-	e.initLocationCreated(depth + 1).output()
+	e.initLocationCreated(logs, depth).output(logs.detail, h)
 }
 
 func appendError(p *localeutil.Printer, b *Buffer, ef xerrors.Formatter) {
@@ -167,60 +165,52 @@ func appendError(p *localeutil.Printer, b *Buffer, ef xerrors.Formatter) {
 	}
 }
 
-func (e *Record) String(s string) { e.DepthString(2, s) }
-
-// DepthString 输出字符串类型的内容到日志
+// depthString 输出字符串类型的内容到日志
 //
-// depth 表示调用，1 表示调用此方法的位置；
+// depth 表示调用，2 表示调用此方法的位置；
 //
 // 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
-func (e *Record) DepthString(depth int, s string) {
+func (e *Record) depthString(logs *Logs, h Handler, depth int, s string) {
 	e.AppendMessage = func(b *Buffer) { b.AppendString(s) }
-	e.initLocationCreated(depth + 1).output()
+	e.initLocationCreated(logs, depth).output(logs.detail, h)
 }
 
-func (e *Record) Print(v ...any) { e.DepthPrint(2, v...) }
-
-// DepthPrint 输出任意类型的内容到日志
+// depthPrint 输出任意类型的内容到日志
 //
-// depth 表示调用，1 表示调用此方法的位置；
+// depth 表示调用，2 表示调用此方法的位置；
 //
 // 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
-func (e *Record) DepthPrint(depth int, v ...any) {
-	replaceLocaleString(e.Logs().printer, v)
+func (e *Record) depthPrint(logs *Logs, h Handler, depth int, v ...any) {
+	replaceLocaleString(logs.printer, v)
 	e.AppendMessage = func(b *Buffer) { b.Append(v...) }
-	e.initLocationCreated(depth + 1).output()
+	e.initLocationCreated(logs, depth).output(logs.detail, h)
 }
 
-func (e *Record) Printf(format string, v ...any) { e.DepthPrintf(2, format, v...) }
-
-// DepthPrintf 输出任意类型的内容到日志
+// depthPrintf 输出任意类型的内容到日志
 //
-// depth 表示调用，1 表示调用此方法的位置；
+// depth 表示调用，2 表示调用此方法的位置；
 //
 // 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
-func (e *Record) DepthPrintf(depth int, format string, v ...any) {
-	replaceLocaleString(e.Logs().printer, v)
+func (e *Record) depthPrintf(logs *Logs, h Handler, depth int, format string, v ...any) {
+	replaceLocaleString(logs.printer, v)
 	e.AppendMessage = func(b *Buffer) { b.Appendf(format, v...) }
-	e.initLocationCreated(depth + 1).output()
+	e.initLocationCreated(logs, depth).output(logs.detail, h)
 }
 
-func (e *Record) Println(v ...any) { e.DepthPrintln(2, v...) }
-
-// DepthPrintln 输出任意类型的内容到日志
+// depthPrintln 输出任意类型的内容到日志
 //
-// depth 表示调用，1 表示调用此方法的位置；
+// depth 表示调用，2 表示调用此方法的位置；
 //
 // 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
-func (e *Record) DepthPrintln(depth int, v ...any) {
-	replaceLocaleString(e.Logs().printer, v)
+func (e *Record) depthPrintln(logs *Logs, h Handler, depth int, v ...any) {
+	replaceLocaleString(logs.printer, v)
 	e.AppendMessage = func(b *Buffer) { b.Appendln(v...) }
-	e.initLocationCreated(depth + 1).output()
+	e.initLocationCreated(logs, depth).output(logs.detail, h)
 }
 
-func (e *Record) output() {
+func (e *Record) output(detail bool, h Handler) {
 	const poolMaxAttrs = 100
-	e.h.Handle(e)
+	h.Handle(detail, e)
 	if len(e.Attrs) < poolMaxAttrs {
 		recordPool.Put(e)
 	}
@@ -238,14 +228,46 @@ func replaceLocaleString(p *localeutil.Printer, v []any) {
 	}
 }
 
-func (l *disableRecorder) With(_ string, _ any) Recorder { return l }
+func (e *withRecorder) With(name string, val any) Recorder {
+	e.r.with(e.logs, name, val)
+	return e
+}
 
-func (l *disableRecorder) Error(_ error) {}
+func (e *withRecorder) Error(err error) {
+	e.r.depthError(e.logs, e.h, 3, err)
+	e.free()
+}
 
-func (l *disableRecorder) String(_ string) {}
+func (e *withRecorder) String(s string) {
+	e.r.depthString(e.logs, e.h, 3, s)
+	e.free()
+}
 
-func (l *disableRecorder) Print(_ ...any) {}
+func (e *withRecorder) Print(v ...any) {
+	e.r.depthPrint(e.logs, e.h, 3, v...)
+	e.free()
+}
 
-func (l *disableRecorder) Printf(_ string, _ ...any) {}
+func (e *withRecorder) Printf(format string, v ...any) {
+	e.r.depthPrintf(e.logs, e.h, 3, format, v...)
+	e.free()
+}
 
-func (l *disableRecorder) Println(_ ...any) {}
+func (e *withRecorder) Println(v ...any) {
+	e.r.depthPrintln(e.logs, e.h, 3, v...)
+	e.free()
+}
+
+func (e *withRecorder) free() { withRecordPool.Put(e) }
+
+func (l *disableRecorder) With(string, any) Recorder { return l }
+
+func (l *disableRecorder) Error(error) {}
+
+func (l *disableRecorder) String(string) {}
+
+func (l *disableRecorder) Print(...any) {}
+
+func (l *disableRecorder) Printf(string, ...any) {}
+
+func (l *disableRecorder) Println(...any) {}

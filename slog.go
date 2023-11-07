@@ -37,15 +37,15 @@ func (h *logsHandler) Enabled(ctx context.Context, lv slog.Level) bool {
 }
 
 func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
-	rr := h.l.NewRecord(slog2Logs[r.Level], h.l.handler)
-	rr.AppendCreated = func(b *Buffer) { b.AppendTime(r.Time, rr.Logs().createdFormat) }
+	rr := NewRecord(slog2Logs[r.Level])
+	rr.AppendCreated = func(b *Buffer) { b.AppendTime(r.Time, h.l.createdFormat) }
 	rr.AppendMessage = func(b *Buffer) { b.AppendString(r.Message) }
 
 	for _, attr := range h.attrs {
-		rr.With(h.prefix+attr.Key, attr.Value)
+		rr.with(h.l, h.prefix+attr.Key, attr.Value)
 	}
 	r.Attrs(func(attr slog.Attr) bool {
-		rr.With(h.prefix+attr.Key, attr.Value)
+		rr.with(h.l, h.prefix+attr.Key, attr.Value)
 		return true
 	})
 
@@ -56,7 +56,7 @@ func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 		}
 	}
 
-	rr.output()
+	rr.output(h.l.detail, h.l.handler)
 
 	return nil
 }

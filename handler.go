@@ -31,10 +31,11 @@ type (
 	Handler interface {
 		// Handle 将 [Record] 写入日志
 		//
-		// [Record] 中各个字段的名称由处理器自行决定。
+		// [Record] 中各个字段的名称由处理器自行决定；
+		// detail 表示是否显示错误的堆栈信息；
 		//
 		// NOTE: 此方法应该保证输出内容是以换行符作为结尾。
-		Handle(*Record)
+		Handle(detail bool, r *Record)
 
 		// WithAttrs 根据参数生成新的 [Handler] 对象
 		//
@@ -81,8 +82,8 @@ func NewTextHandler(w ...io.Writer) Handler {
 	return &textHandler{w: writers.New(w...)}
 }
 
-func (h *textHandler) Handle(e *Record) {
-	b := NewBuffer(e.Logs().Detail())
+func (h *textHandler) Handle(detail bool, e *Record) {
+	b := NewBuffer(detail)
 	defer b.Free()
 
 	b.AppendBytes('[').AppendString(e.Level.String()).AppendBytes(']')
@@ -177,8 +178,8 @@ func NewJSONHandler(w ...io.Writer) Handler {
 	return &jsonHandler{w: writers.New(w...)}
 }
 
-func (h *jsonHandler) Handle(e *Record) {
-	b := NewBuffer(e.Logs().Detail())
+func (h *jsonHandler) Handle(detail bool, e *Record) {
+	b := NewBuffer(detail)
 	defer b.Free()
 
 	b.AppendBytes('{')
@@ -295,8 +296,8 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 	return &termHandler{w: w, foreColors: cs}
 }
 
-func (h *termHandler) Handle(e *Record) {
-	b := NewBuffer(e.Logs().Detail())
+func (h *termHandler) Handle(detail bool, e *Record) {
+	b := NewBuffer(detail)
 	defer b.Free()
 
 	ww := colors.New(b)
@@ -305,7 +306,7 @@ func (h *termHandler) Handle(e *Record) {
 
 	var indent byte = ' '
 	if e.AppendCreated != nil {
-		b := NewBuffer(e.Logs().Detail())
+		b := NewBuffer(detail)
 		defer b.Free()
 		e.AppendCreated(b)
 		ww.WByte(' ').WBytes(b.data)
@@ -313,14 +314,14 @@ func (h *termHandler) Handle(e *Record) {
 	}
 
 	if e.AppendLocation != nil {
-		b := NewBuffer(e.Logs().Detail())
+		b := NewBuffer(detail)
 		defer b.Free()
 		e.AppendLocation(b)
 		ww.WByte(' ').WBytes(b.data)
 		indent = '\t'
 	}
 
-	bb := NewBuffer(e.Logs().Detail())
+	bb := NewBuffer(detail)
 	defer bb.Free()
 	e.AppendMessage(bb)
 	ww.WByte(indent).WBytes(bb.data)
@@ -354,7 +355,7 @@ func NewDispatchHandler(d map[Level]Handler) Handler {
 	return &dispatchHandler{handlers: d}
 }
 
-func (h *dispatchHandler) Handle(e *Record) { h.handlers[e.Level].Handle(e) }
+func (h *dispatchHandler) Handle(detail bool, e *Record) { h.handlers[e.Level].Handle(detail, e) }
 
 func (h *dispatchHandler) WithAttrs(attrs []Attr) Handler {
 	m := make(map[Level]Handler, len(h.handlers))
@@ -367,9 +368,9 @@ func (h *dispatchHandler) WithAttrs(attrs []Attr) Handler {
 // MergeHandler 将多个 Handler 合并成一个 Handler 接口对象
 func MergeHandler(w ...Handler) Handler { return &mergeHandler{handlers: w} }
 
-func (h *mergeHandler) Handle(e *Record) {
+func (h *mergeHandler) Handle(detail bool, e *Record) {
 	for _, hh := range h.handlers {
-		hh.Handle(e)
+		hh.Handle(detail, e)
 	}
 }
 
@@ -384,6 +385,6 @@ func (h *mergeHandler) WithAttrs(attrs []Attr) Handler {
 // NewNopHandler 空的 Handler 接口实现
 func NewNopHandler() Handler { return nop }
 
-func (h *nopHandler) Handle(_ *Record) {}
+func (h *nopHandler) Handle(bool, *Record) {}
 
 func (h *nopHandler) WithAttrs([]Attr) Handler { return h }

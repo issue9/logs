@@ -17,7 +17,7 @@ func TestLogger_location(t *testing.T) {
 	a.NotNil(l)
 	l.Enable(LevelError)
 
-	// Record.Location
+	// withRecorder
 	l.ERROR().With("k1", "v1").
 		Printf("Record.Printf") // 位置记录此行
 	val := buf.String()
@@ -25,14 +25,14 @@ func TestLogger_location(t *testing.T) {
 		Contains(val, "k1=v1").
 		Contains(val, "Record.Printf")
 
-	// Logs.Location
+	// Logger
 	buf.Reset()
 	l.ERROR().Printf("Logs.%s", "Errorf")
 	val = buf.String()
 	a.Contains(val, "logger_test.go:30").
 		Contains(val, "Logs.Errorf")
 
-	// logger.Location
+	// Logger
 	buf.Reset()
 	l.ERROR().Print("logger.Print")
 	val = buf.String()

@@ -1,4 +1,4 @@
-module github.com/issue9/logs/v6
+module github.com/issue9/logs/v7
 
 require (
 	github.com/issue9/assert/v3 v3.1.0

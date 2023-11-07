@@ -16,7 +16,11 @@ import (
 	"golang.org/x/xerrors"
 )
 
-var _ Recorder = &Record{}
+var (
+	_ Recorder = &Record{}
+	_ Recorder = &disableRecorder{}
+	_ Recorder = &Logger{}
+)
 
 type err struct {
 	err error
@@ -44,7 +48,7 @@ func TestRecord_location(t *testing.T) {
 	b := NewBuffer(false)
 	defer b.Free()
 	e.AppendLocation(b)
-	a.True(strings.HasSuffix(string(b.data), "record_test.go:43"), string(b.data))
+	a.True(strings.HasSuffix(string(b.data), "record_test.go:47"), string(b.data))
 }
 
 func TestRecord_Error(t *testing.T) {
@@ -64,7 +68,7 @@ func TestRecord_Error(t *testing.T) {
 		b := NewBuffer(false)
 		defer b.Free()
 		e.AppendLocation(b)
-		a.True(strings.HasSuffix(string(b.data), "record_test.go:61"), string(b.data))
+		a.True(strings.HasSuffix(string(b.data), "record_test.go:65"), string(b.data))
 	})
 
 	err2 := &err{err: err1}

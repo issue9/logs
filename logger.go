@@ -6,7 +6,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/issue9/logs/v6/writers"
+	"github.com/issue9/logs/v7/writers"
 )
 
 // Logger 日志对象

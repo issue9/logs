@@ -20,7 +20,10 @@ var (
 type (
 	// Recorder 日志的输出接口
 	Recorder interface {
-		// With 为日志提供额外的参数
+		// With 创建带有指定属性的 [Recorder] 对象
+		//
+		// 返回对象与当前对象未必是同一个，由实现者决定。
+		// 且返回对象是一次性的，在调用 Error、String 等输出之后即被回收。
 		With(name string, val any) Recorder
 
 		// Error 将一条错误信息作为一条日志输出
@@ -43,7 +46,7 @@ type (
 		Printf(format string, v ...any)
 	}
 
-	// Record 单条日志产生的数据
+	// Record 单条日志输出时产生的数据
 	Record struct {
 		Level Level
 

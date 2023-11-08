@@ -44,8 +44,6 @@ func (l *Logger) With(name string, val any) Recorder {
 	return r
 }
 
-func (l *Logger) newRecord() *Record { return NewRecord(l.lv) }
-
 func (l *Logger) Error(err error) {
 	if l.IsEnable() {
 		l.newRecord().depthError(l.logs, l.h, 3, err)
@@ -75,6 +73,8 @@ func (l *Logger) Printf(format string, v ...any) {
 		l.newRecord().depthPrintf(l.logs, l.h, 3, format, v...)
 	}
 }
+
+func (l *Logger) newRecord() *Record { return NewRecord(l.lv) }
 
 // New 根据当前对象派生新的 [Logger]
 //

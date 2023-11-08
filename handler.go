@@ -41,7 +41,9 @@ type (
 		//
 		// 新对象继承旧对象的属性，并添加了参数中的新属性。
 		//
-		// 即便参数的长度为零，也应该返回新的对象。
+		// 对于重名的问题并无规定，只要 Handler 自身能处理相应的情况即可。
+		//
+		// NOTE: 即便参数的长度为零，也应该返回新的对象。
 		WithAttrs([]Attr) Handler
 	}
 
@@ -120,8 +122,8 @@ func (h *textHandler) WithAttrs(attrs []Attr) Handler {
 
 	h.buildAttrs(b, attrs)
 
-	data := make([]byte, len(h.attrs), b.Len()+len(h.attrs))
-	copy(data, h.attrs)
+	data := make([]byte, 0, b.Len()+len(h.attrs))
+	data = append(data, h.attrs...)
 
 	return &textHandler{
 		w:     h.w,
@@ -156,9 +158,9 @@ func (h *textHandler) buildAttrs(b *Buffer, attrs []Attr) {
 		case uint8:
 			b.AppendUint(uint64(v), 10)
 		case float32:
-			b.AppendFloat(float64(v), 'f', 5, 32)
+			b.AppendFloat(float64(v), 'f', -1, 32)
 		case float64:
-			b.AppendFloat(v, 'f', 5, 64)
+			b.AppendFloat(v, 'f', -1, 64)
 		case encoding.TextMarshaler:
 			if bs, err := v.MarshalText(); err != nil {
 				b.AppendString("Err(").AppendString(err.Error()).AppendBytes(')')
@@ -195,10 +197,14 @@ func (h *jsonHandler) Handle(detail bool, e *Record) {
 		b.AppendString(`,"path":"`).AppendFunc(e.AppendLocation).AppendBytes('"')
 	}
 
-	if len(e.Attrs) > 0 {
+	if len(e.Attrs) > 0 || len(h.attrs) > 0 {
 		b.AppendString(`,"attrs":[`)
 
 		b.AppendBytes(h.attrs...)
+
+		if len(e.Attrs) > 0 && len(h.attrs) > 0 {
+			b.AppendBytes(',')
+		}
 
 		h.buildAttr(b, e.Attrs)
 
@@ -217,10 +223,9 @@ func (h *jsonHandler) Handle(detail bool, e *Record) {
 func (h *jsonHandler) WithAttrs(attrs []Attr) Handler {
 	b := NewBuffer(false)
 	h.buildAttr(b, attrs)
-	data := make([]byte, len(h.attrs), b.Len()+len(h.attrs)+1)
-	copy(data, h.attrs)
-
-	if len(data) > 0 {
+	data := make([]byte, 0, b.Len()+len(h.attrs)+1)
+	data = append(data, h.attrs...)
+	if len(h.attrs) > 0 && len(attrs) > 0 {
 		data = append(data, ',')
 	}
 
@@ -261,9 +266,9 @@ func (h *jsonHandler) buildAttr(b *Buffer, attrs []Attr) {
 		case uint8:
 			b.AppendUint(uint64(v), 10)
 		case float32:
-			b.AppendFloat(float64(v), 'f', 5, 32)
+			b.AppendFloat(float64(v), 'f', -1, 32)
 		case float64:
-			b.AppendFloat(v, 'f', 5, 64)
+			b.AppendFloat(v, 'f', -1, 64)
 		default:
 			val, err := json.Marshal(p.V)
 			if err != nil {
@@ -344,9 +349,16 @@ func (h *termHandler) WithAttrs(attrs []Attr) Handler {
 	as := make([]Attr, len(h.attrs), len(h.attrs)+len(attrs))
 	copy(as, h.attrs)
 
+	// TODO(go1.21): 改为 maps.Copy
+	fc := make(map[Level]colors.Color, len(h.foreColors))
+	for k, v := range h.foreColors {
+		fc[k] = v
+	}
+
 	return &termHandler{
-		w:     h.w,
-		attrs: append(as, attrs...),
+		w:          h.w,
+		foreColors: fc,
+		attrs:      append(as, attrs...),
 	}
 }
 
@@ -365,7 +377,7 @@ func (h *dispatchHandler) WithAttrs(attrs []Attr) Handler {
 	return NewDispatchHandler(m)
 }
 
-// MergeHandler 将多个 Handler 合并成一个 Handler 接口对象
+// MergeHandler 将多个 [Handler] 合并成一个 [Handler] 接口对象
 func MergeHandler(w ...Handler) Handler { return &mergeHandler{handlers: w} }
 
 func (h *mergeHandler) Handle(detail bool, e *Record) {
@@ -382,7 +394,7 @@ func (h *mergeHandler) WithAttrs(attrs []Attr) Handler {
 	return MergeHandler(slices...)
 }
 
-// NewNopHandler 空的 Handler 接口实现
+// NewNopHandler 空的 [Handler] 接口实现
 func NewNopHandler() Handler { return nop }
 
 func (h *nopHandler) Handle(bool, *Record) {}

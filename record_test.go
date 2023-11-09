@@ -40,7 +40,7 @@ func TestRecord_location(t *testing.T) {
 	a := assert.New(t, false)
 	l := New(nil, WithLocation(true), WithCreated(MicroLayout))
 
-	e := NewRecord(LevelWarn)
+	e := NewRecord()
 	a.NotNil(e)
 	a.Empty(e.AppendLocation)
 

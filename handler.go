@@ -35,35 +35,44 @@ type (
 		// detail 表示是否显示错误的堆栈信息；
 		//
 		// NOTE: 此方法应该保证输出内容是以换行符作为结尾。
-		Handle(detail bool, r *Record)
+		Handle(r *Record)
 
-		// WithAttrs 根据参数生成新的 [Handler] 对象
+		// New 根据当前对象的参数派生新的 [Handler] 对象
 		//
 		// 新对象继承旧对象的属性，并添加了参数中的新属性。
 		//
 		// 对于重名的问题并无规定，只要 Handler 自身能处理相应的情况即可。
 		//
-		// NOTE: 即便参数的长度为零，也应该返回新的对象。
-		WithAttrs([]Attr) Handler
+		// NOTE: 即便所有的参数均为零值，也应该返回一个新的对象。
+		New(detail bool, lv Level, attrs []Attr) Handler
 	}
 
 	textHandler struct {
-		w     io.Writer
-		mux   sync.Mutex
-		attrs []byte
+		w   io.Writer
+		mux sync.Mutex
+
+		attrsText []byte // 预编译的属性值
+		levelText []byte // 预编译的 level 内容
+		detail    bool
 	}
 
 	jsonHandler struct {
-		w     io.Writer
-		mux   sync.Mutex
-		attrs []byte
+		w   io.Writer
+		mux sync.Mutex
+
+		attrsText []byte // 预编译的属性值
+		level     []byte // 预编译的 level 内容
+		detail    bool
 	}
 
 	termHandler struct {
 		w          io.Writer
 		foreColors map[Level]colors.Color
 		mux        sync.Mutex
-		attrs      []Attr
+
+		attrs  []Attr
+		level  Level
+		detail bool
 	}
 
 	dispatchHandler struct {
@@ -84,11 +93,11 @@ func NewTextHandler(w ...io.Writer) Handler {
 	return &textHandler{w: writers.New(w...)}
 }
 
-func (h *textHandler) Handle(detail bool, e *Record) {
-	b := NewBuffer(detail)
+func (h *textHandler) Handle(e *Record) {
+	b := NewBuffer(h.detail)
 	defer b.Free()
 
-	b.AppendBytes('[').AppendString(e.Level.String()).AppendBytes(']')
+	b.AppendBytes(h.levelText...)
 
 	var indent byte = ' '
 	if e.AppendCreated != nil {
@@ -103,7 +112,7 @@ func (h *textHandler) Handle(detail bool, e *Record) {
 
 	b.AppendBytes(indent).AppendFunc(e.AppendMessage)
 
-	b.AppendBytes(h.attrs...)
+	b.AppendBytes(h.attrsText...)
 
 	h.buildAttrs(b, e.Attrs)
 
@@ -116,18 +125,21 @@ func (h *textHandler) Handle(detail bool, e *Record) {
 	}
 }
 
-func (h *textHandler) WithAttrs(attrs []Attr) Handler {
+func (h *textHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 	b := NewBuffer(false)
 	defer b.Free()
 
 	h.buildAttrs(b, attrs)
 
-	data := make([]byte, 0, b.Len()+len(h.attrs))
-	data = append(data, h.attrs...)
+	data := make([]byte, 0, b.Len()+len(h.attrsText))
+	data = append(data, h.attrsText...)
 
 	return &textHandler{
-		w:     h.w,
-		attrs: append(data, b.Bytes()...),
+		w: h.w,
+
+		attrsText: append(data, b.Bytes()...),
+		levelText: []byte("[" + lv.String() + "]"),
+		detail:    detail,
 	}
 }
 
@@ -180,14 +192,15 @@ func NewJSONHandler(w ...io.Writer) Handler {
 	return &jsonHandler{w: writers.New(w...)}
 }
 
-func (h *jsonHandler) Handle(detail bool, e *Record) {
-	b := NewBuffer(detail)
+func (h *jsonHandler) Handle(e *Record) {
+	b := NewBuffer(h.detail)
 	defer b.Free()
 
 	b.AppendBytes('{')
 
-	b.AppendString(`"level":"`).AppendString(e.Level.String()).AppendString(`",`).
-		AppendString(`"message":"`).AppendFunc(e.AppendMessage).AppendBytes('"')
+	b.AppendBytes(h.level...)
+
+	b.AppendString(`"message":"`).AppendFunc(e.AppendMessage).AppendBytes('"')
 
 	if e.AppendCreated != nil {
 		b.AppendString(`,"created":"`).AppendFunc(e.AppendCreated).AppendBytes('"')
@@ -197,12 +210,12 @@ func (h *jsonHandler) Handle(detail bool, e *Record) {
 		b.AppendString(`,"path":"`).AppendFunc(e.AppendLocation).AppendBytes('"')
 	}
 
-	if len(e.Attrs) > 0 || len(h.attrs) > 0 {
+	if len(e.Attrs) > 0 || len(h.attrsText) > 0 {
 		b.AppendString(`,"attrs":[`)
 
-		b.AppendBytes(h.attrs...)
+		b.AppendBytes(h.attrsText...)
 
-		if len(e.Attrs) > 0 && len(h.attrs) > 0 {
+		if len(e.Attrs) > 0 && len(h.attrsText) > 0 {
 			b.AppendBytes(',')
 		}
 
@@ -220,18 +233,23 @@ func (h *jsonHandler) Handle(detail bool, e *Record) {
 	}
 }
 
-func (h *jsonHandler) WithAttrs(attrs []Attr) Handler {
+func (h *jsonHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 	b := NewBuffer(false)
+	defer b.Free()
+
 	h.buildAttr(b, attrs)
-	data := make([]byte, 0, b.Len()+len(h.attrs)+1)
-	data = append(data, h.attrs...)
-	if len(h.attrs) > 0 && len(attrs) > 0 {
+	data := make([]byte, 0, b.Len()+len(h.attrsText)+1)
+	data = append(data, h.attrsText...)
+	if len(h.attrsText) > 0 && len(attrs) > 0 {
 		data = append(data, ',')
 	}
 
 	return &jsonHandler{
-		w:     h.w,
-		attrs: append(data, b.Bytes()...),
+		w: h.w,
+
+		attrsText: append(data, b.Bytes()...),
+		level:     []byte(`"level":"` + lv.String() + `",`),
+		detail:    detail,
 	}
 }
 
@@ -272,7 +290,7 @@ func (h *jsonHandler) buildAttr(b *Buffer, attrs []Attr) {
 		default:
 			val, err := json.Marshal(p.V)
 			if err != nil {
-				val = []byte("\"Err(" + err.Error() + ")\"")
+				val = []byte(`"Err(` + err.Error() + `)"`)
 			}
 			b.AppendBytes(val...)
 		}
@@ -301,17 +319,17 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 	return &termHandler{w: w, foreColors: cs}
 }
 
-func (h *termHandler) Handle(detail bool, e *Record) {
-	b := NewBuffer(detail)
+func (h *termHandler) Handle(e *Record) {
+	b := NewBuffer(h.detail)
 	defer b.Free()
 
 	ww := colors.New(b)
-	fc := h.foreColors[e.Level]
-	ww.WByte('[').Color(colors.Normal, fc, colors.Default).WString(e.Level.String()).Reset().WByte(']') // [WARN]
+	fc := h.foreColors[h.level]
+	ww.WByte('[').Color(colors.Normal, fc, colors.Default).WString(h.level.String()).Reset().WByte(']') // [WARN]
 
 	var indent byte = ' '
 	if e.AppendCreated != nil {
-		b := NewBuffer(detail)
+		b := NewBuffer(h.detail)
 		defer b.Free()
 		e.AppendCreated(b)
 		ww.WByte(' ').WBytes(b.data)
@@ -319,14 +337,14 @@ func (h *termHandler) Handle(detail bool, e *Record) {
 	}
 
 	if e.AppendLocation != nil {
-		b := NewBuffer(detail)
+		b := NewBuffer(h.detail)
 		defer b.Free()
 		e.AppendLocation(b)
 		ww.WByte(' ').WBytes(b.data)
 		indent = '\t'
 	}
 
-	bb := NewBuffer(detail)
+	bb := NewBuffer(h.detail)
 	defer bb.Free()
 	e.AppendMessage(bb)
 	ww.WByte(indent).WBytes(bb.data)
@@ -345,7 +363,7 @@ func (h *termHandler) Handle(detail bool, e *Record) {
 	}
 }
 
-func (h *termHandler) WithAttrs(attrs []Attr) Handler {
+func (h *termHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 	as := make([]Attr, len(h.attrs), len(h.attrs)+len(attrs))
 	copy(as, h.attrs)
 
@@ -358,38 +376,56 @@ func (h *termHandler) WithAttrs(attrs []Attr) Handler {
 	return &termHandler{
 		w:          h.w,
 		foreColors: fc,
-		attrs:      append(as, attrs...),
+
+		attrs:  append(as, attrs...),
+		level:  lv,
+		detail: detail,
 	}
 }
 
 // NewDispatchHandler 根据 [Level] 派发到不同的 [Handler] 对象
+//
+// 返回对象的 New 方法会根据其传递的 Level 参数从 d 中选择一个相应的对象返回。
 func NewDispatchHandler(d map[Level]Handler) Handler {
+	if len(d) != len(levelStrings) {
+		panic("需指定所有 Level 对应的对象")
+	}
+
 	return &dispatchHandler{handlers: d}
 }
 
-func (h *dispatchHandler) Handle(detail bool, e *Record) { h.handlers[e.Level].Handle(detail, e) }
+func (h *dispatchHandler) Handle(e *Record) { panic("不支持该功能") }
 
-func (h *dispatchHandler) WithAttrs(attrs []Attr) Handler {
-	m := make(map[Level]Handler, len(h.handlers))
-	for l, hh := range h.handlers {
-		m[l] = hh.WithAttrs(attrs)
+func (h *dispatchHandler) New(detail bool, lv Level, attrs []Attr) Handler {
+	if hh, found := h.handlers[lv]; found {
+		return hh.New(detail, lv, attrs)
 	}
-	return NewDispatchHandler(m)
+	panic(fmt.Sprintf("无效的 Level 值：%v", lv)) // 所有有效果的 Level 值由初始化方法指定了
 }
 
 // MergeHandler 将多个 [Handler] 合并成一个 [Handler] 接口对象
-func MergeHandler(w ...Handler) Handler { return &mergeHandler{handlers: w} }
+func MergeHandler(w ...Handler) Handler {
+	handlers := make([]Handler, 0, len(w))
+	for _, ww := range w {
+		if h, ok := ww.(*mergeHandler); ok {
+			handlers = append(handlers, h.handlers...)
+		} else {
+			handlers = append(handlers, ww)
+		}
+	}
+	return &mergeHandler{handlers: handlers}
+}
 
-func (h *mergeHandler) Handle(detail bool, e *Record) {
+func (h *mergeHandler) Handle(e *Record) {
 	for _, hh := range h.handlers {
-		hh.Handle(detail, e)
+		hh.Handle(e)
 	}
 }
 
-func (h *mergeHandler) WithAttrs(attrs []Attr) Handler {
+func (h *mergeHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 	slices := make([]Handler, 0, len(h.handlers))
 	for _, hh := range h.handlers {
-		slices = append(slices, hh.WithAttrs(attrs))
+		slices = append(slices, hh.New(detail, lv, attrs))
 	}
 	return MergeHandler(slices...)
 }
@@ -397,6 +433,6 @@ func (h *mergeHandler) WithAttrs(attrs []Attr) Handler {
 // NewNopHandler 空的 [Handler] 接口实现
 func NewNopHandler() Handler { return nop }
 
-func (h *nopHandler) Handle(bool, *Record) {}
+func (h *nopHandler) Handle(*Record) {}
 
-func (h *nopHandler) WithAttrs([]Attr) Handler { return h }
+func (h *nopHandler) New(bool, Level, []Attr) Handler { return h }

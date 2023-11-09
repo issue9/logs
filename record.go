@@ -48,8 +48,6 @@ type (
 
 	// Record 单条日志输出时产生的数据
 	Record struct {
-		Level Level
-
 		// AppendCreated 添加字符串类型的日志创建时间
 		//
 		// 可能为空，根据 [Logs.CreatedFormat] 是否为空决定。
@@ -83,7 +81,7 @@ type (
 	disableRecorder struct{}
 )
 
-func NewRecord(lv Level) *Record {
+func NewRecord() *Record {
 	e := recordPool.Get().(*Record)
 
 	if e.Attrs != nil {
@@ -92,7 +90,6 @@ func NewRecord(lv Level) *Record {
 	e.AppendLocation = nil
 	e.AppendMessage = nil
 	e.AppendCreated = nil
-	e.Level = lv
 
 	return e
 }
@@ -213,7 +210,7 @@ func (e *Record) depthPrintln(logs *Logs, h Handler, depth int, v ...any) {
 
 func (e *Record) output(detail bool, h Handler) {
 	const poolMaxAttrs = 100
-	h.Handle(detail, e)
+	h.Handle(e)
 	if len(e.Attrs) < poolMaxAttrs {
 		recordPool.Put(e)
 	}

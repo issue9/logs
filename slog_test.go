@@ -16,8 +16,7 @@ func TestLogs_SLog(t *testing.T) {
 	a := assert.New(t, false)
 
 	buf := new(bytes.Buffer)
-	w := NewTextHandler(buf)
-	l := New(w, WithLocation(true), WithCreated(MilliLayout))
+	l := New(NewTextHandler(buf), WithLocation(true), WithCreated(MilliLayout))
 	slog.SetDefault(l.SLog())
 
 	slog.Error("error", "a1", "v1")

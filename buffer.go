@@ -10,7 +10,7 @@ import (
 )
 
 var buffersPool = &sync.Pool{New: func() any {
-	return &Buffer{data: make([]byte, 0, 1024)}
+	return &Buffer{data: make([]byte, 0, 256)}
 }}
 
 // Buffer []byte 复用对象池
@@ -112,7 +112,7 @@ func (w *Buffer) Len() int { return len(w.data) }
 
 func (w *Buffer) Free() {
 	const buffersPoolMaxSize = 1 << 10
-	if len(w.data) < buffersPoolMaxSize {
+	if cap(w.data) < buffersPoolMaxSize {
 		buffersPool.Put(w)
 	}
 }

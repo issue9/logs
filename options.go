@@ -80,6 +80,4 @@ func (logs *Logs) SetLocation(v bool) { logs.location = v }
 // 如果 v 为空将会禁用日期显示。
 func (logs *Logs) SetCreated(v string) { logs.createdFormat = v }
 
-func (logs *Logs) Handler() Handler { return logs.handler }
-
 func (logs *Logs) Detail() bool { return logs.detail }

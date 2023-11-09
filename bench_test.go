@@ -28,6 +28,7 @@ func benchHandler(h Handler, b *testing.B) {
 		l := New(h)
 		e := l.ERROR().With("k1", "v1").With("k2", 2).With("k3", localeutil.Phrase("lang"))
 
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			e.String("err")
 		}
@@ -37,6 +38,7 @@ func benchHandler(h Handler, b *testing.B) {
 		l := New(h)
 		err := l.ERROR().New(map[string]any{"k1": "v1", "k2": 2, "k3": localeutil.Phrase("lang")})
 
+		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			err.String("err")
 		}

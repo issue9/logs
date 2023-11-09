@@ -37,7 +37,7 @@ func (h *logsHandler) Enabled(ctx context.Context, lv slog.Level) bool {
 }
 
 func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
-	rr := NewRecord(slog2Logs[r.Level])
+	rr := NewRecord()
 	rr.AppendCreated = func(b *Buffer) { b.AppendTime(r.Time, h.l.createdFormat) }
 	rr.AppendMessage = func(b *Buffer) { b.AppendString(r.Message) }
 
@@ -56,7 +56,7 @@ func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 		}
 	}
 
-	rr.output(h.l.detail, h.l.handler)
+	rr.output(h.l.detail, h.l.Logger(slog2Logs[r.Level]).Handler())
 
 	return nil
 }

@@ -67,7 +67,7 @@ func New(h Handler, o ...Option) *Logs {
 		l.loggers[lv] = &Logger{
 			logs: l,
 			lv:   lv,
-			h:    h.WithAttrs(attrs),
+			h:    h.New(l.detail, lv, attrs),
 		}
 		l.enables[lv] = true
 	}

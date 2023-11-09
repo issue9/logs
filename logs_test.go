@@ -14,21 +14,22 @@ import (
 func TestLogs(t *testing.T) {
 	a := assert.New(t, false)
 	buf := new(bytes.Buffer)
-	w := NewTextHandler(buf)
-	l := New(w, WithLocation(true), WithCreated(MicroLayout))
+	l := New(NewTextHandler(buf), WithLocation(true), WithCreated(MicroLayout))
 	a.NotNil(l)
 	l.Enable(LevelInfo, LevelWarn, LevelDebug, LevelTrace, LevelError, LevelFatal)
 
 	testLogger := func(a *assert.Assertion, p func(...any), pf func(string, ...any), w *bytes.Buffer) {
+		a.TB().Helper()
+
 		p("p1")
 		val := w.String()
 		a.Contains(val, "p1").
-			Contains(val, "logs_test.go:23") // 行数是否正确
+			Contains(val, "logs_test.go:24") // 行数是否正确
 
 		pf("p2")
 		val = w.String()
 		a.Contains(val, "p2").
-			Contains(val, "logs_test.go:28") // 行数是否正确
+			Contains(val, "logs_test.go:29") // 行数是否正确
 	}
 
 	testLogger(a, l.INFO().Print, l.INFO().Printf, buf)

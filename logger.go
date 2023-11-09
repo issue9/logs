@@ -28,7 +28,7 @@ func (l *Logger) Level() Level { return l.lv }
 //
 // 不会影响之前调用 [Logger.New] 生成的对象。
 func (l *Logger) AppendAttrs(attrs map[string]any) {
-	l.h = l.h.WithAttrs(map2Slice(l.logs.printer, attrs))
+	l.h = l.h.New(l.logs.detail, l.Level(), map2Slice(l.logs.printer, attrs))
 }
 
 // With 创建 [Recorder] 对象
@@ -39,42 +39,40 @@ func (l *Logger) With(name string, val any) Recorder {
 
 	r := withRecordPool.Get().(*withRecorder)
 	r.logs = l.logs
-	r.r = l.newRecord().with(l.logs, name, val)
+	r.r = NewRecord().with(l.logs, name, val)
 	r.h = l.h
 	return r
 }
 
 func (l *Logger) Error(err error) {
 	if l.IsEnable() {
-		l.newRecord().depthError(l.logs, l.h, 3, err)
+		NewRecord().depthError(l.logs, l.h, 3, err)
 	}
 }
 
 func (l *Logger) String(s string) {
 	if l.IsEnable() {
-		l.newRecord().depthString(l.logs, l.h, 3, s)
+		NewRecord().depthString(l.logs, l.h, 3, s)
 	}
 }
 
 func (l *Logger) Print(v ...any) {
 	if l.IsEnable() {
-		l.newRecord().depthPrint(l.logs, l.h, 3, v...)
+		NewRecord().depthPrint(l.logs, l.h, 3, v...)
 	}
 }
 
 func (l *Logger) Println(v ...any) {
 	if l.IsEnable() {
-		l.newRecord().depthPrintln(l.logs, l.h, 3, v...)
+		NewRecord().depthPrintln(l.logs, l.h, 3, v...)
 	}
 }
 
 func (l *Logger) Printf(format string, v ...any) {
 	if l.IsEnable() {
-		l.newRecord().depthPrintf(l.logs, l.h, 3, format, v...)
+		NewRecord().depthPrintf(l.logs, l.h, 3, format, v...)
 	}
 }
-
-func (l *Logger) newRecord() *Record { return NewRecord(l.lv) }
 
 // New 根据当前对象派生新的 [Logger]
 //
@@ -83,7 +81,7 @@ func (l *Logger) New(attrs map[string]any) *Logger {
 	return &Logger{
 		lv:   l.lv,
 		logs: l.logs,
-		h:    l.h.WithAttrs(map2Slice(l.logs.printer, attrs)),
+		h:    l.h.New(l.logs.Detail(), l.Level(), map2Slice(l.logs.printer, attrs)),
 	}
 }
 
@@ -102,7 +100,9 @@ func (l *Logger) LogLogger() *log.Logger {
 // 仅供 [Logger.LogLogger] 使用，因为 depth 值的关系，只有固定的调用层级关系才能正常显示行号。
 func (l *Logger) asWriter() io.Writer {
 	return writers.WriteFunc(func(data []byte) (int, error) {
-		l.newRecord().depthString(l.logs, l.h, 6, string(data))
+		NewRecord().depthString(l.logs, l.h, 6, string(data))
 		return len(data), nil
 	})
 }
+
+func (l *Logger) Handler() Handler { return l.h }

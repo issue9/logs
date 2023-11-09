@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"os"
 	"testing"
 	"time"
 
@@ -169,18 +168,49 @@ func TestJSONFormat(t *testing.T) {
 func TestTermHandler(t *testing.T) {
 	a := assert.New(t, false)
 
-	t.Log("此测试将在终端输出一段带颜色的日志记录")
+	a.PanicString(func() { NewTermHandler(nil, nil) }, "参数 w 不能为空")
 
-	w := NewTermHandler(os.Stdout, map[Level]colors.Color{LevelError: colors.BrightRed})
-	l := New(w, WithDetail(true))
+	layout := MilliLayout
+	now := time.Now()
+
+	l := New(nil, WithCreated(layout), WithLocation(true))
 	e := newRecord(a)
-	e.AppendCreated = func(b *Buffer) { b.AppendTime(time.Now(), l.createdFormat) }
-	l.WARN().Handler().Handle(e)
+	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
+	e.with(l, "m1", marshalObject("m1"))
 
-	l = New(w.New(l.Detail(), LevelWarn, []Attr{{K: "a1", V: "v1"}}), WithLocation(true), WithCreated(MicroLayout))
+	buf := new(bytes.Buffer)
+	l = New(NewTermHandler(buf, nil), WithCreated(layout), WithLocation(true))
 	e = newRecord(a)
-	e.AppendMessage = func(b *Buffer) { b.AppendString("error message") }
-	l.ERROR().Handler().Handle(e)
+	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
+	e.with(l, "m1", marshalObject("m1"))
+	e.output(l.detail, l.WARN().Handler())
+	a.Equal(buf.String(), "[\033[33;49mWARN\033[0m] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1\n")
+
+	// error
+
+	buf.Reset()
+	l = New(NewTermHandler(buf, map[Level]colors.Color{LevelWarn: colors.Red}), WithCreated(layout), WithLocation(true))
+	e = newRecord(a)
+	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
+	e.with(l, "m1", marshalObject("m1")).with(l, "m2", marshalErrObject("m2"))
+	e.output(l.detail, l.WARN().Handler())
+	a.Equal(buf.String(), "[\033[31;49mWARN\033[0m] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1 m2=Err(marshal text error)\n")
+
+	// Handler.New
+
+	buf.Reset()
+	h := NewTermHandler(buf, nil)
+	l = New(h, WithLocation(true), WithDetail(true))
+	e = newRecord(a)
+	h = h.New(l.Detail(), LevelWarn, []Attr{{K: "attr1", V: 3.51}})
+	h.Handle(e)
+	a.Equal(buf.String(), "[\033[33;49mWARN\033[0m] path.go:20\tmsg attr1=3.51 k1=v1 k2=v2\n")
+
+	// Handler.New().New()
+	buf.Reset()
+	e = newRecord(a)
+	h.New(l.Detail(), LevelWarn, []Attr{{K: "a1", V: int8(5)}, {K: "a2", V: uint(8)}}).Handle(e)
+	a.Equal(buf.String(), "[\033[33;49mWARN\033[0m] path.go:20\tmsg attr1=3.51 a1=5 a2=8 k1=v1 k2=v2\n")
 }
 
 func TestDispatchHandler(t *testing.T) {

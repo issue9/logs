@@ -51,28 +51,23 @@ type (
 		w   io.Writer
 		mux sync.Mutex
 
-		attrsText []byte // 预编译的属性值
-		levelText []byte // 预编译的 level 内容
-		detail    bool
+		attrs  []byte // 预编译的属性值
+		level  []byte // 预编译的 level 内容
+		detail bool
 	}
 
 	jsonHandler struct {
 		w   io.Writer
 		mux sync.Mutex
 
-		attrsText []byte // 预编译的属性值
-		level     []byte // 预编译的 level 内容
-		detail    bool
+		attrs  []byte // 预编译的属性值
+		level  []byte // 预编译的 level 内容
+		detail bool
 	}
 
 	termHandler struct {
-		w          io.Writer
+		textHandler
 		foreColors map[Level]colors.Color
-		mux        sync.Mutex
-
-		attrs  []Attr
-		level  Level
-		detail bool
 	}
 
 	dispatchHandler struct {
@@ -94,10 +89,16 @@ func NewTextHandler(w ...io.Writer) Handler {
 }
 
 func (h *textHandler) Handle(e *Record) {
+	if err := h.handle(e); err != nil {
+		fmt.Fprintf(os.Stderr, "NewTextHandler.Handle:%v\n", err)
+	}
+}
+
+func (h *textHandler) handle(e *Record) error {
 	b := NewBuffer(h.detail)
 	defer b.Free()
 
-	b.AppendBytes(h.levelText...)
+	b.AppendBytes(h.level...)
 
 	var indent byte = ' '
 	if e.AppendCreated != nil {
@@ -112,7 +113,7 @@ func (h *textHandler) Handle(e *Record) {
 
 	b.AppendBytes(indent).AppendFunc(e.AppendMessage)
 
-	b.AppendBytes(h.attrsText...)
+	b.AppendBytes(h.attrs...)
 
 	h.buildAttrs(b, e.Attrs)
 
@@ -120,26 +121,26 @@ func (h *textHandler) Handle(e *Record) {
 
 	h.mux.Lock()
 	defer h.mux.Unlock()
-	if _, err := h.w.Write(b.Bytes()); err != nil { // 一次性写入，性能更好一些。
-		fmt.Fprintf(os.Stderr, "NewTextHandler.Handle:%v\n", err)
-	}
+	// 必须要在 Buffer 回收之前将内容写入 h.w
+	// 一次性写入，性能更好一些。
+	_, err := h.w.Write(b.Bytes())
+	return err
 }
 
 func (h *textHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 	b := NewBuffer(false)
 	defer b.Free()
-
 	h.buildAttrs(b, attrs)
 
-	data := make([]byte, 0, b.Len()+len(h.attrsText))
-	data = append(data, h.attrsText...)
+	data := make([]byte, 0, b.Len()+len(h.attrs))
+	data = append(data, h.attrs...)
 
 	return &textHandler{
 		w: h.w,
 
-		attrsText: append(data, b.Bytes()...),
-		levelText: []byte("[" + lv.String() + "]"),
-		detail:    detail,
+		attrs:  append(data, b.Bytes()...),
+		level:  []byte("[" + lv.String() + "]"),
+		detail: detail,
 	}
 }
 
@@ -210,12 +211,12 @@ func (h *jsonHandler) Handle(e *Record) {
 		b.AppendString(`,"path":"`).AppendFunc(e.AppendLocation).AppendBytes('"')
 	}
 
-	if len(e.Attrs) > 0 || len(h.attrsText) > 0 {
+	if len(e.Attrs) > 0 || len(h.attrs) > 0 {
 		b.AppendString(`,"attrs":[`)
 
-		b.AppendBytes(h.attrsText...)
+		b.AppendBytes(h.attrs...)
 
-		if len(e.Attrs) > 0 && len(h.attrsText) > 0 {
+		if len(e.Attrs) > 0 && len(h.attrs) > 0 {
 			b.AppendBytes(',')
 		}
 
@@ -238,18 +239,18 @@ func (h *jsonHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 	defer b.Free()
 
 	h.buildAttr(b, attrs)
-	data := make([]byte, 0, b.Len()+len(h.attrsText)+1)
-	data = append(data, h.attrsText...)
-	if len(h.attrsText) > 0 && len(attrs) > 0 {
+	data := make([]byte, 0, b.Len()+len(h.attrs)+1)
+	data = append(data, h.attrs...)
+	if len(h.attrs) > 0 && len(attrs) > 0 {
 		data = append(data, ',')
 	}
 
 	return &jsonHandler{
 		w: h.w,
 
-		attrsText: append(data, b.Bytes()...),
-		level:     []byte(`"level":"` + lv.String() + `",`),
-		detail:    detail,
+		attrs:  append(data, b.Bytes()...),
+		level:  []byte(`"level":"` + lv.String() + `",`),
+		detail: detail,
 	}
 }
 
@@ -307,6 +308,10 @@ func (h *jsonHandler) buildAttr(b *Buffer, attrs []Attr) {
 //
 // NOTE: 如果向 w 输出内容时出错，将会导致 panic。
 func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
+	if w == nil {
+		panic("参数 w 不能为空")
+	}
+
 	cs := make(map[Level]colors.Color, len(defaultTermColors))
 	for l, cc := range defaultTermColors {
 		if c, found := foreColors[l]; found {
@@ -316,70 +321,40 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 		}
 	}
 
-	return &termHandler{w: w, foreColors: cs}
+	return &termHandler{textHandler: textHandler{w: w}, foreColors: cs}
 }
 
 func (h *termHandler) Handle(e *Record) {
-	b := NewBuffer(h.detail)
-	defer b.Free()
-
-	ww := colors.New(b)
-	fc := h.foreColors[h.level]
-	ww.WByte('[').Color(colors.Normal, fc, colors.Default).WString(h.level.String()).Reset().WByte(']') // [WARN]
-
-	var indent byte = ' '
-	if e.AppendCreated != nil {
-		b := NewBuffer(h.detail)
-		defer b.Free()
-		e.AppendCreated(b)
-		ww.WByte(' ').WBytes(b.data)
-		indent = '\t'
-	}
-
-	if e.AppendLocation != nil {
-		b := NewBuffer(h.detail)
-		defer b.Free()
-		e.AppendLocation(b)
-		ww.WByte(' ').WBytes(b.data)
-		indent = '\t'
-	}
-
-	bb := NewBuffer(h.detail)
-	defer bb.Free()
-	e.AppendMessage(bb)
-	ww.WByte(indent).WBytes(bb.data)
-
-	for _, p := range e.Attrs {
-		ww.WByte(' ').WString(p.K).WByte('=').WString(fmt.Sprint(p.V))
-	}
-
-	ww.WByte('\n')
-
-	h.mux.Lock()
-	defer h.mux.Unlock()
-	if _, err := h.w.Write(b.Bytes()); err != nil {
+	if err := h.handle(e); err != nil {
 		// 大概率是写入终端失败，直接 panic。
 		panic(fmt.Sprintf("NewTermHandler.Handle:%v\n", err))
 	}
 }
 
 func (h *termHandler) New(detail bool, lv Level, attrs []Attr) Handler {
-	as := make([]Attr, len(h.attrs), len(h.attrs)+len(attrs))
-	copy(as, h.attrs)
-
 	// TODO(go1.21): 改为 maps.Copy
 	fc := make(map[Level]colors.Color, len(h.foreColors))
 	for k, v := range h.foreColors {
 		fc[k] = v
 	}
 
-	return &termHandler{
-		w:          h.w,
-		foreColors: fc,
+	l := "[" + colors.Sprint(colors.Normal, h.foreColors[lv], colors.Default, lv.String()) + "]"
 
-		attrs:  append(as, attrs...),
-		level:  lv,
-		detail: detail,
+	b := NewBuffer(false)
+	defer b.Free()
+	h.buildAttrs(b, attrs)
+	data := make([]byte, 0, b.Len()+len(h.attrs))
+	data = append(data, h.attrs...)
+
+	return &termHandler{
+		textHandler: textHandler{
+			w: h.w,
+
+			attrs:  append(data, b.Bytes()...),
+			level:  []byte(l),
+			detail: detail,
+		},
+		foreColors: fc,
 	}
 }
 

@@ -45,20 +45,7 @@ func benchHandler(h Handler, b *testing.B) {
 	})
 }
 
-func BenchmarkRecord_Printf(b *testing.B) {
-	a := assert.New(b, false)
-	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(buf), WithCreated(MilliLayout), WithLocation(true))
-	a.NotNil(l)
-	l.Enable(LevelError)
-
-	err := l.ERROR()
-	for i := 0; i < b.N; i++ {
-		err.With("k1", "v1").Printf("p1")
-	}
-}
-
-func BenchmarkLogger(b *testing.B) {
+func BenchmarkWithRecorder(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)
 	l := New(NewTextHandler(buf))

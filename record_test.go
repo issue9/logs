@@ -40,11 +40,11 @@ func TestRecord_location(t *testing.T) {
 	a := assert.New(t, false)
 	l := New(nil, WithLocation(true), WithCreated(MicroLayout))
 
-	e := NewRecord()
+	e := l.NewRecord()
 	a.NotNil(e)
 	a.Empty(e.AppendLocation)
 
-	e.initLocationCreated(l, 1) // 输出定位
+	e.initLocationCreated(1) // 输出定位
 	b := NewBuffer(false)
 	defer b.Free()
 	e.AppendLocation(b)

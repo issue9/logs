@@ -38,39 +38,38 @@ func (l *Logger) With(name string, val any) Recorder {
 	}
 
 	r := withRecordPool.Get().(*withRecorder)
-	r.logs = l.logs
-	r.r = NewRecord().with(l.logs, name, val)
-	r.h = l.h
+	r.l = l
+	r.r = l.logs.NewRecord().with(l.logs, name, val)
 	return r
 }
 
 func (l *Logger) Error(err error) {
 	if l.IsEnable() {
-		NewRecord().depthError(l.logs, l.h, 3, err)
+		l.logs.NewRecord().DepthError(3, err).Output(l)
 	}
 }
 
 func (l *Logger) String(s string) {
 	if l.IsEnable() {
-		NewRecord().depthString(l.logs, l.h, 3, s)
+		l.logs.NewRecord().DepthString(3, s).Output(l)
 	}
 }
 
 func (l *Logger) Print(v ...any) {
 	if l.IsEnable() {
-		NewRecord().depthPrint(l.logs, l.h, 3, v...)
+		l.logs.NewRecord().DepthPrint(3, v...).Output(l)
 	}
 }
 
 func (l *Logger) Println(v ...any) {
 	if l.IsEnable() {
-		NewRecord().depthPrintln(l.logs, l.h, 3, v...)
+		l.logs.NewRecord().DepthPrintln(3, v...).Output(l)
 	}
 }
 
 func (l *Logger) Printf(format string, v ...any) {
 	if l.IsEnable() {
-		NewRecord().depthPrintf(l.logs, l.h, 3, format, v...)
+		l.logs.NewRecord().DepthPrintf(3, format, v...).Output(l)
 	}
 }
 
@@ -100,9 +99,10 @@ func (l *Logger) LogLogger() *log.Logger {
 // 仅供 [Logger.LogLogger] 使用，因为 depth 值的关系，只有固定的调用层级关系才能正常显示行号。
 func (l *Logger) asWriter() io.Writer {
 	return writers.WriteFunc(func(data []byte) (int, error) {
-		NewRecord().depthString(l.logs, l.h, 6, string(data))
+		l.logs.NewRecord().DepthString(6, string(data)).Output(l)
 		return len(data), nil
 	})
 }
 
+// Handler 返回关联的 [Handler] 对象
 func (l *Logger) Handler() Handler { return l.h }

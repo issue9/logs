@@ -3,7 +3,6 @@
 package logs
 
 import (
-	"encoding"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -174,12 +173,6 @@ func (h *textHandler) buildAttrs(b *Buffer, attrs []Attr) {
 			b.AppendFloat(float64(v), 'f', -1, 32)
 		case float64:
 			b.AppendFloat(v, 'f', -1, 64)
-		case encoding.TextMarshaler:
-			if bs, err := v.MarshalText(); err != nil {
-				b.AppendString("Err(").AppendString(err.Error()).AppendBytes(')')
-			} else {
-				b.AppendBytes(bs...)
-			}
 		default:
 			b.Append(p.V)
 		}

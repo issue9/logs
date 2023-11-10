@@ -24,6 +24,9 @@ type (
 		//
 		// 返回对象与当前对象未必是同一个，由实现者决定。
 		// 且返回对象是一次性的，在调用 Error、String 等输出之后即被回收。
+		//
+		// 如果 val 实现了 [localeutil.Stringer] 或是 [Marshaler] 接口，
+		// 将被转换成字符串保存。
 		With(name string, val any) Recorder
 
 		// Error 将一条错误信息作为一条日志输出
@@ -32,17 +35,31 @@ type (
 		// 采用此方法会比 Print(err) 有更好的性能。
 		//
 		// 如果 err 实现了 [xerrors.FormatError] 接口，同时也会打印调用信息。
+		//
+		// NOTE: 此操作之后，当前对象不再可用！
 		Error(err error)
 
 		// String 将字符串作为一条日志输出
 		//
 		// 这是 Print 的特化版本，在已知类型为字符串时，
 		// 采用此方法会比 Print(s) 有更好的性能。
+		//
+		// NOTE: 此操作之后，当前对象不再可用！
 		String(s string)
 
 		// 输出一条日志信息
+		//
+		// NOTE: 此操作之后，当前对象不再可用！
 		Print(v ...any)
+
+		// 输出一条日志信息
+		//
+		// NOTE: 此操作之后，当前对象不再可用！
 		Println(v ...any)
+
+		// 输出一条日志信息
+		//
+		// NOTE: 此操作之后，当前对象不再可用！
 		Printf(format string, v ...any)
 	}
 
@@ -115,11 +132,19 @@ func (e *Record) initLocationCreated(depth int) *Record {
 	return e
 }
 
-func (e *Record) with(logs *Logs, name string, val any) *Record {
-	if ls, ok := val.(localeutil.Stringer); ok && logs.printer != nil {
-		val = ls.LocaleString(logs.printer)
+func (e *Record) with(name string, val any) *Record {
+	switch v := val.(type) {
+	case localeutil.Stringer:
+		if e.logs.printer != nil {
+			e.Attrs = append(e.Attrs, Attr{K: name, V: v.LocaleString(e.logs.printer)})
+		} else {
+			e.Attrs = append(e.Attrs, Attr{K: name, V: v})
+		}
+	case Marshaler:
+		e.Attrs = append(e.Attrs, Attr{K: name, V: v.MarshalLog()})
+	default:
+		e.Attrs = append(e.Attrs, Attr{K: name, V: v})
 	}
-	e.Attrs = append(e.Attrs, Attr{K: name, V: val})
 	return e
 }
 
@@ -234,7 +259,7 @@ func replaceLocaleString(p *localeutil.Printer, v []any) {
 }
 
 func (e *withRecorder) With(name string, val any) Recorder {
-	e.r.with(e.l.logs, name, val)
+	e.r.with(name, val)
 	return e
 }
 

@@ -42,10 +42,10 @@ func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 	rr.AppendMessage = func(b *Buffer) { b.AppendString(r.Message) }
 
 	for _, attr := range h.attrs {
-		rr.with(h.l, h.prefix+attr.Key, attr.Value)
+		rr.with(h.prefix+attr.Key, attr.Value)
 	}
 	r.Attrs(func(attr slog.Attr) bool {
-		rr.with(h.l, h.prefix+attr.Key, attr.Value)
+		rr.with(h.prefix+attr.Key, attr.Value)
 		return true
 	})
 

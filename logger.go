@@ -39,7 +39,7 @@ func (l *Logger) With(name string, val any) Recorder {
 
 	r := withRecordPool.Get().(*withRecorder)
 	r.l = l
-	r.r = l.logs.NewRecord().with(l.logs, name, val)
+	r.r = l.logs.NewRecord().with(name, val)
 	return r
 }
 

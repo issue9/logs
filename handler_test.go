@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/issue9/assert/v3"
-	"github.com/issue9/term/v3/colors"
 )
 
 type (
@@ -18,16 +17,12 @@ type (
 	marshalErrObject string
 )
 
-func (o marshalObject) MarshalText() ([]byte, error) {
-	return []byte(o), nil
-}
+var _ Marshaler = marshalObject("")
+
+func (o marshalObject) MarshalLog() string { return string(o) }
 
 func (o marshalObject) MarshalJSON() ([]byte, error) {
 	return json.Marshal(string(o))
-}
-
-func (o marshalErrObject) MarshalText() ([]byte, error) {
-	return nil, errors.New("marshal text error")
 }
 
 func (o marshalErrObject) MarshalJSON() ([]byte, error) {
@@ -59,13 +54,13 @@ func TestTextHandler(t *testing.T) {
 	l := New(nil, WithCreated(layout), WithLocation(true))
 	e := newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1"))
+	e.with("m1", marshalObject("m1"))
 
 	buf := new(bytes.Buffer)
 	l = New(NewTextHandler(buf), WithCreated(layout), WithLocation(true))
 	e = newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1"))
+	e.with("m1", marshalObject("m1"))
 	e.Output(l.WARN())
 	a.Equal(buf.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1\n")
 
@@ -75,21 +70,11 @@ func TestTextHandler(t *testing.T) {
 	l = New(NewTextHandler(b1, b2, b3), WithCreated(layout), WithLocation(true))
 	e = newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1"))
+	e.with("m1", marshalObject("m1"))
 	e.Output(l.WARN())
 	a.Equal(b1.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1\n")
 	a.Equal(b2.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1\n")
 	a.Equal(b3.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1\n")
-
-	// error
-
-	buf.Reset()
-	l = New(NewTextHandler(buf), WithCreated(layout), WithLocation(true))
-	e = newRecord(a, l)
-	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1")).with(l, "m2", marshalErrObject("m2"))
-	e.Output(l.WARN())
-	a.Equal(buf.String(), "[WARN] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1 m2=Err(marshal text error)\n")
 
 	// Handler.New
 
@@ -116,7 +101,7 @@ func TestJSONFormat(t *testing.T) {
 	l := New(nil, WithCreated(layout), WithLocation(true))
 	e := newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1"))
+	e.with("m1", marshalObject("m1"))
 
 	a.Panic(func() { NewJSONHandler() })
 
@@ -124,7 +109,7 @@ func TestJSONFormat(t *testing.T) {
 	l = New(NewJSONHandler(buf), WithCreated(layout), WithLocation(true))
 	e = newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1"))
+	e.with("m1", marshalObject("m1"))
 	e.Output(l.WARN())
 	a.Equal(buf.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","attrs":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"}]}`)
 
@@ -133,7 +118,7 @@ func TestJSONFormat(t *testing.T) {
 	l = New(NewJSONHandler(b1, b2), WithCreated(layout), WithLocation(true))
 	e = newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1"))
+	e.with("m1", marshalObject("m1"))
 	e.Output(l.WARN())
 	a.Equal(b1.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","attrs":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"}]}`).
 		Equal(b1.String(), b2.String())
@@ -144,7 +129,7 @@ func TestJSONFormat(t *testing.T) {
 	l = New(NewJSONHandler(buf), WithCreated(layout), WithLocation(true))
 	e = newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1")).with(l, "m2", marshalErrObject("m2"))
+	e.with("m1", marshalObject("m1")).with("m2", marshalErrObject("m2"))
 	e.Output(l.WARN())
 	a.Equal(buf.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","attrs":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"},{"m2":"Err(json: error calling MarshalJSON for type logs.marshalErrObject: marshal json error)"}]}`)
 
@@ -176,25 +161,15 @@ func TestTermHandler(t *testing.T) {
 	l := New(nil, WithCreated(layout), WithLocation(true))
 	e := newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1"))
+	e.with("m1", marshalObject("m1"))
 
 	buf := new(bytes.Buffer)
 	l = New(NewTermHandler(buf, nil), WithCreated(layout), WithLocation(true))
 	e = newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1"))
+	e.with("m1", marshalObject("m1"))
 	e.Output(l.WARN())
 	a.Equal(buf.String(), "[\033[33;49mWARN\033[0m] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1\n")
-
-	// error
-
-	buf.Reset()
-	l = New(NewTermHandler(buf, map[Level]colors.Color{LevelWarn: colors.Red}), WithCreated(layout), WithLocation(true))
-	e = newRecord(a, l)
-	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with(l, "m1", marshalObject("m1")).with(l, "m2", marshalErrObject("m2"))
-	e.Output(l.WARN())
-	a.Equal(buf.String(), "[\033[31;49mWARN\033[0m] "+now.Format(layout)+" path.go:20\tmsg k1=v1 k2=v2 m1=m1 m2=Err(marshal text error)\n")
 
 	// Handler.New
 

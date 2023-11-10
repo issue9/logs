@@ -24,6 +24,10 @@ type Logs struct {
 	printer          *localeutil.Printer
 }
 
+type Marshaler interface {
+	MarshalLog() string
+}
+
 func map2Slice(p *localeutil.Printer, attrs map[string]any) []Attr {
 	pairs := make([]Attr, 0, len(attrs))
 

@@ -5,6 +5,7 @@ package logs
 import (
 	"bytes"
 	"errors"
+	"io"
 	"strings"
 	"testing"
 
@@ -38,7 +39,7 @@ func (e *err) FormatError(p xerrors.Printer) error {
 
 func TestRecord_location(t *testing.T) {
 	a := assert.New(t, false)
-	l := New(nil, WithLocation(true), WithCreated(MicroLayout))
+	l := New(NewTextHandler(io.Discard), WithLocation(true), WithCreated(MicroLayout))
 
 	e := l.NewRecord()
 	a.NotNil(e)
@@ -48,7 +49,7 @@ func TestRecord_location(t *testing.T) {
 	b := NewBuffer(false)
 	defer b.Free()
 	e.AppendLocation(b)
-	a.True(strings.HasSuffix(string(b.data), "record_test.go:47"), string(b.data))
+	a.True(strings.HasSuffix(string(b.data), "record_test.go:48"), string(b.data))
 }
 
 func TestRecord_Error(t *testing.T) {
@@ -60,7 +61,7 @@ func TestRecord_Error(t *testing.T) {
 		l := New(NewTextHandler(buf), WithLocation(true), WithCreated(MicroLayout))
 		a.NotNil(l)
 		l.WARN().Error(err1) // 输出定位
-		a.True(strings.Contains(buf.String(), "record_test.go:62"), buf.String())
+		a.True(strings.Contains(buf.String(), "record_test.go:63"), buf.String())
 	})
 
 	err2 := &err{err: err1}

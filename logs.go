@@ -14,16 +14,20 @@ import (
 )
 
 type Logs struct {
-	handler Handler
 	loggers map[Level]*Logger
-	enables map[Level]bool
 
-	attrs            map[string]any // 仅用于被 Option 函数存取，没有其它用处。
-	location, detail bool
-	createdFormat    string
-	printer          *localeutil.Printer
+	levels        []Level
+	attrs         map[string]any
+	location      bool
+	detail        bool
+	createdFormat string
+	printer       *localeutil.Printer
 }
 
+// Marshaler 定义了序列化日志属性的方法
+//
+// [Recorder.With] 的 val 如果实现了该接口，
+// 那么在传递进去之后会调用该接口转换成字符串之后保存。
 type Marshaler interface {
 	MarshalLog() string
 }
@@ -52,15 +56,13 @@ func map2Slice(p *localeutil.Printer, attrs map[string]any) []Attr {
 // h 如果为 nil，则表示采用 [NewNopHandler]。
 func New(h Handler, o ...Option) *Logs {
 	if h == nil {
-		h = NewNopHandler()
+		panic("参数 h 不能为空")
 	}
 
 	l := &Logs{
-		handler: h,
+		levels:  AllLevels(),
+		attrs:   make(map[string]any, 10),
 		loggers: make(map[Level]*Logger, len(levelStrings)),
-		enables: make(map[Level]bool, len(levelStrings)),
-
-		attrs: make(map[string]any, 10),
 	}
 	for _, opt := range o {
 		opt(l)
@@ -73,7 +75,6 @@ func New(h Handler, o ...Option) *Logs {
 			lv:   lv,
 			h:    h.New(l.detail, lv, attrs),
 		}
-		l.enables[lv] = true
 	}
 
 	return l
@@ -83,15 +84,25 @@ func New(h Handler, o ...Option) *Logs {
 //
 // 调用此函数之后，所有不在 level 参数的通道都将被关闭。
 func (logs *Logs) Enable(level ...Level) {
-	for lv := range logs.enables {
-		logs.enables[lv] = sliceutil.Exists(level, func(ll Level, _ int) bool { return ll == lv })
+	// TODO(go1.21): 采用 slices.Clone 代替
+	ls := make([]Level, 0, len(level))
+	logs.levels = append(ls, level...)
+}
+
+// AppendAttrs 为所有的 [Logger] 对象添加属性
+func (logs *Logs) AppendAttrs(attrs map[string]any) {
+	for _, l := range logs.loggers {
+		l.AppendAttrs(attrs)
 	}
 }
 
 // IsEnable 指定级别日志是否会真实被启用
 //
 // 如果设置了 [Handler] 为空值或是未在 [Logs.Enable] 中指定都将返回 false。
-func (logs *Logs) IsEnable(l Level) bool { return logs.enables[l] && logs.handler != nop }
+func (logs *Logs) IsEnable(l Level) bool {
+	// TODO(go1.21): 采用 slices.Index 代替
+	return sliceutil.Exists(logs.levels, func(v Level, _ int) bool { return v == l })
+}
 
 func (logs *Logs) INFO() *Logger { return logs.Logger(LevelInfo) }
 

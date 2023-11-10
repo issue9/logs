@@ -51,14 +51,9 @@ func TestTextHandler(t *testing.T) {
 	layout := MilliLayout
 	now := time.Now()
 
-	l := New(nil, WithCreated(layout), WithLocation(true))
-	e := newRecord(a, l)
-	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with("m1", marshalObject("m1"))
-
 	buf := new(bytes.Buffer)
-	l = New(NewTextHandler(buf), WithCreated(layout), WithLocation(true))
-	e = newRecord(a, l)
+	l := New(NewTextHandler(buf), WithCreated(layout), WithLocation(true))
+	e := newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
 	e.with("m1", marshalObject("m1"))
 	e.Output(l.WARN())
@@ -82,14 +77,14 @@ func TestTextHandler(t *testing.T) {
 	h := NewTextHandler(buf)
 	l = New(h, WithLocation(true), WithDetail(true))
 	e = newRecord(a, l)
-	h = h.New(l.Detail(), LevelWarn, []Attr{{K: "attr1", V: 3.51}})
+	h = h.New(l.detail, LevelWarn, []Attr{{K: "attr1", V: 3.51}})
 	h.Handle(e)
 	a.Equal(buf.String(), "[WARN] path.go:20\tmsg attr1=3.51 k1=v1 k2=v2\n")
 
 	// Handler.New().New()
 	buf.Reset()
 	e = newRecord(a, l)
-	h.New(l.Detail(), LevelWarn, []Attr{{K: "a1", V: int8(5)}, {K: "a2", V: uint(8)}}).Handle(e)
+	h.New(l.detail, LevelWarn, []Attr{{K: "a1", V: int8(5)}, {K: "a2", V: uint(8)}}).Handle(e)
 	a.Equal(buf.String(), "[WARN] path.go:20\tmsg attr1=3.51 a1=5 a2=8 k1=v1 k2=v2\n")
 }
 
@@ -98,16 +93,11 @@ func TestJSONFormat(t *testing.T) {
 	layout := MilliLayout
 	now := time.Now()
 
-	l := New(nil, WithCreated(layout), WithLocation(true))
-	e := newRecord(a, l)
-	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with("m1", marshalObject("m1"))
-
 	a.Panic(func() { NewJSONHandler() })
 
 	buf := new(bytes.Buffer)
-	l = New(NewJSONHandler(buf), WithCreated(layout), WithLocation(true))
-	e = newRecord(a, l)
+	l := New(NewJSONHandler(buf), WithCreated(layout), WithLocation(true))
+	e := newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
 	e.with("m1", marshalObject("m1"))
 	e.Output(l.WARN())
@@ -139,14 +129,14 @@ func TestJSONFormat(t *testing.T) {
 	h := NewJSONHandler(buf)
 	l = New(h, WithLocation(true), WithDetail(true))
 	e = newRecord(a, l)
-	h = h.New(l.Detail(), LevelWarn, []Attr{{K: "attr1", V: 3.5}})
+	h = h.New(l.detail, LevelWarn, []Attr{{K: "attr1", V: 3.5}})
 	h.Handle(e)
 	a.Equal(buf.String(), `{"level":"WARN","message":"msg","path":"path.go:20","attrs":[{"attr1":3.5},{"k1":"v1"},{"k2":"v2"}]}`)
 
 	// Handler.New().New()
 	buf.Reset()
 	e = newRecord(a, l)
-	h.New(l.Detail(), LevelWarn, []Attr{{K: "a1", V: int8(5)}, {K: "a2", V: uint(8)}}).Handle(e)
+	h.New(l.detail, LevelWarn, []Attr{{K: "a1", V: int8(5)}, {K: "a2", V: uint(8)}}).Handle(e)
 	a.Equal(buf.String(), `{"level":"WARN","message":"msg","path":"path.go:20","attrs":[{"attr1":3.5},{"a1":5},{"a2":8},{"k1":"v1"},{"k2":"v2"}]}`)
 }
 
@@ -158,14 +148,9 @@ func TestTermHandler(t *testing.T) {
 	layout := MilliLayout
 	now := time.Now()
 
-	l := New(nil, WithCreated(layout), WithLocation(true))
-	e := newRecord(a, l)
-	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
-	e.with("m1", marshalObject("m1"))
-
 	buf := new(bytes.Buffer)
-	l = New(NewTermHandler(buf, nil), WithCreated(layout), WithLocation(true))
-	e = newRecord(a, l)
+	l := New(NewTermHandler(buf, nil), WithCreated(layout), WithLocation(true))
+	e := newRecord(a, l)
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
 	e.with("m1", marshalObject("m1"))
 	e.Output(l.WARN())
@@ -177,14 +162,14 @@ func TestTermHandler(t *testing.T) {
 	h := NewTermHandler(buf, nil)
 	l = New(h, WithLocation(true), WithDetail(true))
 	e = newRecord(a, l)
-	h = h.New(l.Detail(), LevelWarn, []Attr{{K: "attr1", V: 3.51}})
+	h = h.New(l.detail, LevelWarn, []Attr{{K: "attr1", V: 3.51}})
 	h.Handle(e)
 	a.Equal(buf.String(), "[\033[33;49mWARN\033[0m] path.go:20\tmsg attr1=3.51 k1=v1 k2=v2\n")
 
 	// Handler.New().New()
 	buf.Reset()
 	e = newRecord(a, l)
-	h.New(l.Detail(), LevelWarn, []Attr{{K: "a1", V: int8(5)}, {K: "a2", V: uint(8)}}).Handle(e)
+	h.New(l.detail, LevelWarn, []Attr{{K: "a1", V: int8(5)}, {K: "a2", V: uint(8)}}).Handle(e)
 	a.Equal(buf.String(), "[\033[33;49mWARN\033[0m] path.go:20\tmsg attr1=3.51 a1=5 a2=8 k1=v1 k2=v2\n")
 }
 
@@ -238,7 +223,7 @@ func TestMergeHandler(t *testing.T) {
 	textBuf.Reset()
 	jsonBuf.Reset()
 
-	w = w.New(l.Detail(), LevelWarn, []Attr{{K: "a1", V: "v1"}})
+	w = w.New(l.detail, LevelWarn, []Attr{{K: "a1", V: "v1"}})
 	l = New(w)
 	l.WARN().Printf("warnf test")
 
@@ -251,7 +236,7 @@ func TestMergeHandler(t *testing.T) {
 	textBuf.Reset()
 	jsonBuf.Reset()
 
-	w = w.New(l.Detail(), LevelWarn, []Attr{{K: "a2", V: uint8(3)}})
+	w = w.New(l.detail, LevelWarn, []Attr{{K: "a2", V: uint8(3)}})
 	l = New(w)
 	l.WARN().Printf("warnf test")
 

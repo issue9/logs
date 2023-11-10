@@ -94,18 +94,6 @@ func BenchmarkLogs_disableRecorder(b *testing.B) {
 	}
 }
 
-func BenchmarkLogs_nop(b *testing.B) {
-	a := assert.New(b, false)
-	l := New(nil)
-	a.NotNil(l)
-	l.Enable(LevelError)
-
-	err := l.ERROR()
-	for i := 0; i < b.N; i++ {
-		err.With("k1", "v1").Printf("p1")
-	}
-}
-
 func BenchmarkLogger_LogLogger(b *testing.B) {
 	a := assert.New(b, false)
 	buf := new(bytes.Buffer)

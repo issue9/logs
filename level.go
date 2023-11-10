@@ -28,6 +28,10 @@ var levelStrings = map[Level]string{
 	LevelFatal: "FATL",
 }
 
+func AllLevels() []Level {
+	return []Level{LevelInfo, LevelWarn, LevelTrace, LevelFatal, LevelError, LevelDebug}
+}
+
 func IsValidLevel(l Level) bool { return l >= LevelInfo && l <= LevelFatal }
 
 func (l Level) String() string { return levelStrings[l] }

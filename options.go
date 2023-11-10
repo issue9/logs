@@ -21,6 +21,9 @@ const (
 
 type Option func(*Logs)
 
+// WithLevels 指定启用的日志通道
+func WithLevels(lv ...Level) Option { return func(l *Logs) { l.levels = lv } }
+
 // WithLocale 指定本地化信息
 //
 // 如果为 nil，那么将禁用本地化输出，如果多次调用，则以最后一次为准。
@@ -79,5 +82,3 @@ func (logs *Logs) SetLocation(v bool) { logs.location = v }
 //
 // 如果 v 为空将会禁用日期显示。
 func (logs *Logs) SetCreated(v string) { logs.createdFormat = v }
-
-func (logs *Logs) Detail() bool { return logs.detail }

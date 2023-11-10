@@ -18,7 +18,7 @@ var slog2Logs = map[slog.Level]Level{
 	slog.LevelError: LevelError,
 }
 
-type logsHandler struct {
+type slogHandler struct {
 	l      *Logs
 	attrs  []slog.Attr
 	prefix string // groups 组成
@@ -27,16 +27,16 @@ type logsHandler struct {
 // SLogHandler 将 logs 转换为 [slog.Handler] 接口
 //
 // 所有的 group 会作为普通 attr 的名称前缀，但是不影响 Level、Message 等字段。
-func (l *Logs) SLogHandler() slog.Handler { return &logsHandler{l: l} }
+func (l *Logs) SLogHandler() slog.Handler { return &slogHandler{l: l} }
 
 // SLog 将 Logs 作为 [slog.Logger] 的后端
 func (l *Logs) SLog() *slog.Logger { return slog.New(l.SLogHandler()) }
 
-func (h *logsHandler) Enabled(ctx context.Context, lv slog.Level) bool {
+func (h *slogHandler) Enabled(ctx context.Context, lv slog.Level) bool {
 	return h.l.IsEnable(slog2Logs[lv])
 }
 
-func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
+func (h *slogHandler) Handle(ctx context.Context, r slog.Record) error {
 	rr := h.l.NewRecord()
 	rr.AppendCreated = func(b *Buffer) { b.AppendTime(r.Time, h.l.createdFormat) }
 	rr.AppendMessage = func(b *Buffer) { b.AppendString(r.Message) }
@@ -61,7 +61,7 @@ func (h *logsHandler) Handle(ctx context.Context, r slog.Record) error {
 	return nil
 }
 
-func (h *logsHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+func (h *slogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	var a []slog.Attr
 	if len(h.attrs) == 0 {
 		a = attrs
@@ -69,19 +69,19 @@ func (h *logsHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 		a = append(slices.Clip(h.attrs), attrs...)
 	}
 
-	return &logsHandler{
+	return &slogHandler{
 		l:      h.l,
 		attrs:  a,
 		prefix: h.prefix,
 	}
 }
 
-func (h *logsHandler) WithGroup(name string) slog.Handler {
+func (h *slogHandler) WithGroup(name string) slog.Handler {
 	if name == "" {
 		return h
 	}
 
-	return &logsHandler{
+	return &slogHandler{
 		l:      h.l,
 		attrs:  h.attrs,
 		prefix: name + "." + h.prefix,

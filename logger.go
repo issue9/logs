@@ -80,7 +80,7 @@ func (l *Logger) New(attrs map[string]any) *Logger {
 	return &Logger{
 		lv:   l.lv,
 		logs: l.logs,
-		h:    l.h.New(l.logs.Detail(), l.Level(), map2Slice(l.logs.printer, attrs)),
+		h:    l.h.New(l.logs.detail, l.Level(), map2Slice(l.logs.printer, attrs)),
 	}
 }
 

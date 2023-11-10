@@ -14,8 +14,6 @@ import (
 	"github.com/issue9/logs/v7/writers"
 )
 
-var nop = &nopHandler{}
-
 var defaultTermColors = map[Level]colors.Color{
 	LevelInfo:  colors.Green,
 	LevelDebug: colors.Yellow,
@@ -76,8 +74,6 @@ type (
 	mergeHandler struct {
 		handlers []Handler
 	}
-
-	nopHandler struct{}
 )
 
 // NewTextHandler 返回将 [Record] 以普通文本的形式写入 w 的对象
@@ -397,10 +393,3 @@ func (h *mergeHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 	}
 	return MergeHandler(slices...)
 }
-
-// NewNopHandler 空的 [Handler] 接口实现
-func NewNopHandler() Handler { return nop }
-
-func (h *nopHandler) Handle(*Record) {}
-
-func (h *nopHandler) New(bool, Level, []Attr) Handler { return h }

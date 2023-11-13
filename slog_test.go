@@ -12,12 +12,11 @@ import (
 	"github.com/issue9/assert/v3"
 )
 
-func TestLogs_SLog(t *testing.T) {
+func TestLogs_WithStd(t *testing.T) {
 	a := assert.New(t, false)
 
 	buf := new(bytes.Buffer)
-	l := New(NewTextHandler(buf), WithLocation(true), WithCreated(MilliLayout))
-	slog.SetDefault(l.SLog())
+	New(NewTextHandler(buf), WithLocation(true), WithCreated(MilliLayout), WithStd())
 
 	slog.Error("error", "a1", "v1")
 	a.Contains(buf.String(), "error").Contains(buf.String(), "a1=v1")

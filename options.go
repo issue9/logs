@@ -21,7 +21,15 @@ const (
 
 type Option func(*Logs)
 
-// WithLevels 指定启用的日志通道
+// WithStd 是否接管默认的日志处理程序
+//
+// 如果是 go1.21 之前的版本，会调用 [log.SetOutput] 管理默认日志的输出，输出到 [logs.INFO]；
+// 如果是 go1.21 之后的版本，会调用 [slog.SetDefault] 管理默认日志的输出；
+func WithStd() Option { return func(l *Logs) { withStd(l) } }
+
+// WithLevels 指定启用的日志级别
+//
+// 之后也可以通过 [Logs.Enable] 进行修改。
 func WithLevels(lv ...Level) Option { return func(l *Logs) { l.levels = lv } }
 
 // WithLocale 指定本地化信息

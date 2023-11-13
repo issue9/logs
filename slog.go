@@ -24,13 +24,12 @@ type slogHandler struct {
 	prefix string // groups 组成
 }
 
+func withStd(l *Logs) { slog.SetDefault(slog.New(l.SLogHandler())) }
+
 // SLogHandler 将 logs 转换为 [slog.Handler] 接口
 //
 // 所有的 group 会作为普通 attr 的名称前缀，但是不影响 Level、Message 等字段。
 func (l *Logs) SLogHandler() slog.Handler { return &slogHandler{l: l} }
-
-// SLog 将 Logs 作为 [slog.Logger] 的后端
-func (l *Logs) SLog() *slog.Logger { return slog.New(l.SLogHandler()) }
 
 func (h *slogHandler) Enabled(ctx context.Context, lv slog.Level) bool {
 	return h.l.IsEnable(slog2Logs[lv])

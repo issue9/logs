@@ -24,8 +24,8 @@ import "github.com/issue9/logs/v7"
 l := logs.New(logs.NewTextHandler(...))
 l.DEBUG().Print("debug start...")
 
-erro := l.With(logs.LevelError, map[string]interface{}{"k1":"v1"})
-erro.Printf("带默认参数 k1=v1") // 不用 With 指定 k1，err 全都自动带上此参数
+l.ERROR().AppendAttrs(map[string]interface{}{"k1":"v1"})
+l.ERROR().Printf("带默认参数 k1=v1") // 不用 With 指定 k1，err 全都自动带上此参数
 ```
 
 安装

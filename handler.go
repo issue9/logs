@@ -23,6 +23,8 @@ var defaultTermColors = map[Level]colors.Color{
 	LevelFatal: colors.Red,
 }
 
+var nop = &nopHandler{}
+
 type (
 	// Handler 日志后端的处理接口
 	Handler interface {
@@ -36,7 +38,10 @@ type (
 
 		// New 根据当前对象的参数派生新的 [Handler] 对象
 		//
-		// 新对象继承旧对象的属性，并添加了参数中的新属性。
+		// detail 表示是否需要显示错误的调用堆栈信息；
+		// lv 表示输出的日志级别；
+		// attrs 表示日志属性；
+		// 这三个参数主要供 Handler 缓存这些数据以提升性能；
 		//
 		// 对于重名的问题并无规定，只要 Handler 自身能处理相应的情况即可。
 		//
@@ -74,6 +79,8 @@ type (
 	mergeHandler struct {
 		handlers []Handler
 	}
+
+	nopHandler struct{}
 )
 
 // NewTextHandler 返回将 [Record] 以普通文本的形式写入 w 的对象
@@ -352,7 +359,7 @@ func (h *termHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 // 返回对象的 New 方法会根据其传递的 Level 参数从 d 中选择一个相应的对象返回。
 func NewDispatchHandler(d map[Level]Handler) Handler {
 	if len(d) != len(levelStrings) {
-		panic("需指定所有 Level 对应的对象")
+		panic("NewDispatchHandler: 需指定所有 Level 对应的对象")
 	}
 
 	return &dispatchHandler{handlers: d}
@@ -393,3 +400,9 @@ func (h *mergeHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 	}
 	return MergeHandler(slices...)
 }
+
+func NewNopHandler() Handler { return nop }
+
+func (h *nopHandler) Handle(*Record) {}
+
+func (h *nopHandler) New(bool, Level, []Attr) Handler { return h }

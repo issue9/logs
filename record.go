@@ -39,6 +39,14 @@ type (
 		// NOTE: 此操作之后，当前对象不再可用！
 		Error(err error)
 
+		// LocaleString 输出一条本地化的信息
+		//
+		// 这是 Print 的特化版本，在已知类型为 [localeutil.Stringer] 时，
+		// 采用此方法会比 Print(s) 有更好的性能。
+		//
+		// NOTE: 此操作之后，当前对象不再可用！
+		LocaleString(localeutil.Stringer)
+
 		// String 将字符串作为一条日志输出
 		//
 		// 这是 Print 的特化版本，在已知类型为字符串时，
@@ -135,11 +143,7 @@ func (e *Record) initLocationCreated(depth int) *Record {
 func (e *Record) with(name string, val any) *Record {
 	switch v := val.(type) {
 	case localeutil.Stringer:
-		if e.logs.printer != nil {
-			e.Attrs = append(e.Attrs, Attr{K: name, V: v.LocaleString(e.logs.printer)})
-		} else {
-			e.Attrs = append(e.Attrs, Attr{K: name, V: v})
-		}
+		e.Attrs = append(e.Attrs, Attr{K: name, V: v.LocaleString(e.logs.printer)})
 	case Marshaler:
 		e.Attrs = append(e.Attrs, Attr{K: name, V: v.MarshalLog()})
 	default:
@@ -165,12 +169,22 @@ func (e *Record) DepthError(depth int, err error) *Record {
 		if pp := e.logs.printer; pp != nil {
 			e.AppendMessage = func(b *Buffer) { b.AppendString(ee.LocaleString(pp)) }
 		} else { // e2 必然是实现了 error 接口的
-			e.AppendMessage = func(b *Buffer) { b.AppendString(ee.(error).Error()) }
+			e.AppendMessage = func(b *Buffer) { b.AppendString(err.Error()) }
 		}
 	default:
 		e.AppendMessage = func(b *Buffer) { b.AppendString(err.Error()) }
 	}
 
+	return e.initLocationCreated(depth)
+}
+
+// DepthLocaleString 输出 [localeutil.Stringer]  类型的内容到日志
+//
+// depth 表示调用，2 表示调用此方法的位置；
+//
+// 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
+func (e *Record) DepthLocaleString(depth int, s localeutil.Stringer) *Record {
+	e.AppendMessage = func(b *Buffer) { b.AppendString(s.LocaleString(e.logs.printer)) }
 	return e.initLocationCreated(depth)
 }
 
@@ -273,6 +287,11 @@ func (e *withRecorder) String(s string) {
 	e.free()
 }
 
+func (e *withRecorder) LocaleString(s localeutil.Stringer) {
+	e.r.DepthLocaleString(3, s).Output(e.l)
+	e.free()
+}
+
 func (e *withRecorder) Print(v ...any) {
 	e.r.DepthPrint(3, v...).Output(e.l)
 	e.free()
@@ -295,6 +314,8 @@ func (l *disableRecorder) With(string, any) Recorder { return l }
 func (l *disableRecorder) Error(error) {}
 
 func (l *disableRecorder) String(string) {}
+
+func (l *disableRecorder) LocaleString(localeutil.Stringer) {}
 
 func (l *disableRecorder) Print(...any) {}
 

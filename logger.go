@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 
+	"github.com/issue9/localeutil"
 	"github.com/issue9/logs/v7/writers"
 )
 
@@ -52,6 +53,12 @@ func (l *Logger) Error(err error) {
 func (l *Logger) String(s string) {
 	if l.IsEnable() {
 		l.logs.NewRecord().DepthString(3, s).Output(l)
+	}
+}
+
+func (l *Logger) LocaleString(s localeutil.Stringer) {
+	if l.IsEnable() {
+		l.logs.NewRecord().DepthLocaleString(3, s).Output(l)
 	}
 }
 

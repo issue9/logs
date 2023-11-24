@@ -3,6 +3,7 @@
 package logs
 
 import (
+	"fmt"
 	"runtime"
 	"sync"
 	"time"
@@ -61,6 +62,8 @@ type (
 		Print(v ...any)
 
 		// 输出一条日志信息
+		//
+		// 如果指定了 [WithLocale]，那么该方法会尝试翻译些条内容。
 		//
 		// NOTE: 此操作之后，当前对象不再可用！
 		Printf(format string, v ...any)
@@ -230,8 +233,14 @@ func (e *Record) DepthPrint(depth int, v ...any) *Record {
 //
 // 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
 func (e *Record) DepthPrintf(depth int, format string, v ...any) *Record {
-	replaceLocaleString(e.logs.printer, v)
-	e.AppendMessage = func(b *Buffer) { b.Appendf(format, v...) }
+	var s string
+	if e.logs.printer == nil {
+		s = fmt.Sprintf(format, v...)
+	} else {
+		s = e.logs.printer.Sprintf(format, v...)
+	}
+
+	e.AppendMessage = func(b *Buffer) { b.AppendString(s) }
 	return e.initLocationCreated(depth)
 }
 

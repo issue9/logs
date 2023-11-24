@@ -5,10 +5,14 @@ package logs
 import (
 	"io"
 	"log"
+	"sync"
 
 	"github.com/issue9/localeutil"
+
 	"github.com/issue9/logs/v7/writers"
 )
+
+var loggerPool = &sync.Pool{New: func() any { return &Logger{} }}
 
 // Logger 日志对象
 type Logger struct {
@@ -84,11 +88,11 @@ func (l *Logger) Printf(format string, v ...any) {
 //
 // 新对象会继承当前对象的 [Logger.attrs] 同时还拥有参数 attrs。
 func (l *Logger) New(attrs map[string]any) *Logger {
-	return &Logger{
-		lv:   l.lv,
-		logs: l.logs,
-		h:    l.h.New(l.logs.detail, l.Level(), map2Slice(l.logs.printer, attrs)),
-	}
+	ll := loggerPool.Get().(*Logger)
+	ll.lv = l.lv
+	ll.logs = l.logs
+	ll.h = l.Handler().New(l.logs.detail, l.Level(), map2Slice(l.logs.printer, attrs))
+	return ll
 }
 
 // LogLogger 将当前对象转换成标准库的日志对象
@@ -113,3 +117,6 @@ func (l *Logger) asWriter() io.Writer {
 
 // Handler 返回关联的 [Handler] 对象
 func (l *Logger) Handler() Handler { return l.h }
+
+// 仅用于 AttrLogs 对象中的生成的 Logger
+func (l *Logger) free() { loggerPool.Put(l) }

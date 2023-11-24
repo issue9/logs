@@ -40,6 +40,52 @@ func TestLogs(t *testing.T) {
 	testLogger(a, l.FATAL().Print, l.FATAL().Printf, buf)
 }
 
+func TestLogs_AppendAttrs(t *testing.T) {
+	a := assert.New(t, false)
+	buf := new(bytes.Buffer)
+	l := New(NewTextHandler(buf))
+	a.NotNil(l)
+
+	l.AppendAttrs(map[string]any{"a1": 1})
+	l.INFO().Print("123")
+	a.Equal(buf.String(), "[INFO] 123 a1=1\n")
+}
+
+func TestLogs_New(t *testing.T) {
+	a := assert.New(t, false)
+	buf := new(bytes.Buffer)
+	l := New(NewTextHandler(buf))
+	a.NotNil(l)
+
+	al := l.New(map[string]any{"a1": 1})
+	a.NotNil(al)
+
+	a.Equal(al.INFO(), al.INFO()) // 确保不会每次都构建新对象
+
+	al.ERROR().String("abc")
+	a.Equal(buf.String(), "[ERRO] abc a1=1\n")
+
+	FreeAttrLogs(al)
+}
+
+func TestAttrLogs_AppendAttrs(t *testing.T) {
+	a := assert.New(t, false)
+	buf := new(bytes.Buffer)
+	l := New(NewTextHandler(buf))
+	a.NotNil(l)
+
+	al := l.New(map[string]any{"a1": 1})
+	a.NotNil(al)
+
+	al.TRACE().String("abc")
+	a.Equal(buf.String(), "[TRAC] abc a1=1\n")
+
+	buf.Reset()
+	al.AppendAttrs(map[string]any{"a2": 2})
+	al.TRACE().String("abc")
+	a.Equal(buf.String(), "[TRAC] abc a1=1 a2=2\n")
+}
+
 func TestLogs_IsEnable(t *testing.T) {
 	a := assert.New(t, false)
 

@@ -3,7 +3,7 @@ module github.com/issue9/logs/v7
 require (
 	github.com/issue9/assert/v3 v3.1.0
 	github.com/issue9/errwrap v0.3.1
-	github.com/issue9/localeutil v0.24.0
+	github.com/issue9/localeutil v0.25.0
 	github.com/issue9/sliceutil v0.15.0
 	github.com/issue9/term/v3 v3.2.4
 	golang.org/x/text v0.14.0

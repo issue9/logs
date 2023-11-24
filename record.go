@@ -63,11 +63,6 @@ type (
 		// 输出一条日志信息
 		//
 		// NOTE: 此操作之后，当前对象不再可用！
-		Println(v ...any)
-
-		// 输出一条日志信息
-		//
-		// NOTE: 此操作之后，当前对象不再可用！
 		Printf(format string, v ...any)
 	}
 
@@ -240,17 +235,6 @@ func (e *Record) DepthPrintf(depth int, format string, v ...any) *Record {
 	return e.initLocationCreated(depth)
 }
 
-// DepthPrintln 输出任意类型的内容到日志
-//
-// depth 表示调用，2 表示调用此方法的位置；
-//
-// 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
-func (e *Record) DepthPrintln(depth int, v ...any) *Record {
-	replaceLocaleString(e.logs.printer, v)
-	e.AppendMessage = func(b *Buffer) { b.Appendln(v...) }
-	return e.initLocationCreated(depth)
-}
-
 // Output 输出当前记录到日志
 func (e *Record) Output(l *Logger) {
 	const poolMaxAttrs = 100
@@ -302,11 +286,6 @@ func (e *withRecorder) Printf(format string, v ...any) {
 	e.free()
 }
 
-func (e *withRecorder) Println(v ...any) {
-	e.r.DepthPrintln(3, v...).Output(e.l)
-	e.free()
-}
-
 func (e *withRecorder) free() { withRecordPool.Put(e) }
 
 func (l *disableRecorder) With(string, any) Recorder { return l }
@@ -320,5 +299,3 @@ func (l *disableRecorder) LocaleString(localeutil.Stringer) {}
 func (l *disableRecorder) Print(...any) {}
 
 func (l *disableRecorder) Printf(string, ...any) {}
-
-func (l *disableRecorder) Println(...any) {}

@@ -135,19 +135,3 @@ func TestRecord_Error(t *testing.T) {
 		a.True(strings.HasSuffix(buf.String(), "root\nroot\ncn\n"), buf.String())
 	})
 }
-
-func TestRecorder_Println(t *testing.T) {
-	a := assert.New(t, false)
-
-	c := catalog.NewBuilder()
-	a.NotError(c.SetString(language.SimplifiedChinese, "abc", "cn"))
-	p := message.NewPrinter(language.SimplifiedChinese, message.Catalog(c))
-	a.NotNil(p)
-	buf := &bytes.Buffer{}
-	l := New(NewTextHandler(buf), WithLocation(true), WithCreated(MicroLayout), WithLocale(p))
-	a.NotNil(l)
-
-	e := l.WARN()
-	e.Println(localeutil.Phrase("abc"))
-	a.True(strings.HasSuffix(buf.String(), "cn\n\n"), buf.String()) // Println 本身包含了一个回车符
-}

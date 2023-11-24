@@ -72,12 +72,6 @@ func (l *Logger) Print(v ...any) {
 	}
 }
 
-func (l *Logger) Println(v ...any) {
-	if l.IsEnable() {
-		l.logs.NewRecord().DepthPrintln(3, v...).Output(l)
-	}
-}
-
 func (l *Logger) Printf(format string, v ...any) {
 	if l.IsEnable() {
 		l.logs.NewRecord().DepthPrintf(3, format, v...).Output(l)

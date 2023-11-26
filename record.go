@@ -3,7 +3,6 @@
 package logs
 
 import (
-	"fmt"
 	"runtime"
 	"sync"
 	"time"
@@ -63,9 +62,10 @@ type (
 
 		// 输出一条日志信息
 		//
-		// 如果指定了 [WithLocale]，那么该方法会尝试翻译些条内容。
-		//
 		// NOTE: 此操作之后，当前对象不再可用！
+		//
+		// NOTE: 不会对内容进行翻译，否则对于字符串类型的枚举类型可能会输出意想不到的内容，
+		// 如果需要翻译内容，可以调用 [Recorder.LocaleString]。
 		Printf(format string, v ...any)
 	}
 
@@ -232,15 +232,12 @@ func (e *Record) DepthPrint(depth int, v ...any) *Record {
 // depth 表示调用，2 表示调用此方法的位置；
 //
 // 如果 [Logs.HasLocation] 为 false，那么 depth 将不起实际作用。
+//
+// NOTE: 不会对内容进行翻译，否则对于字符串类型的枚举类型可能会输出意想不到的内容，
+// 如果需要翻译内容，可以调用 [Record.DepthLocaleString]。
 func (e *Record) DepthPrintf(depth int, format string, v ...any) *Record {
-	var s string
-	if e.logs.printer == nil {
-		s = fmt.Sprintf(format, v...)
-	} else {
-		s = e.logs.printer.Sprintf(format, v...)
-	}
-
-	e.AppendMessage = func(b *Buffer) { b.AppendString(s) }
+	replaceLocaleString(e.logs.printer, v)
+	e.AppendMessage = func(b *Buffer) { b.Appendf(format, v...) }
 	return e.initLocationCreated(depth)
 }
 

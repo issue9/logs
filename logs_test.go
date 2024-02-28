@@ -26,12 +26,12 @@ func TestLogs(t *testing.T) {
 		p("p1")
 		val := w.String()
 		a.Contains(val, "p1").
-			Contains(val, "logs_test.go:24") // 行数是否正确
+			Contains(val, "logs_test.go:26") // 行数是否正确
 
 		pf("p2")
 		val = w.String()
 		a.Contains(val, "p2").
-			Contains(val, "logs_test.go:29") // 行数是否正确
+			Contains(val, "logs_test.go:31") // 行数是否正确
 	}
 
 	testLogger(a, l.INFO().Print, l.INFO().Printf, buf)

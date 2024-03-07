@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"sync"
 
@@ -330,12 +331,6 @@ func (h *termHandler) Handle(e *Record) {
 }
 
 func (h *termHandler) New(detail bool, lv Level, attrs []Attr) Handler {
-	// TODO(go1.21): 改为 maps.Copy
-	fc := make(map[Level]colors.Color, len(h.foreColors))
-	for k, v := range h.foreColors {
-		fc[k] = v
-	}
-
 	l := "[" + colors.Sprint(colors.Normal, h.foreColors[lv], colors.Default, lv.String()) + "]"
 
 	b := NewBuffer(false)
@@ -352,7 +347,7 @@ func (h *termHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 			level:  []byte(l),
 			detail: detail,
 		},
-		foreColors: fc,
+		foreColors: maps.Clone(h.foreColors),
 	}
 }
 

@@ -6,6 +6,7 @@ package logs
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/issue9/localeutil"
 )
@@ -23,11 +24,8 @@ const (
 
 type Option func(*Logs)
 
-// WithStd 是否接管默认的日志处理程序
-//
-// 如果是 go1.21 之前的版本，会调用 [log.SetOutput] 管理默认日志的输出，输出到 [logs.INFO]；
-// 如果是 go1.21 之后的版本，会调用 [slog.SetDefault] 管理默认日志的输出；
-func WithStd() Option { return func(l *Logs) { withStd(l) } }
+// WithStd 是否接管标准库中 log 和 log/slog 中的全局输出函数
+func WithStd() Option { return func(l *Logs) { slog.SetDefault(slog.New(l.SLogHandler())) } }
 
 // WithLevels 指定启用的日志级别
 //

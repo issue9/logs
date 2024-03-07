@@ -6,10 +6,10 @@
 package logs
 
 import (
+	"slices"
 	"sync"
 
 	"github.com/issue9/localeutil"
-	"github.com/issue9/sliceutil"
 )
 
 var attrLogsPool = &sync.Pool{
@@ -93,10 +93,7 @@ func New(h Handler, o ...Option) *Logs {
 // Enable 允许的日志通道
 //
 // 调用此函数之后，所有不在 level 参数的通道都将被关闭。
-func (logs *Logs) Enable(level ...Level) {
-	// TODO(go1.21): 采用 slices.Clone 代替
-	logs.levels = append([]Level{}, level...)
-}
+func (logs *Logs) Enable(level ...Level) { logs.levels = slices.Clone(level) }
 
 // AppendAttrs 为所有的 [Logger] 对象添加属性
 func (logs *Logs) AppendAttrs(attrs map[string]any) {
@@ -106,10 +103,7 @@ func (logs *Logs) AppendAttrs(attrs map[string]any) {
 }
 
 // IsEnable 指定级别日志是否会真实被启用
-func (logs *Logs) IsEnable(l Level) bool {
-	// TODO(go1.21): 采用 slices.Index 代替
-	return sliceutil.Exists(logs.levels, func(v Level, _ int) bool { return v == l })
-}
+func (logs *Logs) IsEnable(l Level) bool { return slices.Index(logs.levels, l) >= 0 }
 
 func (logs *Logs) INFO() *Logger { return logs.Logger(LevelInfo) }
 
@@ -130,7 +124,7 @@ func (logs *Logs) Logger(lv Level) *Logger { return logs.loggers[lv] }
 func (logs *Logs) New(attrs map[string]any) *AttrLogs {
 	l := attrLogsPool.Get().(*AttrLogs)
 	l.attrs = attrs
-	l.loggers = make(map[Level]*Logger, len(logs.loggers)) // TODO(go1.21): clear
+	clear(l.loggers)
 	l.logs = logs
 	return l
 }
@@ -172,11 +166,12 @@ func (l *AttrLogs) AppendAttrs(attrs map[string]any) {
 
 func (l *AttrLogs) NewRecord() *Record { return l.logs.NewRecord() }
 
-// Free 回收 [AttrLogs]
+// FreeAttrLogs 回收 [AttrLogs]
+//
+// 如果需要频繁地生成 [AttrLogs] 且其生命周期都有固定的销毁时间点，
+// 可以用此方法达到复用 [AttrLogs] 以达到些许性能提升。
 //
 // NOTE: 此操作会让 logs 不再可用。
-// 除非需要频繁地生成 [AttrLogs] 且其生命周期都有固定的销毁时间点，
-// 可以用此方法达到复用 [AttrLogs] 以达到些许性能提升。
 func FreeAttrLogs(logs *AttrLogs) {
 	for _, l := range logs.loggers {
 		if l != nil {

@@ -2,8 +2,6 @@
 //
 // SPDX-License-Identifier: MIT
 
-//go:build go1.21
-
 package logs
 
 import (
@@ -25,8 +23,6 @@ type slogHandler struct {
 	attrs  []slog.Attr
 	prefix string // groups 组成
 }
-
-func withStd(l *Logs) { slog.SetDefault(slog.New(l.SLogHandler())) }
 
 // SLogHandler 将 logs 转换为 [slog.Handler] 接口
 //

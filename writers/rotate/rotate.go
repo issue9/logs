@@ -2,24 +2,24 @@
 //
 // SPDX-License-Identifier: MIT
 
-// Package rotate 提供一个可以按文件大小进行分割的 io.Writer 实例
+// Package rotate 提供一个可以按文件大小进行分割的 [io.Writer] 实例
+//
+//	import "log"
+//	// 每个文件以 100M 大小进行分割，以日期名作为文件名保存在 /var/log 下。
+//	f,_ := New("debug-200601%i", "/var/log", 100*1024*1024)
+//	l := log.New(f, "DEBUG", log.LstdFlags)
 package rotate
 
 import (
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
 )
 
-// Rotate 可按大小进行分割的文件
-//
-//	import "log"
-//	// 每个文件以 100M 大小进行分割，以日期名作为文件名保存在 /var/log 下。
-//	f,_ := NewRotate("debug-200601%i", "/var/log", 100*1024*1024)
-//	l := log.New(f, "DEBUG", log.LstdFlags)
-type Rotate struct {
+type rotate struct {
 	dir    string // 文件的保存目录
 	size   int64  // 每个文件的最大尺寸
 	prefix string
@@ -29,20 +29,16 @@ type Rotate struct {
 	wSize int64    // 当前正在写的文件大小
 }
 
-// New 新建 Rotate
+// New 声明按大小进行文件分割的对象
 //
-// format 文件名格式，除了标准库支持的时间格式之外，还可以有以下占位符：
-//
-//	%i 表示同一时间段内的产生多个文件时的计数器。
-//
-// 比如：
+// format 文件名格式，除了标准库支持的时间格式之外，还需要包含
+// %i 占位符，表示同一时间段内的产生多个文件时的计数器。比如：
 //
 //	2006-01-02-15-04-%i-01-02.log
 //
-// 表示
 // dir 为文件保存的目录，若不存在会尝试创建。
 // size 为每个文件的最大尺寸，单位为 byte。
-func New(format, dir string, size int64) (*Rotate, error) {
+func New(format, dir string, size int64) (io.WriteCloser, error) {
 	dir, err := filepath.Abs(dir)
 	if err != nil {
 		return nil, err
@@ -70,7 +66,7 @@ func New(format, dir string, size int64) (*Rotate, error) {
 		return nil, err
 	}
 
-	return &Rotate{
+	return &rotate{
 		dir:    dir,
 		prefix: p,
 		suffix: s,
@@ -79,7 +75,7 @@ func New(format, dir string, size int64) (*Rotate, error) {
 }
 
 // 打开一个日志文件
-func (r *Rotate) open() error {
+func (r *rotate) open() error {
 	if r.w != nil {
 		if err := r.w.Close(); err != nil {
 			return err
@@ -126,7 +122,7 @@ CREATE:
 	return nil
 }
 
-func (r *Rotate) Write(buf []byte) (int, error) {
+func (r *rotate) Write(buf []byte) (int, error) {
 	if (r.wSize > r.size) || r.w == nil {
 		if err := r.open(); err != nil {
 			return 0, err
@@ -143,7 +139,7 @@ func (r *Rotate) Write(buf []byte) (int, error) {
 	return size, nil
 }
 
-func (r *Rotate) Close() error {
+func (r *rotate) Close() error {
 	if r.w == nil {
 		return nil
 	}

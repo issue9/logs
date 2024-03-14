@@ -13,15 +13,15 @@ import (
 	"github.com/issue9/assert/v4"
 )
 
-var _ io.WriteCloser = &Rotate{}
+var _ io.WriteCloser = &rotate{}
 
-func TestRotate(t *testing.T) {
+func TestNew(t *testing.T) {
 	a := assert.New(t, false)
 
 	a.NotError(os.RemoveAll("./testdata"))
 	w, err := New("01-02-%i", "./testdata", 100)
 	a.NotError(err).NotNil(w)
-	a.Equal(w.size, 100)
+	a.Equal(w.(*rotate).size, 100)
 
 	loop := 100
 	for i := 0; i < loop; i++ {
@@ -32,7 +32,7 @@ func TestRotate(t *testing.T) {
 		a.NotEqual(size, 0).NotError(err)
 	}
 
-	files, err := os.ReadDir(w.dir)
+	files, err := os.ReadDir(w.(*rotate).dir)
 	a.NotError(err)
-	a.Equal(len(files), int64(loop*len("1024\n"))/w.size)
+	a.Equal(len(files), int64(loop*len("1024\n"))/w.(*rotate).size)
 }

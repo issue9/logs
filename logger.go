@@ -114,5 +114,5 @@ func (l *Logger) asWriter() io.Writer {
 // Handler 返回关联的 [Handler] 对象
 func (l *Logger) Handler() Handler { return l.h }
 
-// 仅用于 AttrLogs 对象中的生成的 Logger
+// 仅用于 [AttrLogs] 对象中的生成的对象
 func (l *Logger) free() { loggerPool.Put(l) }

@@ -44,9 +44,9 @@ type (
 		// detail 表示是否需要显示错误的调用堆栈信息；
 		// lv 表示输出的日志级别；
 		// attrs 表示日志属性；
-		// 这三个参数主要供 Handler 缓存这些数据以提升性能；
+		// 这三个参数主要供 [Handler] 缓存这些数据以提升性能；
 		//
-		// 对于重名的问题并无规定，只要 Handler 自身能处理相应的情况即可。
+		// 对于重名的问题并无规定，只要 [Handler] 自身能处理相应的情况即可。
 		//
 		// NOTE: 即便所有的参数均为零值，也应该返回一个新的对象。
 		New(detail bool, lv Level, attrs []Attr) Handler
@@ -57,7 +57,7 @@ type (
 		mux sync.Mutex
 
 		attrs  []byte // 预编译的属性值
-		level  []byte // 预编译的 level 内容
+		level  []byte // 预处理的 level 内容
 		detail bool
 	}
 
@@ -66,7 +66,7 @@ type (
 		mux sync.Mutex
 
 		attrs  []byte // 预编译的属性值
-		level  []byte // 预编译的 level 内容
+		level  []byte // 预处理的 level 内容
 		detail bool
 	}
 
@@ -353,7 +353,7 @@ func (h *termHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 
 // NewDispatchHandler 根据 [Level] 派发到不同的 [Handler] 对象
 //
-// 返回对象的 New 方法会根据其传递的 Level 参数从 d 中选择一个相应的对象返回。
+// 返回对象的 [Handler.New] 方法会根据其传递的 Level 参数从 d 中选择一个相应的对象返回。
 func NewDispatchHandler(d map[Level]Handler) Handler {
 	if len(d) != len(levelStrings) {
 		panic("NewDispatchHandler: 需指定所有 Level 对应的对象")
@@ -368,7 +368,7 @@ func (h *dispatchHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 	if hh, found := h.handlers[lv]; found {
 		return hh.New(detail, lv, attrs)
 	}
-	panic(fmt.Sprintf("无效的 Level 值：%v", lv)) // 所有有效果的 Level 值由初始化方法指定了
+	panic(fmt.Sprintf("无效的 lv 参数：%v", lv)) // 由 [NewDispatchHandler] 确保不会执行到此
 }
 
 // MergeHandler 将多个 [Handler] 合并成一个 [Handler] 接口对象

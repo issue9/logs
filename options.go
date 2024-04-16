@@ -68,9 +68,7 @@ func WithDetail(v bool) Option { return func(l *Logs) { l.detail = v } }
 // WithCreated 指定日期的格式
 //
 // 如果 layout 为空将会禁用日期显示。
-func WithCreated(layout string) Option {
-	return func(l *Logs) { l.createdFormat = layout }
-}
+func WithCreated(layout string) Option { return func(l *Logs) { l.createdFormat = layout } }
 
 // WithLocation 是否显示定位信息
 func WithLocation(v bool) Option { return func(l *Logs) { l.location = v } }
@@ -90,3 +88,9 @@ func (logs *Logs) SetLocation(v bool) { logs.location = v }
 //
 // 如果 v 为空将会禁用日期显示。
 func (logs *Logs) SetCreated(v string) { logs.createdFormat = v }
+
+// SetLocale 改变本地化对象
+func (logs *Logs) SetLocale(p *localeutil.Printer) { logs.printer = p }
+
+// SetDetail 是否显示错误的堆栈信息
+func (logs *Logs) SetDetail(v bool) { logs.detail = v }

@@ -171,7 +171,7 @@ func (e *Record) DepthError(depth int, err error) *Record {
 	case localeutil.Stringer:
 		if pp := e.logs.printer; pp != nil {
 			e.AppendMessage = func(b *Buffer) { b.AppendString(ee.LocaleString(pp)) }
-		} else { // e2 必然是实现了 error 接口的
+		} else { // ee 必然是实现了 error 接口的
 			e.AppendMessage = func(b *Buffer) { b.AppendString(err.Error()) }
 		}
 	default:

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -6,6 +6,7 @@
 package logs
 
 import (
+	"maps"
 	"slices"
 	"sync"
 
@@ -153,18 +154,17 @@ func (logs *AttrLogs) Logger(lv Level) *Logger {
 }
 
 // AppendAttrs 为所有的 [Logger] 对象添加属性
-func (l *AttrLogs) AppendAttrs(attrs map[string]any) {
-	for _, ll := range l.loggers {
+func (logs *AttrLogs) AppendAttrs(attrs map[string]any) {
+	for _, ll := range logs.loggers {
 		if ll != nil {
 			ll.AppendAttrs(attrs)
 		}
 	}
-	for k, v := range attrs {
-		l.attrs[k] = v
-	}
+
+	maps.Copy(logs.attrs, attrs)
 }
 
-func (l *AttrLogs) NewRecord() *Record { return l.logs.NewRecord() }
+func (logs *AttrLogs) NewRecord() *Record { return logs.logs.NewRecord() }
 
 // FreeAttrLogs 回收 [AttrLogs]
 //

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -27,7 +27,7 @@ type slogHandler struct {
 // SLogHandler 将 logs 转换为 [slog.Handler] 接口
 //
 // 所有的 group 会作为普通 attr 的名称前缀，但是不影响 Level、Message 等字段。
-func (l *Logs) SLogHandler() slog.Handler { return &slogHandler{l: l} }
+func (logs *Logs) SLogHandler() slog.Handler { return &slogHandler{l: logs} }
 
 func (h *slogHandler) Enabled(ctx context.Context, lv slog.Level) bool {
 	return h.l.IsEnable(slog2Logs[lv])

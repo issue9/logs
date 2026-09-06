@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -9,7 +9,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/issue9/assert/v4"
+	"github.com/issue9/assert/v5"
 	"github.com/issue9/localeutil"
 )
 
@@ -91,7 +91,7 @@ func BenchmarkLogs_disableRecorder(b *testing.B) {
 	l.Enable(LevelInfo)
 
 	err := l.ERROR()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		err.With("k1", "v1").Printf("p1")
 	}
 }
@@ -104,7 +104,7 @@ func BenchmarkLogger_LogLogger(b *testing.B) {
 	l.Enable(LevelError)
 	err := l.ERROR()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		err.LogLogger().Printf("std log")
 	}
 }
@@ -117,7 +117,7 @@ func BenchmarkLogs_LogLogger_withDisable(b *testing.B) {
 	l.Enable(LevelInfo)
 	err := l.ERROR()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		err.LogLogger().Printf("std log")
 	}
 }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/issue9/assert/v4"
+	"github.com/issue9/assert/v5"
 )
 
 var _ io.WriteCloser = &rotate{}
@@ -24,7 +24,7 @@ func TestNew(t *testing.T) {
 	a.Equal(w.(*rotate).size, 100)
 
 	loop := 100
-	for i := 0; i < loop; i++ {
+	for range loop {
 		// 加个延时，否则全部到一个文件中
 		time.Sleep(60 * time.Millisecond)
 

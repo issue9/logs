@@ -62,7 +62,7 @@ func map2Slice(p *localeutil.Printer, attrs map[string]any) []Attr {
 	return pairs
 }
 
-// New 声明 Logs 对象
+// New 声明 [Logs] 对象
 //
 // h 如果为 nil，则表示采用 [NewNopHandler]。
 func New(h Handler, o ...Option) *Logs {

@@ -123,7 +123,7 @@ func TestJSONFormat(t *testing.T) {
 	e.AppendCreated = func(b *Buffer) { b.AppendTime(now, l.createdFormat) }
 	e.with("m1", marshalObject("m1")).with("m2", marshalErrObject("m2"))
 	e.Output(l.WARN())
-	a.Equal(buf.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","attrs":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"},{"m2":"Err(json: error calling MarshalJSON for type logs.marshalErrObject: marshal json error)"}]}`)
+	a.Equal(buf.String(), `{"level":"WARN","message":"msg","created":"`+now.Format(layout)+`","path":"path.go:20","attrs":[{"k1":"v1"},{"k2":"v2"},{"m1":"m1"},{"m2":"Err(json: error calling MarshalJSON for type *logs.marshalErrObject: marshal json error)"}]}`)
 
 	// Handler.New
 

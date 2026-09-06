@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2014-2024 caixw
+// SPDX-FileCopyrightText: 2014-2026 caixw
 //
 // SPDX-License-Identifier: MIT
 
@@ -320,7 +320,7 @@ func NewTermHandler(w io.Writer, foreColors map[Level]colors.Color) Handler {
 		}
 	}
 
-	return &termHandler{textHandler: textHandler{w: w}, foreColors: cs}
+	return &termHandler{w: w, foreColors: cs}
 }
 
 func (h *termHandler) Handle(e *Record) {
@@ -340,13 +340,11 @@ func (h *termHandler) New(detail bool, lv Level, attrs []Attr) Handler {
 	data = append(data, h.attrs...)
 
 	return &termHandler{
-		textHandler: textHandler{
-			w: h.w,
+		w:      h.w,
+		attrs:  append(data, b.Bytes()...),
+		level:  []byte(l),
+		detail: detail,
 
-			attrs:  append(data, b.Bytes()...),
-			level:  []byte(l),
-			detail: detail,
-		},
 		foreColors: maps.Clone(h.foreColors),
 	}
 }

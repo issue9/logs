@@ -58,25 +58,25 @@ func BenchmarkWithRecorder(b *testing.B) {
 	e := errors.New("err")
 
 	b.Run("print", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			err.With("k1", "v1").Print(e)
 		}
 	})
 
 	b.Run("printf", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			err.With("k1", "v1").Printf("%v", e)
 		}
 	})
 
 	b.Run("error", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			err.With("k1", "v1").Error(e)
 		}
 	})
 
 	b.Run("string", func(b *testing.B) {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			err.With("k1", "v1").String("err")
 		}
 	})

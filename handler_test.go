@@ -6,7 +6,7 @@ package logs
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json/v2"
 	"errors"
 	"testing"
 	"time"
@@ -202,7 +202,6 @@ func TestDispatchHandler(t *testing.T) {
 	l.INFO().Print("info test")
 
 	a.Equal(jsonBuf.String(), `{"level":"WARN","message":"warnf test"}`).
-		True(json.Valid(jsonBuf.Bytes())).
 		Equal(textBuf.String(), "[INFO] info test\n")
 }
 
@@ -217,7 +216,6 @@ func TestMergeHandler(t *testing.T) {
 	l.WARN().Printf("warnf test")
 
 	a.Equal(jsonBuf.String(), `{"level":"WARN","message":"warnf test"}`).
-		True(json.Valid(jsonBuf.Bytes())).
 		Equal(textBuf.String(), "[WARN] warnf test\n")
 
 	// Handler.New()
@@ -230,7 +228,6 @@ func TestMergeHandler(t *testing.T) {
 	l.WARN().Printf("warnf test")
 
 	a.Equal(jsonBuf.String(), `{"level":"WARN","message":"warnf test","attrs":[{"a1":"v1"}]}`).
-		True(json.Valid(jsonBuf.Bytes()), jsonBuf.String()).
 		Equal(textBuf.String(), "[WARN] warnf test a1=v1\n")
 
 	// Handler.New().New()
@@ -243,6 +240,5 @@ func TestMergeHandler(t *testing.T) {
 	l.WARN().Printf("warnf test")
 
 	a.Equal(jsonBuf.String(), `{"level":"WARN","message":"warnf test","attrs":[{"a1":"v1"},{"a2":3}]}`).
-		True(json.Valid(jsonBuf.Bytes()), jsonBuf.String()).
 		Equal(textBuf.String(), "[WARN] warnf test a1=v1 a2=3\n")
 }

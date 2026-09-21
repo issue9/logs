@@ -6,7 +6,7 @@ package logs
 
 import (
 	"encoding"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"testing"
 
